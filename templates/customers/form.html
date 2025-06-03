@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Mijozlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person{% if customer %}-gear{% else %}-plus{% endif %} me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            {% if customer %}
+            <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+            {% else %}
+            <a href="{% url 'customers:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Mijozlar ro'yxati
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Mijoz ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                {{ form.first_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                {{ form.last_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">
+                            {{ form.phone.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            {{ form.phone }}
+                        </div>
+                        {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Masalan: +998901234567 yoki 901234567
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">
+                            {{ form.address.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-geo-alt"></i>
+                            </span>
+                            {{ form.address }}
+                        </div>
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.address.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-card-text"></i>
+                            </span>
+                            {{ form.notes }}
+                        </div>
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Qo'shimcha ma'lumotlar (ixtiyoriy)
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        {% if customer %}
+                        <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        {% else %}
+                        <a href="{% url 'customers:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if customer %}Yangilash{% else %}Saqlash{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Yordam ma'lumotlari -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Eslatma
+                </h6>
+                <ul class="list-unstyled mb-0 small text-muted">
+                    <li><i class="bi bi-check me-1"></i> Barcha majburiy maydonlarni to'ldiring</li>
+                    <li><i class="bi bi-check me-1"></i> Telefon raqam to'g'ri formatda bo'lishi kerak</li>
+                    <li><i class="bi bi-check me-1"></i> Manzilni batafsil yozing</li>
+                    {% if not customer %}
+                    <li><i class="bi bi-check me-1"></i> Saqlangandan keyin mijoz uchun buyurtma yaratishingiz mumkin</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation va yaxshilashlar
+document.addEventListener('DOMContentLoaded', function() {
+    // Telefon raqam formatlash
+    const phoneInput = document.querySelector('input[name="phone"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('998')) {
+                if (value.length === 9) {
+                    value = '998' + value;
+                }
+            }
+            if (value.length > 12) {
+                value = value.substr(0, 12);
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const firstName = document.querySelector('input[name="first_name"]');
+            const lastName = document.querySelector('input[name="last_name"]');
+            const phone = document.querySelector('input[name="phone"]');
+            const address = document.querySelector('textarea[name="address"]');
+            
+            let isValid = true;
+            
+            // Validation qoidalari
+            if (!firstName.value.trim()) {
+                isValid = false;
+                firstName.classList.add('is-invalid');
+            } else {
+                firstName.classList.remove('is-invalid');
+            }
+            
+            if (!lastName.value.trim()) {
+                isValid = false;
+                lastName.classList.add('is-invalid');
+            } else {
+                lastName.classList.remove('is-invalid');
+            }
+            
+            if (!phone.value.trim()) {
+                isValid = false;
+                phone.classList.add('is-invalid');
+            } else {
+                phone.classList.remove('is-invalid');
+            }
+            
+            if (!address.value.trim()) {
+                isValid = false;
+                address.classList.add('is-invalid');
+            } else {
+                address.classList.remove('is-invalid');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

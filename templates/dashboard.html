@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+
+{% block title %}Bosh sahifa - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-house-door me-2"></i>
+        Bosh sahifa
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-calendar me-1"></i>
+                {{ "now"|date:"d.m.Y" }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistika kartochkalari -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold mb-1">
+                            Jami mijozlar
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.total_customers }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold mb-1">
+                            Tugallangan
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.completed_orders }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold mb-1">
+                            Jarayonda
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.processing_orders }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-clock-history" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-info">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold mb-1">
+                            Yangi buyurtmalar
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.new_orders }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-plus-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_manager or user.is_admin %}
+<!-- Menejer va Admin uchun -->
+<div class="row">
+    <!-- Bu oylik statistika -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-month me-2"></i>
+                    Bu oylik natijalar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ monthly_stats.new_customers }}</h4>
+                            <small class="text-muted">Yangi mijozlar</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ monthly_stats.new_orders }}</h4>
+                            <small class="text-muted">Yangi buyurtmalar</small>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ monthly_stats.completed_orders }}</h4>
+                            <small class="text-muted">Tugallangan</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-warning">{{ monthly_stats.total_revenue|floatformat:0 }} so'm</h4>
+                            <small class="text-muted">Daromad</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tezkor harakatlar -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>
+                    Tezkor harakatlar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Yangi mijoz qo'shish
+                    </a>
+                    <a href="#" class="btn btn-outline-success">
+                        <i class="bi bi-cart-plus me-2"></i>
+                        Yangi buyurtma yaratish
+                    </a>
+                    <a href="#" class="btn btn-outline-info">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Kunlik hisobot
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- So'nggi buyurtmalar -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    So'nggi buyurtmalar
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Barchasini ko'rish
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Buyurtma raqami</th>
+                                <th>Mijoz</th>
+                                <th>Holat</th>
+                                <th>Yaratilgan</th>
+                                <th>Yaratuvchi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <a href="#" class="text-decoration-none">
+                                        #{{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td>{{ order.customer.get_full_name }}</td>
+                                <td>
+                                    {% if order.status == 'new' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'measuring' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'installed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>{{ order.created_by.get_full_name|default:order.created_by.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    Hozircha buyurtmalar yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Texnik xodim uchun -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-task me-2"></i>
+                    Mening vazifalarim
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if user.can_measure %}
+                    <div class="col-md-4 text-center">
+                        <h4 class="text-info">{{ my_tasks.to_measure }}</h4>
+                        <small class="text-muted">O'lchash kerak</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_manufacture %}
+                    <div class="col-md-4 text-center">
+                        <h4 class="text-warning">{{ my_tasks.to_process }}</h4>
+                        <small class="text-muted">Ishlab chiqarish</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_install %}
+                    <div class="col-md-4 text-center">
+                        <h4 class="text-success">{{ my_tasks.to_install }}</h4>
+                        <small class="text-muted">O'rnatish kerak</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tools me-2"></i>
+                    Huquqlarim
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if user.can_create_order %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Buyurtma yaratish</span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_measure %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>O'lchov olish</span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_manufacture %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Ishlab chiqarish</span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_install %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>O'rnatish</span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.can_cancel_order %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Bekor qilish</span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mening buyurtmalarim -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-workspace me-2"></i>
+                    Mening buyurtmalarim
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Barchasini ko'rish
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Buyurtma raqami</th>
+                                <th>Mijoz</th>
+                                <th>Holat</th>
+                                <th>Mening vazifam</th>
+                                <th>Yaratilgan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in my_orders %}
+                            <tr>
+                                <td>
+                                    <a href="#" class="text-decoration-none">
+                                        #{{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td>{{ order.customer.get_full_name }}</td>
+                                <td>
+                                    {% if order.status == 'new' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'measuring' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'installed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.measured_by == user %}
+                                        <span class="badge bg-info">O'lchov</span>
+                                    {% endif %}
+                                    {% if order.processed_by == user %}
+                                        <span class="badge bg-warning">Ishlab chiqarish</span>
+                                    {% endif %}
+                                    {% if order.installed_by == user %}
+                                        <span class="badge bg-success">O'rnatish</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    Sizga tayinlangan buyurtmalar yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ customer.get_full_name }} - Mijozlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person me-2"></i>
+        {{ customer.get_full_name }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+            {% if user.is_manager or user.is_admin %}
+            <a href="" class="btn btn-sm btn-warning">
+                <i class="bi bi-pencil me-1"></i>
+                Tahrirlash
+            </a>
+            <a href="" class="btn btn-sm btn-success">
+                <i class="bi bi-cart-plus me-1"></i>
+                Yangi buyurtma
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Mijoz ma'lumotlari -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Mijoz ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">To'liq ism</label>
+                    <p class="fw-bold">{{ customer.get_full_name }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Telefon raqam</label>
+                    <p>
+                        <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                            <i class="bi bi-telephone me-1"></i>
+                            {{ customer.phone }}
+                        </a>
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Manzil</label>
+                    <p>
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ customer.address }}
+                    </p>
+                </div>
+                
+                {% if customer.notes %}
+                <div class="mb-3">
+                    <label class="form-label text-muted">Izohlar</label>
+                    <p class="text-muted">{{ customer.notes }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="mb-0">
+                    <label class="form-label text-muted">Qo'shilgan sana</label>
+                    <p>
+                        <i class="bi bi-calendar me-1"></i>
+                        {{ customer.created_at|date:"d.m.Y H:i" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistika -->
+    <div class="col-md-8 mb-4">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card stats-card-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cart" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3 class="mt-2">{{ customer.total_orders }}</h3>
+                        <p class="mb-0">Jami buyurtmalar</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card stats-card-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3 class="mt-2">{{ customer.completed_orders }}</h3>
+                        <p class="mb-0">Tugallangan</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card stats-card-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3 class="mt-2">{{ customer.total_spent|floatformat:0 }}</h3>
+                        <p class="mb-0">Jami xarajat (so'm)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card {% if customer.outstanding_balance > 0 %}stats-card{% else %}stats-card-success{% endif %}">
+                    <div class="card-body text-center">
+                        <i class="bi bi-{% if customer.outstanding_balance > 0 %}exclamation-triangle{% else %}check-circle{% endif %}" 
+                           style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3 class="mt-2">{{ customer.outstanding_balance|floatformat:0 }}</h3>
+                        <p class="mb-0">Qarzdorlik (so'm)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Buyurtmalar tarixi -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-clock-history me-2"></i>
+            Buyurtmalar tarixi
+        </h5>
+        {% if user.is_manager or user.is_admin %}
+        <a href="" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus me-1"></i>
+            Yangi buyurtma
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Buyurtma raqami</th>
+                        <th>Holat</th>
+                        <th>Jalyuzilar soni</th>
+                        <th>Umumiy narx</th>
+                        <th>To'langan</th>
+                        <th>Qolgan</th>
+                        <th>Sana</th>
+                        <th>Harakatlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="" class="text-decoration-none fw-bold">
+                                #{{ order.order_number }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if order.status == 'new' %}
+                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'measuring' %}
+                                <span class="badge bg-info">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'installed' %}
+                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ order.total_items }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ order.total_price|floatformat:0 }} so'm</strong>
+                        </td>
+                        <td>
+                            <span class="text-success">{{ order.total_paid|floatformat:0 }} so'm</span>
+                        </td>
+                        <td>
+                            {% if order.remaining_balance > 0 %}
+                                <span class="text-danger">{{ order.remaining_balance|floatformat:0 }} so'm</span>
+                            {% else %}
+                                <span class="text-success">
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small>
+                        </td>
+                        <td>
+                            <a href="" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-cart" style="font-size: 2rem; opacity: 0.3;"></i>
+                                <p class="mt-2">Bu mijozda hozircha buyurtmalar yo'q</p>
+                                {% if user.is_manager or user.is_admin %}
+                                <a href="" class="btn btn-primary">
+                                    <i class="bi bi-cart-plus me-2"></i>
+                                    Birinchi buyurtmani yaratish
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

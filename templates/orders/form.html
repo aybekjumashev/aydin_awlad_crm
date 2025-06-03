@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-cart{% if order %}-gear{% else %}-plus{% endif %} me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            {% if order %}
+            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+            {% else %}
+            <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Buyurtmalar ro'yxati
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<form method="post" novalidate id="orderForm">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Asosiy ma'lumotlar -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Asosiy ma'lumotlar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.customer.id_for_label }}" class="form-label">
+                            {{ form.customer.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.customer }}
+                        {% if form.customer.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.customer.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            {{ form.status.label }}
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sanalar va mas'ullar -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar me-2"></i>
+                        Sanalar va mas'ullar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.measurement_date.id_for_label }}" class="form-label">
+                                {{ form.measurement_date.label }}
+                            </label>
+                            {{ form.measurement_date }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.measured_by.id_for_label }}" class="form-label">
+                                {{ form.measured_by.label }}
+                            </label>
+                            {{ form.measured_by }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.processing_start_date.id_for_label }}" class="form-label">
+                                {{ form.processing_start_date.label }}
+                            </label>
+                            {{ form.processing_start_date }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.processed_by.id_for_label }}" class="form-label">
+                                {{ form.processed_by.label }}
+                            </label>
+                            {{ form.processed_by }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.installation_date.id_for_label }}" class="form-label">
+                                {{ form.installation_date.label }}
+                            </label>
+                            {{ form.installation_date }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.installed_by.id_for_label }}" class="form-label">
+                                {{ form.installed_by.label }}
+                            </label>
+                            {{ form.installed_by }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jalyuzilar -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-list me-2"></i>
+                Jalyuzilar
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addItemBtn">
+                <i class="bi bi-plus me-1"></i>
+                Jalyuzi qo'shish
+            </button>
+        </div>
+        <div class="card-body">
+            {{ formset.management_form }}
+            
+            <div id="itemFormset">
+                {% for form in formset %}
+                    <div class="item-form border rounded p-3 mb-3" data-form-index="{{ forloop.counter0 }}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Jalyuzi #<span class="item-number">{{ forloop.counter }}</span></h6>
+                            {% if not formset.form.instance.pk or formset|length > 1 %}
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.blind_type.label }}</label>
+                                {{ form.blind_type }}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">{{ form.width.label }}</label>
+                                {{ form.width }}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">{{ form.height.label }}</label>
+                                {{ form.height }}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.material.label }}</label>
+                                {{ form.material }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">{{ form.installation_type.label }}</label>
+                                {{ form.installation_type }}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">{{ form.room_name.label }}</label>
+                                {{ form.room_name }}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">{{ form.quantity.label }}</label>
+                                {{ form.quantity }}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">{{ form.unit_price.label }}</label>
+                                <div class="input-group">
+                                    {{ form.unit_price }}
+                                    <span class="input-group-text">so'm</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.mechanism_type.label }}</label>
+                                {{ form.mechanism_type }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.cornice_type.label }}</label>
+                                {{ form.cornice_type }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                        </div>
+                        
+                        <!-- Hisoblangan narx -->
+                        <div class="alert alert-info">
+                            <strong>Ushbu jalyuzi narxi: <span class="item-total">0</span> so'm</strong>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Umumiy narx -->
+            <div class="alert alert-success">
+                <h5 class="mb-0">Umumiy narx: <span id="grandTotal">0</span> so'm</h5>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Saqlash tugmalari -->
+    <div class="d-flex justify-content-between mb-4">
+        {% if order %}
+        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-2"></i>
+            Bekor qilish
+        </a>
+        {% else %}
+        <a href="{% url 'orders:list' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-2"></i>
+            Bekor qilish
+        </a>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle me-2"></i>
+            {% if order %}Yangilash{% else %}Saqlash{% endif %}
+        </button>
+    </div>
+</form>
+
+<!-- Empty form template for adding new items -->
+<div id="emptyFormTemplate" style="display: none;">
+    {% with formset.empty_form as form %}
+    <div class="item-form border rounded p-3 mb-3" data-form-index="__prefix__">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Jalyuzi #<span class="item-number"></span></h6>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.blind_type.label }}</label>
+                {{ form.blind_type }}
+            </div>
+            
+            <div class="col-md-2 mb-3">
+                <label class="form-label">{{ form.width.label }}</label>
+                {{ form.width }}
+            </div>
+            
+            <div class="col-md-2 mb-3">
+                <label class="form-label">{{ form.height.label }}</label>
+                {{ form.height }}
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.material.label }}</label>
+                {{ form.material }}
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label">{{ form.installation_type.label }}</label>
+                {{ form.installation_type }}
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <label class="form-label">{{ form.room_name.label }}</label>
+                {{ form.room_name }}
+            </div>
+            
+            <div class="col-md-2 mb-3">
+                <label class="form-label">{{ form.quantity.label }}</label>
+                {{ form.quantity }}
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.unit_price.label }}</label>
+                <div class="input-group">
+                    {{ form.unit_price }}
+                    <span class="input-group-text">so'm</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.mechanism_type.label }}</label>
+                {{ form.mechanism_type }}
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.cornice_type.label }}</label>
+                {{ form.cornice_type }}
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">{{ form.notes.label }}</label>
+            {{ form.notes }}
+        </div>
+        
+        <!-- Hisoblangan narx -->
+        <div class="alert alert-info">
+            <strong>Ushbu jalyuzi narxi: <span class="item-total">0</span> so'm</strong>
+        </div>
+    </div>
+    {% endwith %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let formIndex = parseInt(document.querySelector('#id_form-TOTAL_FORMS').value);
+    
+    // Jalyuzi qo'shish
+    document.getElementById('addItemBtn').addEventListener('click', function() {
+        const template = document.getElementById('emptyFormTemplate').innerHTML;
+        const newForm = template.replace(/__prefix__/g, formIndex);
+        
+        const formContainer = document.getElementById('itemFormset');
+        formContainer.insertAdjacentHTML('beforeend', newForm);
+        
+        formIndex++;
+        document.querySelector('#id_form-TOTAL_FORMS').value = formIndex;
+        
+        updateItemNumbers();
+        setupFormListeners();
+        calculateTotals();
+    });
+    
+    // Jalyuzi o'chirish
+    function setupFormListeners() {
+        document.querySelectorAll('.remove-item').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (document.querySelectorAll('.item-form').length > 1) {
+                    this.closest('.item-form').remove();
+                    updateItemNumbers();
+                    calculateTotals();
+                }
+            });
+        });
+        
+        // Narxlarni hisoblash
+        document.querySelectorAll('input[name$="-quantity"], input[name$="-unit_price"]').forEach(function(input) {
+            input.addEventListener('input', calculateTotals);
+        });
+    }
+    
+    // Raqamlarni yangilash
+    function updateItemNumbers() {
+        document.querySelectorAll('.item-number').forEach(function(span, index) {
+            span.textContent = index + 1;
+        });
+    }
+    
+    // Narxlarni hisoblash
+    function calculateTotals() {
+        let grandTotal = 0;
+        
+        document.querySelectorAll('.item-form').forEach(function(form) {
+            const quantity = parseFloat(form.querySelector('input[name$="-quantity"]').value) || 0;
+            const unitPrice = parseFloat(form.querySelector('input[name$="-unit_price"]').value) || 0;
+            const itemTotal = quantity * unitPrice;
+            
+            form.querySelector('.item-total').textContent = itemTotal.toLocaleString();
+            grandTotal += itemTotal;
+        });
+        
+        document.getElementById('grandTotal').textContent = grandTotal.toLocaleString();
+    }
+    
+    // Boshlang'ich setup
+    setupFormListeners();
+    calculateTotals();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ customer.get_full_name }}ni o'chirish - Mijozlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2 text-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Mijozni o'chirish
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Xavfli harakat!
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Diqqat!</h6>
+                    <p class="mb-0">
+                        Siz <strong>{{ customer.get_full_name }}</strong> mijozini butunlay o'chirmoqchisiz. 
+                        Bu harakat bekor qilib bo'lmaydi!
+                    </p>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Mijoz ma'lumotlari:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Ism:</strong> {{ customer.get_full_name }}</li>
+                        <li><strong>Telefon:</strong> {{ customer.phone }}</li>
+                        <li><strong>Manzil:</strong> {{ customer.address }}</li>
+                        <li><strong>Qo'shilgan:</strong> {{ customer.created_at|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Buyurtmalar soni:</strong> {{ customer.total_orders }}</li>
+                    </ul>
+                </div>
+                
+                {% if customer.total_orders > 0 %}
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        O'chirish mumkin emas!
+                    </h6>
+                    <p class="mb-0">
+                        Bu mijozning {{ customer.total_orders }} ta buyurtmasi mavjud. 
+                        Avval barcha buyurtmalarni o'chiring yoki boshqa mijozga o'tkazing.
+                    </p>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Orqaga qaytish
+                    </a>
+                    <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-primary">
+                        <i class="bi bi-eye me-2"></i>
+                        Buyurtmalarni ko'rish
+                    </a>
+                </div>
+                
+                {% else %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Tasdiqlash uchun mijoz ismini kiriting:</label>
+                        <input type="text" class="form-control" id="confirmName" 
+                               placeholder="{{ customer.get_full_name }}" required>
+                        <div class="form-text">
+                            Xavfsizlik uchun to'liq ismni kiriting
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                            <i class="bi bi-trash me-2"></i>
+                            Mijozni o'chirish
+                        </button>
+                    </div>
+                </form>
+                
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Yordam ma'lumotlari -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Ma'lumot
+                </h6>
+                <ul class="list-unstyled mb-0 small text-muted">
+                    <li><i class="bi bi-check me-1"></i> Faqat admin mijozlarni o'chira oladi</li>
+                    <li><i class="bi bi-check me-1"></i> Buyurtmalari bo'lgan mijozlarni o'chirish mumkin emas</li>
+                    <li><i class="bi bi-check me-1"></i> O'chirilgan ma'lumotlarni qayta tiklash mumkin emas</li>
+                    <li><i class="bi bi-check me-1"></i> Barcha bog'liq ma'lumotlar ham o'chadi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmInput = document.getElementById('confirmName');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const expectedName = "{{ customer.get_full_name }}";
+    
+    if (confirmInput && deleteBtn) {
+        confirmInput.addEventListener('input', function() {
+            if (this.value.trim() === expectedName) {
+                deleteBtn.disabled = false;
+                deleteBtn.classList.remove('btn-secondary');
+                deleteBtn.classList.add('btn-danger');
+            } else {
+                deleteBtn.disabled = true;
+                deleteBtn.classList.remove('btn-danger');
+                deleteBtn.classList.add('btn-secondary');
+            }
+        });
+        
+        // Form submit confirmation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Haqiqatan ham bu mijozni o\'chirmoqchimisiz? Bu harakat bekor qilib bo\'lmaydi!')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
