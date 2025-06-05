@@ -1,0 +1,40 @@
+# Python umumiy
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Venv (virtual muhit)
+aydin_crm_env/
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Django fayllari
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+
+# IDE fayllari
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS fayllari
+.DS_Store
+Thumbs.db
+
+# Secret config
+.env
+*.secret
+*.bak
+
+# Migrations agar kerak bo'lmasa
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
