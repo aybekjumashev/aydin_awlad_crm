@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-plus-circle me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Buyurtmaga qaytish
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Buyurtma ma'lumotlari -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Buyurtma
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Raqam:</strong> #{{ order.order_number }}
+                </div>
+                <div class="mb-2">
+                    <strong>Mijoz:</strong> {{ order.customer.get_full_name }}
+                </div>
+                <div class="mb-2">
+                    <strong>Manzil:</strong> {{ order.address }}
+                </div>
+                <div class="mb-2">
+                    <strong>Status:</strong>
+                    {% if order.status == 'measuring' %}
+                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'processing' %}
+                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'installed' %}
+                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="mb-0">
+                    <strong>Mavjud jalyuzilar:</strong> {{ order.total_items }} ta
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mavjud jalyuzilar -->
+        {% if order.items.exists %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">Mavjud jalyuzilar</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in order.items.all %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ item.get_blind_type_display }}</strong>
+                                {% if item.room_name %}
+                                    <br><small class="text-muted">{{ item.room_name }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small>{{ item.width }}×{{ item.height }} sm</small>
+                                <br><small class="text-muted">{{ item.quantity }} dona</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Jalyuzi qo'shish formasi -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-window me-2"></i>
+                    Yangi jalyuzi ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.blind_type.id_for_label }}" class="form-label">
+                                {{ form.blind_type.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.blind_type }}
+                            {% if form.blind_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.blind_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.material.id_for_label }}" class="form-label">
+                                {{ form.material.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.material }}
+                            {% if form.material.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.material.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.width.id_for_label }}" class="form-label">
+                                {{ form.width.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.width }}
+                                <span class="input-group-text">sm</span>
+                            </div>
+                            {% if form.width.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.width.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.height.id_for_label }}" class="form-label">
+                                {{ form.height.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.height }}
+                                <span class="input-group-text">sm</span>
+                            </div>
+                            {% if form.height.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.height.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                {{ form.quantity.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.unit_price.id_for_label }}" class="form-label">
+                                {{ form.unit_price.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.unit_price }}
+                                <span class="input-group-text">so'm</span>
+                            </div>
+                            {% if form.unit_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unit_price.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.installation_type.id_for_label }}" class="form-label">
+                                {{ form.installation_type.label }}
+                            </label>
+                            {{ form.installation_type }}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.room_name.id_for_label }}" class="form-label">
+                                {{ form.room_name.label }}
+                            </label>
+                            {{ form.room_name }}
+                            <div class="form-text">
+                                Masalan: Yotoq xona, Mehmonxona
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Maydon</label>
+                            <div class="form-control-plaintext" id="areaDisplay">
+                                0 m²
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.mechanism_type.id_for_label }}" class="form-label">
+                                {{ form.mechanism_type.label }}
+                            </label>
+                            {{ form.mechanism_type }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cornice_type.id_for_label }}" class="form-label">
+                                {{ form.cornice_type.label }}
+                            </label>
+                            {{ form.cornice_type }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                    </div>
+                    
+                    <!-- Hisoblangan narx -->
+                    <div class="alert alert-info">
+                        <h6 class="mb-2">Hisoblangan narx:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small>Birlik narxi:</small><br>
+                                <strong id="unitPriceDisplay">0 so'm</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small>Donasi:</small><br>
+                                <strong id="quantityDisplay">0</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small>Jami narx:</small><br>
+                                <strong id="totalPriceDisplay" class="text-primary">0 so'm</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Jalyuzi qo'shish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const widthInput = document.querySelector('input[name="width"]');
+    const heightInput = document.querySelector('input[name="height"]');
+    const quantityInput = document.querySelector('input[name="quantity"]');
+    const unitPriceInput = document.querySelector('input[name="unit_price"]');
+    
+    const areaDisplay = document.getElementById('areaDisplay');
+    const unitPriceDisplay = document.getElementById('unitPriceDisplay');
+    const quantityDisplay = document.getElementById('quantityDisplay');
+    const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+    
+    function updateCalculations() {
+        const width = parseFloat(widthInput.value) || 0;
+        const height = parseFloat(heightInput.value) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        
+        // Maydonni hisoblash (sm² dan m² ga)
+        const area = (width * height) / 10000;
+        areaDisplay.textContent = area.toFixed(2) + ' m²';
+        
+        // Narxlarni ko'rsatish
+        unitPriceDisplay.textContent = unitPrice.toLocaleString() + ' so\'m';
+        quantityDisplay.textContent = quantity;
+        
+        const totalPrice = unitPrice * quantity;
+        totalPriceDisplay.textContent = totalPrice.toLocaleString() + ' so\'m';
+    }
+    
+    // Event listeners
+    [widthInput, heightInput, quantityInput, unitPriceInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', updateCalculations);
+        }
+    });
+    
+    // Initial calculation
+    updateCalculations();
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = [
+                { input: widthInput, name: 'En' },
+                { input: heightInput, name: 'Bo\'y' },
+                { input: quantityInput, name: 'Donasi' },
+                { input: unitPriceInput, name: 'Birlik narxi' }
+            ];
+            
+            for (let field of requiredFields) {
+                if (!field.input.value || parseFloat(field.input.value) <= 0) {
+                    e.preventDefault();
+                    alert(field.name + ' maydonini to\'g\'ri to\'ldiring!');
+                    field.input.focus();
+                    return;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

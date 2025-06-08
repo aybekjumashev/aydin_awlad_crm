@@ -97,18 +97,16 @@ def order_detail(request, pk):
     """
     Buyurtma tafsilotlari
     """
+    # Faqat mavjud maydonlar bilan
     order = get_object_or_404(
-        Order.objects.select_related('customer', 'created_by', 'measured_by', 'processed_by', 'installed_by')
+        Order.objects.select_related('customer', 'created_by')
         .prefetch_related('items', 'payments__received_by', 'history__performed_by'),
         pk=pk
     )
     
     # Texnik xodim faqat o'ziga tegishli buyurtmalarni ko'ra oladi
     if request.user.is_technician():
-        if not (order.measured_by == request.user or 
-                order.processed_by == request.user or 
-                order.installed_by == request.user or 
-                order.created_by == request.user):
+        if not (order.created_by == request.user):
             messages.error(request, 'Sizda bu buyurtmani ko\'rish huquqi yo\'q!')
             return redirect('orders:list')
     
@@ -125,66 +123,63 @@ def order_detail(request, pk):
 @login_required
 def order_add(request):
     """
-    Yangi buyurtma yaratish
+    Yangi buyurtma yaratish (soddalashtirilgan)
     """
     # Huquqlarni tekshirish
     if not (request.user.is_manager() or request.user.is_admin() or request.user.can_create_order):
         messages.error(request, 'Sizda buyurtma yaratish huquqi yo\'q!')
         return redirect('orders:list')
     
-    # OrderItem inline formset
-    OrderItemFormSet = inlineformset_factory(
-        Order, OrderItem, 
-        form=OrderItemForm,
-        extra=1, 
-        can_delete=True,
-        min_num=1,
-        validate_min=True
-    )
-    
     if request.method == 'POST':
         form = OrderForm(request.POST)
-        formset = OrderItemFormSet(request.POST)
         
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             order = form.save(commit=False)
             order.created_by = request.user
             order.updated_by = request.user
+            order.status = 'measuring'  # Avtomatik o'lchovda status
             order.save()
-            
-            formset.instance = order
-            formset.save()
             
             # History yaratish
             order.create_history(
                 action='created',
                 performed_by=request.user,
-                notes=f'Buyurtma yaratildi. Jami {order.total_items()} ta jalyuzi.'
+                notes='Buyurtma yaratildi. O\'lchov kutilmoqda.'
             )
             
-            messages.success(request, f'Buyurtma #{order.order_number} muvaffaqiyatli yaratildi!')
+            messages.success(
+                request, 
+                f'Buyurtma #{order.order_number} yaratildi! Status: O\'lchovda'
+            )
             return redirect('orders:detail', pk=order.pk)
+        else:
+            # Form xatolarini ko'rsatish
+            for field, errors in form.errors.items():
+                for error in errors:
+                    field_label = form.fields[field].label if field in form.fields else field
+                    messages.error(request, f'{field_label}: {error}')
     else:
         # URL dan mijozni olish
         customer_id = request.GET.get('customer')
         initial = {}
         if customer_id:
             try:
+                from customers.models import Customer
                 customer = Customer.objects.get(pk=customer_id)
                 initial['customer'] = customer
+                initial['address'] = customer.address  # Mijoz manzilini default qilish
             except Customer.DoesNotExist:
                 pass
         
         form = OrderForm(initial=initial)
-        formset = OrderItemFormSet()
     
     context = {
         'form': form,
-        'formset': formset,
         'title': 'Yangi buyurtma yaratish',
+        'simple_form': True,  # Template uchun flag
     }
     
-    return render(request, 'orders/form.html', context)
+    return render(request, 'orders/simple_form.html', context)
 
 
 @login_required
@@ -216,7 +211,7 @@ def order_edit(request, pk):
     
     if request.method == 'POST':
         form = OrderForm(request.POST, instance=order)
-        formset = OrderItemFormSet(request.POST, instance=order)
+        formset = OrderItemFormSet(request.POST, instance=order, prefix='form')
         
         if form.is_valid() and formset.is_valid():
             order = form.save(commit=False)
@@ -234,9 +229,22 @@ def order_edit(request, pk):
             
             messages.success(request, f'Buyurtma #{order.order_number} yangilandi!')
             return redirect('orders:detail', pk=order.pk)
+        else:
+            # Form xatolarini ko'rsatish
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{form.fields[field].label}: {error}')
+            
+            if not formset.is_valid():
+                for form_errors in formset.errors:
+                    for field, errors in form_errors.items():
+                        if errors:
+                            for error in errors:
+                                messages.error(request, f'Jalyuzi: {error}')
     else:
         form = OrderForm(instance=order)
-        formset = OrderItemFormSet(instance=order)
+        formset = OrderItemFormSet(instance=order, prefix='form')
     
     context = {
         'form': form,

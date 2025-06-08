@@ -32,8 +32,14 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='new',
+        default='measuring',  # Default status o'lchovda
         verbose_name='Holat'
+    )
+    
+    # Manzil ma'lumotlari
+    address = models.TextField(
+        verbose_name='O\'lchov manzili',
+        help_text='Jalyuzi o\'rnatilishi kerak bo\'lgan aniq manzil'
     )
     
     # Qo'shimcha ma'lumotlar
@@ -49,7 +55,7 @@ class Order(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='created_orders',
-        verbose_name='Buyurtmani qabul qilgan'
+        verbose_name='Yaratuvchi'
     )
     updated_by = models.ForeignKey(
         User,
@@ -59,38 +65,32 @@ class Order(models.Model):
         verbose_name='O\'zgartiruvchi'
     )
     
-    # Har bir jarayon uchun mas'ul shaxslar
-    measured_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='measured_orders',
-        verbose_name='O\'lchov olgan'
+    # Avans to'lovi
+    advance_payment = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name='Avans to\'lovi'
     )
-    processed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
+    advance_payment_date = models.DateTimeField(
         blank=True,
-        related_name='processed_orders',
-        verbose_name='Ishlab chiqargan'
+        null=True,
+        verbose_name='Avans to\'lovi sanasi'
     )
-    installed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
+    advance_payment_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('cash', 'Naqd pul'),
+            ('card', 'Plastik karta'),
+            ('bank_transfer', 'Bank o\'tkazmasi'),
+            ('click', 'Click'),
+            ('payme', 'Payme'),
+            ('uzcard', 'UzCard'),
+            ('humo', 'Humo'),
+        ],
         blank=True,
-        related_name='installed_orders',
-        verbose_name='O\'rnatgan'
-    )
-    cancelled_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
         null=True,
-        blank=True,
-        related_name='cancelled_orders',
-        verbose_name='Bekor qilgan'
+        verbose_name='Avans to\'lov usuli'
     )
     
     # Sanalar
@@ -107,25 +107,10 @@ class Order(models.Model):
         null=True,
         verbose_name='O\'lchov sanasi'
     )
-    processing_start_date = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name='Ishlab chiqarish boshlangan sana'
-    )
     installation_date = models.DateField(
         blank=True,
         null=True,
         verbose_name='O\'rnatish sanasi'
-    )
-    cancelled_date = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name='Bekor qilingan sana'
-    )
-    cancellation_reason = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Bekor qilish sababi'
     )
     
     class Meta:
@@ -147,17 +132,13 @@ class Order(models.Model):
         # Eski status ni saqlash (history uchun)
         old_status = None
         if self.pk:
-            try:
-                old_instance = Order.objects.get(pk=self.pk)
-                old_status = old_instance.status
-            except Order.DoesNotExist:
-                pass
+            old_instance = Order.objects.get(pk=self.pk)
+            old_status = old_instance.status
         
         super().save(*args, **kwargs)
         
         # History yaratish (status o'zgarganda)
         if old_status and old_status != self.status:
-            from .models import OrderHistory  # Local import to avoid circular
             OrderHistory.objects.create(
                 order=self,
                 action='status_changed',
@@ -168,7 +149,6 @@ class Order(models.Model):
     
     def create_history(self, action, performed_by, notes=None):
         """History yozuvi yaratish"""
-        from .models import OrderHistory  # Local import
         OrderHistory.objects.create(
             order=self,
             action=action,
@@ -338,8 +318,7 @@ class OrderItem(models.Model):
     def area(self):
         """Maydon (m²)"""
         return (self.width * self.height) / 10000  # sm² dan m² ga
-
-
+    
 class OrderHistory(models.Model):
     """
     Buyurtma tarixini saqlash - kim qachon nima qilgani

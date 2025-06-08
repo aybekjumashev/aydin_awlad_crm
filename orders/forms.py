@@ -7,78 +7,40 @@ from customers.models import Customer
 
 class OrderForm(forms.ModelForm):
     """
-    Buyurtma yaratish/tahrirlash formasi
+    Buyurtma yaratish/tahrirlash formasi (soddalashtirilgan)
     """
     
     class Meta:
         model = Order
-        fields = [
-            'customer', 'status', 'notes', 
-            'measurement_date', 'processing_start_date', 'installation_date',
-            'measured_by', 'processed_by', 'installed_by'
-        ]
+        fields = ['customer', 'address', 'notes']
         widgets = {
             'customer': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
             }),
-            'status': forms.Select(attrs={
-                'class': 'form-select'
+            'address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'O\'lchov va o\'rnatish uchun aniq manzil...',
+                'required': True
             }),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Qo\'shimcha izohlar...'
             }),
-            'measurement_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'processing_start_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'installation_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'measured_by': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'processed_by': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'installed_by': forms.Select(attrs={
-                'class': 'form-select'
-            }),
         }
         labels = {
             'customer': 'Mijoz',
-            'status': 'Holat',
+            'address': 'O\'lchov manzili',
             'notes': 'Izohlar',
-            'measurement_date': 'O\'lchov sanasi',
-            'processing_start_date': 'Ishlab chiqarish boshlanish sanasi',
-            'installation_date': 'O\'rnatish sanasi',
-            'measured_by': 'O\'lchov oluvchi',
-            'processed_by': 'Ishlab chiqaruvchi',
-            'installed_by': 'O\'rnatuvchi',
         }
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # Faqat texnik xodimlarni ko'rsatish
-        from accounts.models import User
-        technicians = User.objects.filter(role='technician', is_active=True)
-        
-        self.fields['measured_by'].queryset = technicians.filter(can_measure=True)
-        self.fields['processed_by'].queryset = technicians.filter(can_manufacture=True)
-        self.fields['installed_by'].queryset = technicians.filter(can_install=True)
-        
-        # Bo'sh tanlov qo'shish
-        self.fields['measured_by'].empty_label = "Tayinlanmagan"
-        self.fields['processed_by'].empty_label = "Tayinlanmagan"
-        self.fields['installed_by'].empty_label = "Tayinlanmagan"
+    def clean_address(self):
+        address = self.cleaned_data.get('address')
+        if not address or not address.strip():
+            raise forms.ValidationError('O\'lchov manzili majburiy!')
+        return address.strip()
 
 
 class OrderItemForm(forms.ModelForm):

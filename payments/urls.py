@@ -1,3 +1,5 @@
+# payments/urls.py faylini yaratish kerak:
+
 # payments/urls.py
 
 from django.urls import path
