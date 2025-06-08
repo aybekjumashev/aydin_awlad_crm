@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}O'lchov olish - #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-ruler me-2"></i>
+        O'lchov olish - #{{ order.order_number }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Buyurtma ma'lumotlari -->
+    <div class="col-md-5 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Buyurtma ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Buyurtma raqami</label>
+                    <p class="fw-bold">#{{ order.order_number }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Mijoz</label>
+                    <p class="fw-bold">{{ order.customer.get_full_name }}</p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-telephone me-1"></i>
+                        <a href="tel:{{ order.customer.phone }}">{{ order.customer.phone }}</a>
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">O'lchov manzili</label>
+                    <p>
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ order.address }}
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Status</label>
+                    <p>
+                        <span class="badge bg-info fs-6">{{ order.get_status_display }}</span>
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Yaratilgan</label>
+                    <p>{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                </div>
+                
+                {% if order.notes %}
+                <div class="mb-0">
+                    <label class="form-label text-muted">Buyurtma izohlar</label>
+                    <p class="text-muted">{{ order.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- O'lchov ko'rsatmalari -->
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    O'lchov ko'rsatmalari
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Deraza o'lchamlarini aniq o'lchang
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        O'rnatish turini aniqlang (devor/shift/rom)
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Jalyuzi turini mijoz bilan kelishing
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Material va rangni tanlang
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Narxni hisoblang va avans oling
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- O'lchov formasi -->
+    <div class="col-md-7 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    O'lchov natijalarini kiritish
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="measurement_date" class="form-label">
+                            O'lchov sanasi <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control" id="measurement_date" 
+                               name="measurement_date" value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="measurement_notes" class="form-label">
+                            O'lchov izohlar va topilmalar
+                        </label>
+                        <textarea class="form-control" id="measurement_notes" name="measurement_notes" 
+                                  rows="6" placeholder="Masalan:
+- Mehmonxona: 150x200 sm, gorizontal jalyuzi, oq rang
+- Oshxona: 120x150 sm, vertikal jalyuzi, kulrang
+- O'rnatish: devorga mahkamlash
+- Mijoz talabi: avtomat mexanizm
+- Qo'shimcha: karniz ham kerak
+- Avans: 500,000 so'm olindi"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Keyingi qadamlar
+                        </h6>
+                        <p class="mb-0">
+                            O'lchov tugagandan keyin:
+                            {% if order.items.exists %}
+                            <br>✅ Jalyuzilar ro'yxati allaqachon mavjud - ishlab chiqarishga o'tadi
+                            {% else %}
+                            <br>📝 Jalyuzilar ro'yxatini qo'shish sahifasiga o'tasiz
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            O'lchov yakunlash
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Mavjud jalyuzilar (agar bor bo'lsa) -->
+        {% if order.items.exists %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-list me-2"></i>
+                    Mavjud jalyuzilar
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Turi</th>
+                                <th>O'lcham</th>
+                                <th>Xona</th>
+                                <th>Narx</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.get_blind_type_display }}</td>
+                                <td>{{ item.width }}×{{ item.height }} sm</td>
+                                <td>{{ item.room_name|default:"-" }}</td>
+                                <td>{{ item.total_price|floatformat:0 }} so'm</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <th colspan="3">Jami:</th>
+                                <th>{{ order.total_price|floatformat:0 }} so'm</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('O\'lchov yakunlanganini tasdiqlaysizmi?\n\nBu harakat buyurtma statusini o\'zgartiradi.')) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Auto-resize textarea
+    const textarea = document.getElementById('measurement_notes');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+});
+</script>
+{% endblock %}

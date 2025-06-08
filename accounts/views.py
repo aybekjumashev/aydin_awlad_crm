@@ -120,20 +120,25 @@ def dashboard(request):
             'monthly_labels_json': json.dumps([m['month'] for m in monthly_revenue]),
         })
     else:
-        # Texnik xodim uchun - faqat o'ziga tegishli
-        my_orders = Order.objects.filter(
-            Q(created_by=user)
-        ).select_related('customer').order_by('-created_at')[:5]
+        # Texnik xodim uchun - barcha buyurtmalarni ko'rish
+        recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:5]
+        
+        # Texnik xodim vazifalariga qarab statistika
+        my_tasks = {}
+        
+        if user.can_measure:
+            my_tasks['to_measure'] = Order.objects.filter(status='measuring').count()
+        
+        if user.can_manufacture:
+            my_tasks['to_process'] = Order.objects.filter(status='processing').count()
+        
+        if user.can_install:
+            my_tasks['to_install'] = Order.objects.filter(status='processing').count()  # O'rnatishga tayyor
         
         context.update({
-            'my_orders': my_orders,
-            'my_tasks': {
-                'to_measure': Order.objects.filter(status='measuring').count() if user.can_measure else 0,
-                'to_process': Order.objects.filter(status='processing').count() if user.can_manufacture else 0,
-                'to_install': Order.objects.filter(status='processing').count() if user.can_install else 0,
-            }
+            'recent_orders': recent_orders,
+            'my_tasks': my_tasks,
         })
-    
     return render(request, 'dashboard.html', context)
 
 

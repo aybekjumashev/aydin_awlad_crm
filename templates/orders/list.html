@@ -193,6 +193,12 @@
                                    class="btn btn-outline-info" title="Ko'rish">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% if order.status == 'measuring' and user.can_measure or user.is_manager or user.is_admin %}
+                                <a href="{% url 'orders:measurement' order.pk %}" 
+                                   class="btn btn-outline-success" title="O'lchov olish">
+                                    <i class="bi bi-ruler"></i>
+                                </a>
+                                {% endif %}
                                 {% if user.is_manager or user.is_admin %}
                                 <a href="{% url 'orders:edit' order.pk %}" 
                                    class="btn btn-outline-warning" title="Tahrirlash">
@@ -207,7 +213,7 @@
                                     <ul class="dropdown-menu">
                                         {% if order.status != 'cancelled' and order.remaining_balance > 0 %}
                                         <li>
-                                            <a class="dropdown-item" href="">
+                                            <a class="dropdown-item" href="{% url 'payments:add' order.pk %}">
                                                 <i class="bi bi-credit-card me-2"></i>
                                                 To'lov qo'shish
                                             </a>

@@ -11,7 +11,7 @@ from django.forms import inlineformset_factory
 from .models import Order, OrderItem
 from customers.models import Customer
 from .forms import OrderForm, OrderItemForm
-
+from django.utils import timezone
 
 @login_required
 def order_list(request):
@@ -49,13 +49,13 @@ def order_list(request):
         orders = [o for o in orders if o.is_fully_paid()]
     
     # Texnik xodim uchun faqat o'ziga tegishli buyurtmalar
-    if request.user.is_technician():
-        orders = orders.filter(
-            Q(measured_by=request.user) |
-            Q(processed_by=request.user) |
-            Q(installed_by=request.user) |
-            Q(created_by=request.user)
-        ).distinct()
+    # if request.user.is_technician():
+    #     orders = orders.filter(
+    #         Q(measured_by=request.user) |
+    #         Q(processed_by=request.user) |
+    #         Q(installed_by=request.user) |
+    #         Q(created_by=request.user)
+    #     ).distinct()
     
     # Statistika
     all_orders = Order.objects.all()
@@ -395,3 +395,67 @@ def order_print(request, pk):
     }
     
     return render(request, 'orders/print.html', context)
+
+
+
+
+@login_required
+def order_measurement(request, pk):
+    """
+    Buyurtma o'lchovi sahifasi
+    """
+    order = get_object_or_404(Order, pk=pk)
+    
+    # Huquqlarni tekshirish - faqat o'lchash huquqi bor xodimlar
+    if not (request.user.is_manager() or request.user.is_admin() or request.user.can_measure):
+        messages.error(request, 'Sizda o\'lchov olish huquqi yo\'q!')
+        return redirect('orders:detail', pk=pk)
+    
+    # Faqat "measuring" statusdagi buyurtmalarni o'lchash mumkin
+    if order.status != 'measuring':
+        messages.error(request, 'Bu buyurtma o\'lchov bosqichida emas!')
+        return redirect('orders:detail', pk=pk)
+    
+    if request.method == 'POST':
+        # O'lchov ma'lumotlarini saqlash
+        measurement_notes = request.POST.get('measurement_notes', '')
+        measurement_date = request.POST.get('measurement_date')
+        
+        # Buyurtmani yangilash
+        order.measured_by = request.user
+        order.measurement_date = measurement_date if measurement_date else timezone.now().date()
+        order.updated_by = request.user
+        
+        # Agar jalyuzilar qo'shilgan bo'lsa, statusni "processing" ga o'tkazish
+        if order.items.exists():
+            order.status = 'processing'
+            order.processing_start_date = timezone.now().date()
+            order.processed_by = request.user
+        
+        if measurement_notes:
+            order.notes = (order.notes + '\n\n' + measurement_notes) if order.notes else measurement_notes
+        
+        order.save()
+        
+        # History yaratish
+        order.create_history(
+            action='measured',
+            performed_by=request.user,
+            notes=f'O\'lchov olindi. {measurement_notes}' if measurement_notes else 'O\'lchov olindi.'
+        )
+        
+        messages.success(request, 'O\'lchov muvaffaqiyatli bajarildi!')
+        
+        # Agar jalyuzilar yo'q bo'lsa, jalyuzi qo'shish sahifasiga yo'naltirish
+        if not order.items.exists():
+            messages.info(request, 'Endi jalyuzilar ro\'yxatini qo\'shing!')
+            return redirect('orders:add_item', pk=pk)
+        else:
+            return redirect('orders:detail', pk=pk)
+    
+    context = {
+        'order': order,
+        'today': timezone.now().date(),
+    }
+    
+    return render(request, 'orders/measurement.html', context)

@@ -517,15 +517,14 @@
         </div>
     </div>
 </div>
-
-<!-- Mening buyurtmalarim -->
+<!-- Mening buyurtmalarim o'rniga Barcha buyurtmalar -->
 <div class="row mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-person-workspace me-2"></i>
-                    Mening buyurtmalarim
+                    <i class="bi bi-list me-2"></i>
+                    So'nggi buyurtmalar
                 </h5>
                 <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">
                     Barchasini ko'rish
@@ -539,12 +538,12 @@
                                 <th>Buyurtma raqami</th>
                                 <th>Mijoz</th>
                                 <th>Holat</th>
-                                <th>Mening vazifam</th>
                                 <th>Yaratilgan</th>
+                                <th>Harakatlar</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for order in my_orders %}
+                            {% for order in recent_orders %}
                             <tr>
                                 <td>
                                     <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
@@ -558,30 +557,24 @@
                                     {% elif order.status == 'measuring' %}
                                         <span class="badge bg-info">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'processing' %}
-                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'installed' %}
                                         <span class="badge bg-success">{{ order.get_status_display }}</span>
                                     {% else %}
                                         <span class="badge bg-danger">{{ order.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if order.measured_by == user %}
-                                        <span class="badge bg-info">O'lchov</span>
-                                    {% endif %}
-                                    {% if order.processed_by == user %}
-                                        <span class="badge bg-warning">Ishlab chiqarish</span>
-                                    {% endif %}
-                                    {% if order.installed_by == user %}
-                                        <span class="badge bg-success">O'rnatish</span>
-                                    {% endif %}
-                                </td>
                                 <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i> Ko'rish
+                                    </a>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
                                 <td colspan="5" class="text-center text-muted">
-                                    Sizga tayinlangan buyurtmalar yo'q
+                                    Hozircha buyurtmalar yo'q
                                 </td>
                             </tr>
                             {% endfor %}

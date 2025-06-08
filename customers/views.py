@@ -17,7 +17,7 @@ def customer_list(request):
     Mijozlar ro'yxati
     """
     # Faqat menejer va admin ko'ra oladi
-    if not (request.user.is_manager() or request.user.is_admin()):
+    if not (request.user.is_manager() or request.user.is_admin() or request.user.is_technician()):
         messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     

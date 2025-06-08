@@ -25,6 +25,12 @@
                 <i class="bi bi-arrow-left me-1"></i>
                 Orqaga
             </a>
+            {% if order.status == 'measuring' and user.can_measure or user.is_manager or user.is_admin %}
+            <a href="{% url 'orders:measurement' order.pk %}" class="btn btn-sm btn-success">
+                <i class="bi bi-ruler me-1"></i>
+                O'lchov olish
+            </a>
+            {% endif %}
             {% if user.is_manager or user.is_admin %}
             <a href="{% url 'orders:edit' order.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>

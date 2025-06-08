@@ -82,7 +82,8 @@
                             </a>
                         </li>
                         
-                        {% if user.is_manager or user.is_admin %}
+
+                        {% if user.is_manager or user.is_admin or user.is_technician %}
                         <li class="nav-item">
                             <a href="{% url 'customers:list' %}" class="nav-link {% if 'customers' in request.resolver_match.namespace %}active{% endif %}">
                                 <i class="bi bi-people me-2"></i>

@@ -112,6 +112,58 @@ class Order(models.Model):
         null=True,
         verbose_name='O\'rnatish sanasi'
     )
+
+
+    # Jarayon mas'ullari
+    measured_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='measured_orders',
+        verbose_name='O\'lchov olgan'
+    )
+    processed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processed_orders',
+        verbose_name='Ishlab chiqargan'
+    )
+    installed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='installed_orders',
+        verbose_name='O\'rnatgan'
+    )
+    cancelled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cancelled_orders',
+        verbose_name='Bekor qilgan'
+    )
+
+    # Qo'shimcha sanalar
+    processing_start_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Ishlab chiqarish boshlangan sana'
+    )
+    cancelled_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Bekor qilingan sana'
+    )
+    cancellation_reason = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Bekor qilish sababi'
+    )
     
     class Meta:
         verbose_name = 'Buyurtma'
