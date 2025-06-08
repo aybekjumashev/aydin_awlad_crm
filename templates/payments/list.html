@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}To'lovlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-credit-card me-2"></i>
+        To'lovlar
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payments:daily_report' %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-calendar-day me-1"></i>
+                Kunlik hisobot
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistika -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <i class="bi bi-list-check" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.total_payments }}</h3>
+                <p class="mb-0">Jami to'lovlar</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card-success">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.total_amount|floatformat:0 }}</h3>
+                <p class="mb-0">Jami summa (so'm)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.today_payments }}</h3>
+                <p class="mb-0">Bugungi to'lovlar</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-cash-stack" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.today_amount|floatformat:0 }}</h3>
+                <p class="mb-0">Bugungi summa (so'm)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filterlar -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Buyurtma raqami, mijoz..." 
+                       value="{{ search|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <select name="payment_type" class="form-select">
+                    <option value="">Barcha turlar</option>
+                    <option value="advance" {% if payment_type == 'advance' %}selected{% endif %}>Avans</option>
+                    <option value="partial" {% if payment_type == 'partial' %}selected{% endif %}>Qisman</option>
+                    <option value="final" {% if payment_type == 'final' %}selected{% endif %}>Yakuniy</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="payment_method" class="form-select">
+                    <option value="">Barcha usullar</option>
+                    <option value="cash" {% if payment_method == 'cash' %}selected{% endif %}>Naqd</option>
+                    <option value="card" {% if payment_method == 'card' %}selected{% endif %}>Plastik karta</option>
+                    <option value="bank_transfer" {% if payment_method == 'bank_transfer' %}selected{% endif %}>Bank o'tkazmasi</option>
+                    <option value="click" {% if payment_method == 'click' %}selected{% endif %}>Click</option>
+                    <option value="payme" {% if payment_method == 'payme' %}selected{% endif %}>Payme</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_from" class="form-control" 
+                       value="{{ date_from|default:'' }}" placeholder="Dan">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_to" class="form-control" 
+                       value="{{ date_to|default:'' }}" placeholder="Gacha">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- To'lovlar jadvali -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Buyurtma</th>
+                        <th>Mijoz</th>
+                        <th>To'lov turi</th>
+                        <th>Miqdor</th>
+                        <th>To'lov usuli</th>
+                        <th>Qabul qilgan</th>
+                        <th>Sana</th>
+                        <th>Holat</th>
+                        <th width="100">Harakatlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'orders:detail' payment.order.pk %}" class="text-decoration-none fw-bold">
+                                #{{ payment.order.order_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'customers:detail' payment.order.customer.pk %}" class="text-decoration-none">
+                                {{ payment.order.customer.get_full_name }}
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ payment.order.customer.phone }}</small>
+                        </td>
+                        <td>
+                            {% if payment.payment_type == 'advance' %}
+                                <span class="badge bg-info">{{ payment.get_payment_type_display }}</span>
+                            {% elif payment.payment_type == 'partial' %}
+                                <span class="badge bg-warning text-dark">{{ payment.get_payment_type_display }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ payment.get_payment_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="text-primary">{{ payment.amount|floatformat:0 }}</strong>
+                            <small class="text-muted d-block">so'm</small>
+                        </td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>
+                            {% if payment.received_by %}
+                                {{ payment.received_by.get_full_name|default:payment.received_by.username }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ payment.payment_date|date:"d.m.Y" }}
+                            <small class="text-muted d-block">{{ payment.payment_date|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if payment.is_confirmed %}
+                                <span class="badge bg-success">Tasdiqlangan</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Kutilmoqda</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'orders:detail' payment.order.pk %}" 
+                                   class="btn btn-outline-info" title="Buyurtmani ko'rish">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.is_admin %}
+                                <a href="{% url 'payments:edit' payment.pk %}" 
+                                   class="btn btn-outline-warning" title="Tahrirlash">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'payments:delete' payment.pk %}" 
+                                   class="btn btn-outline-danger" title="O'chirish">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-credit-card" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <p class="mt-3">
+                                    {% if search or payment_type or payment_method or date_from or date_to %}
+                                        Filter bo'yicha to'lovlar topilmadi
+                                    {% else %}
+                                        Hozircha to'lovlar yo'q
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if payments.has_other_pages %}
+<nav aria-label="To'lovlar pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if payments.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if payment_type %}&payment_type={{ payment_type }}{% endif %}{% if payment_method %}&payment_method={{ payment_method }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ payments.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if payment_type %}&payment_type={{ payment_type }}{% endif %}{% if payment_method %}&payment_method={{ payment_method }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+        
+        {% for num in payments.paginator.page_range %}
+            {% if payments.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > payments.number|add:'-3' and num < payments.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if payment_type %}&payment_type={{ payment_type }}{% endif %}{% if payment_method %}&payment_method={{ payment_method }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if payments.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ payments.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if payment_type %}&payment_type={{ payment_type }}{% endif %}{% if payment_method %}&payment_method={{ payment_method }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ payments.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if payment_type %}&payment_type={{ payment_type }}{% endif %}{% if payment_method %}&payment_method={{ payment_method }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

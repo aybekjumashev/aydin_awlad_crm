@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}Kunlik to'lovlar hisoboti - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-calendar-day me-2"></i>
+        Kunlik to'lovlar hisoboti
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payments:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                To'lovlar
+            </a>
+            <button onclick="window.print()" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-printer me-1"></i>
+                Chop etish
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sana tanlash -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <form method="get" class="d-flex">
+            <input type="date" name="date" class="form-control me-2" 
+                   value="{{ selected_date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-primary">Ko'rish</button>
+        </form>
+    </div>
+    <div class="col-md-8 text-end">
+        <h5 class="text-primary">{{ selected_date|date:"d.m.Y" }} - {{ selected_date|date:"l" }}</h5>
+    </div>
+</div>
+
+<!-- Statistika -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <i class="bi bi-list-check" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.total_payments }}</h3>
+                <p class="mb-0">Jami to'lovlar</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stats-card-success">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.total_amount|floatformat:0 }}</h3>
+                <p class="mb-0">Jami summa (so'm)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-warning">
+            <div class="card-body text-center">
+                <h4 class="mt-2">{{ stats.advance_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Avans (so'm)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <h4 class="mt-2">{{ stats.partial_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Qisman (so'm)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h4 class="mt-2">{{ stats.final_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Yakuniy (so'm)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- To'lov usullari -->
+{% if payment_methods %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    To'lov usullari bo'yicha
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for method, amount in payment_methods.items %}
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ amount|floatformat:0 }} so'm</h4>
+                            <small class="text-muted">{{ method }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- To'lovlar jadvali -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-list me-2"></i>
+            Kun davomidagi to'lovlar
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vaqt</th>
+                        <th>Buyurtma</th>
+                        <th>Mijoz</th>
+                        <th>To'lov turi</th>
+                        <th>Miqdor</th>
+                        <th>To'lov usuli</th>
+                        <th>Qabul qilgan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>
+                            <strong>{{ payment.payment_date|date:"H:i" }}</strong>
+                        </td>
+                        <td>
+                            <a href="{% url 'orders:detail' payment.order.pk %}" class="text-decoration-none">
+                                #{{ payment.order.order_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'customers:detail' payment.order.customer.pk %}" class="text-decoration-none">
+                                {{ payment.order.customer.get_full_name }}
+                            </a>
+                            <br><small class="text-muted">{{ payment.order.customer.phone }}</small>
+                        </td>
+                        <td>
+                            {% if payment.payment_type == 'advance' %}
+                                <span class="badge bg-info">{{ payment.get_payment_type_display }}</span>
+                            {% elif payment.payment_type == 'partial' %}
+                                <span class="badge bg-warning text-dark">{{ payment.get_payment_type_display }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ payment.get_payment_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="text-success">{{ payment.amount|floatformat:0 }} so'm</strong>
+                        </td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>
+                            {{ payment.received_by.get_full_name|default:payment.received_by.username }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-calendar-x" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <p class="mt-3">{{ selected_date|date:"d.m.Y" }} kunida to'lovlar yo'q</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if payments %}
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="4" class="text-end">Jami:</th>
+                        <th>{{ stats.total_amount|floatformat:0 }} so'm</th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .btn-toolbar, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+    
+    .stats-card, .stats-card-success, .stats-card-warning, .stats-card-info {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #ddd !important;
+    }
+}
+</style>
+{% endblock %}

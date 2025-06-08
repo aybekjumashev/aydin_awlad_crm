@@ -76,7 +76,7 @@
                     
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item">
-                            <a href="{% url 'dashboard' %}" class="nav-link">
+                            <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                                 <i class="bi bi-house-door me-2"></i>
                                 Bosh sahifa
                             </a>
@@ -84,7 +84,7 @@
                         
                         {% if user.is_manager or user.is_admin %}
                         <li class="nav-item">
-                            <a href="{% url 'customers:list' %}" class="nav-link">
+                            <a href="{% url 'customers:list' %}" class="nav-link {% if 'customers' in request.resolver_match.namespace %}active{% endif %}">
                                 <i class="bi bi-people me-2"></i>
                                 Mijozlar
                             </a>
@@ -92,7 +92,7 @@
                         {% endif %}
                         
                         <li class="nav-item">
-                            <a href="{% url 'orders:list' %}" class="nav-link">
+                            <a href="{% url 'orders:list' %}" class="nav-link {% if 'orders' in request.resolver_match.namespace %}active{% endif %}">
                                 <i class="bi bi-cart me-2"></i>
                                 Buyurtmalar
                             </a>
@@ -100,16 +100,9 @@
                         
                         {% if user.is_manager or user.is_admin %}
                         <li class="nav-item">
-                            <a href="" class="nav-link">
+                            <a href="{% url 'payments:list' %}" class="nav-link {% if 'payments' in request.resolver_match.namespace %}active{% endif %}">
                                 <i class="bi bi-credit-card me-2"></i>
                                 To'lovlar
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a href="" class="nav-link">
-                                <i class="bi bi-graph-up me-2"></i>
-                                Hisobotlar
                             </a>
                         </li>
                         {% endif %}
@@ -117,7 +110,7 @@
                         <hr class="text-white-50">
                         
                         <li class="nav-item">
-                            <a href="{% url 'profile' %}" class="nav-link">
+                            <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                                 <i class="bi bi-person me-2"></i>
                                 Profil
                             </a>

@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyurtmalar hisoboti - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-cart me-2"></i>
+        Buyurtmalar hisoboti
+        <small class="text-muted">({{ period_name }})</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Hisobotlar
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Period tanlash -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="btn-group" role="group">
+            <a href="?period=week" class="btn btn-outline-primary {% if period == 'week' %}active{% endif %}">
+                Bu hafta
+            </a>
+            <a href="?period=month" class="btn btn-outline-primary {% if period == 'month' %}active{% endif %}">
+                Bu oy
+            </a>
+            <a href="?period=year" class="btn btn-outline-primary {% if period == 'year' %}active{% endif %}">
+                Bu yil
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Asosiy statistikalar -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.total_orders }}</h4>
+                <p class="mb-0 small">Jami</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.new_orders }}</h4>
+                <p class="mb-0 small">Yangi</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-warning">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.measuring_orders }}</h4>
+                <p class="mb-0 small">O'lchovda</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card" style="background: linear-gradient(135deg, #ff7b7b 0%, #667eea 100%); color: white;">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.processing_orders }}</h4>
+                <p class="mb-0 small">Ishlanmoqda</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-success">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.completed_orders }}</h4>
+                <p class="mb-0 small">Tugallangan</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #6c757d 100%); color: white;">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.cancelled_orders }}</h4>
+                <p class="mb-0 small">Bekor qilingan</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Moliyaviy statistika -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Moliyaviy ko'rsatkichlar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ stats.total_value|floatformat:0 }}</h4>
+                        <small class="text-muted">Jami qiymat (so'm)</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ stats.avg_order_value|floatformat:0 }}</h4>
+                        <small class="text-muted">O'rtacha qiymat (so'm)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Eng faol xodimlar
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Xodim</th>
+                                <th>Yaratgan</th>
+                                <th>O'lchagan</th>
+                                <th>Ishlab chiqargan</th>
+                                <th>O'rnatgan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in top_employees %}
+                            <tr>
+                                <td>
+                                    <strong>{{ employee.get_full_name|default:employee.username }}</strong>
+                                    <br><small class="text-muted">{{ employee.get_role_display }}</small>
+                                </td>
+                                <td>{{ employee.orders_created_count }}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    Ma'lumot yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafik -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Kunlik trend (oxirgi 30 kun)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_labels_json|safe }},
+            datasets: [{
+                label: 'Buyurtmalar soni',
+                data: {{ daily_orders_json|safe }},
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y'
+            }, {
+                label: 'Daromad (so\'m)',
+                data: {{ daily_revenue_json|safe }},
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Sana'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Buyurtmalar soni'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Daromad (so\'m)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' so\'m';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.datasetIndex === 1) {
+                                return 'Daromad: ' + context.parsed.y.toLocaleString() + ' so\'m';
+                            }
+                            return 'Buyurtmalar: ' + context.parsed.y;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

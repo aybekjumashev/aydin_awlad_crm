@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block title %}Moliyaviy hisobot - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-graph-up me-2"></i>
+        Moliyaviy hisobot
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Hisobotlar
+            </a>
+            <button onclick="window.print()" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-printer me-1"></i>
+                Chop etish
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bu oy va o'tgan oy taqqoslash -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-month me-2"></i>
+                    Bu oy
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h4 class="text-success">{{ this_month.revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Daromad (so'm)</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-info">{{ this_month.orders_value|floatformat:0 }}</h4>
+                        <small class="text-muted">Buyurtmalar qiymati</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ this_month.completed_orders }}</h4>
+                        <small class="text-muted">Tugallangan buyurtmalar</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ this_month.pending_revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Kutilayotgan daromad</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar me-2"></i>
+                    O'tgan oy
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h4 class="text-success">{{ last_month.revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Daromad (so'm)</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-info">{{ last_month.orders_value|floatformat:0 }}</h4>
+                        <small class="text-muted">Buyurtmalar qiymati</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ last_month.completed_orders }}</h4>
+                        <small class="text-muted">Tugallangan buyurtmalar</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">-</div>
+                        <small class="text-muted">Yakunlangan oy</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- O'sish ko'rsatkichlari -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-trending-up me-2"></i>
+                    O'sish ko'rsatkichlari (o'tgan oyga nisbatan)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="{% if growth.revenue >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            <h3>
+                                {% if growth.revenue >= 0 %}
+                                    <i class="bi bi-arrow-up"></i> +{{ growth.revenue|floatformat:1 }}%
+                                {% else %}
+                                    <i class="bi bi-arrow-down"></i> {{ growth.revenue|floatformat:1 }}%
+                                {% endif %}
+                            </h3>
+                            <p class="mb-0">Daromad o'sishi</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="{% if growth.orders_value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            <h3>
+                                {% if growth.orders_value >= 0 %}
+                                    <i class="bi bi-arrow-up"></i> +{{ growth.orders_value|floatformat:1 }}%
+                                {% else %}
+                                    <i class="bi bi-arrow-down"></i> {{ growth.orders_value|floatformat:1 }}%
+                                {% endif %}
+                            </h3>
+                            <p class="mb-0">Buyurtmalar qiymati</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="{% if growth.completed_orders >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            <h3>
+                                {% if growth.completed_orders >= 0 %}
+                                    <i class="bi bi-arrow-up"></i> +{{ growth.completed_orders|floatformat:1 }}%
+                                {% else %}
+                                    <i class="bi bi-arrow-down"></i> {{ growth.completed_orders|floatformat:1 }}%
+                                {% endif %}
+                            </h3>
+                            <p class="mb-0">Tugallangan buyurtmalar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Qarzdorlik ma'lumotlari -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Qarzdorlik ma'lumotlari
+                </h5>
+                <div class="text-end">
+                    <h5 class="text-danger mb-0">Jami qarzdorlik: {{ total_outstanding|floatformat:0 }} so'm</h5>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Buyurtma</th>
+                                <th>Mijoz</th>
+                                <th>Status</th>
+                                <th>Jami narx</th>
+                                <th>To'langan</th>
+                                <th>Qolgan qarzdorlik</th>
+                                <th>Yaratilgan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in outstanding_orders %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">
+                                        #{{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'customers:detail' order.customer.pk %}" class="text-decoration-none">
+                                        {{ order.customer.get_full_name }}
+                                    </a>
+                                    <br><small class="text-muted">{{ order.customer.phone }}</small>
+                                </td>
+                                <td>
+                                    {% if order.status == 'new' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'measuring' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'installed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
+                                <td><span class="text-success">{{ order.total_paid|floatformat:0 }} so'm</span></td>
+                                <td><strong class="text-danger">{{ order.remaining|floatformat:0 }} so'm</strong></td>
+                                <td><small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="text-success">
+                                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                                        <p class="mt-2 mb-0">Barcha buyurtmalar to'liq to'langan!</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if outstanding_orders %}
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="5" class="text-end">Jami qarzdorlik:</th>
+                                <th class="text-danger">{{ total_outstanding|floatformat:0 }} so'm</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Xulosa va tavsiyalar -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    Ijobiy ko'rsatkichlar
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    {% if growth.revenue > 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Daromad o'tgan oyga nisbatan {{ growth.revenue|floatformat:1 }}% o'sgan
+                    </li>
+                    {% endif %}
+                    
+                    {% if growth.completed_orders > 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Tugallangan buyurtmalar soni oshgan
+                    </li>
+                    {% endif %}
+                    
+                    {% if total_outstanding == 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Hech qanday qarzdorlik yo'q
+                    </li>
+                    {% endif %}
+                    
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Bu oyda {{ this_month.completed_orders }} ta buyurtma tugallandi
+                    </li>
+                    
+                    {% if this_month.revenue > last_month.revenue %}
+                    <li class="mb-0">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Daromad o'tgan oydan {{ this_month.revenue|sub:last_month.revenue|floatformat:0 }} so'm ko'p
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    E'tibor kerak
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    {% if total_outstanding > 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                        {{ total_outstanding|floatformat:0 }} so'm qarzdorlik mavjud
+                    </li>
+                    {% endif %}
+                    
+                    {% if growth.revenue < 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                        Daromad o'tgan oyga nisbatan kamaygan
+                    </li>
+                    {% endif %}
+                    
+                    {% if this_month.pending_revenue > 0 %}
+                    <li class="mb-2">
+                        <i class="bi bi-clock text-info me-2"></i>
+                        {{ this_month.pending_revenue|floatformat:0 }} so'm kutilayotgan daromad
+                    </li>
+                    {% endif %}
+                    
+                    <li class="mb-2">
+                        <i class="bi bi-target text-primary me-2"></i>
+                        Qarzdorlardan to'lovlarni yig'ish zarur
+                    </li>
+                    
+                    <li class="mb-0">
+                        <i class="bi bi-graph-up text-success me-2"></i>
+                        Yangi mijozlarni jalb qilish strategiyasi kerak
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .btn-toolbar, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+    
+    .bg-primary, .bg-secondary, .bg-success, .bg-warning {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+}
+</style>
+{% endblock %}

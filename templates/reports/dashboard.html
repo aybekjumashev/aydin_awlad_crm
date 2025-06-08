@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}Hisobotlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-graph-up me-2"></i>
+        Hisobotlar va Analitika
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payments:daily_report' %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-calendar-day me-1"></i>
+                Kunlik hisobot
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Asosiy statistikalar -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold small mb-1">
+                            Jami mijozlar
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.total_customers }}</div>
+                        <small class="text-white-50">Bu hafta: +{{ stats.week_customers }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold small mb-1">
+                            Jami daromad
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.total_revenue|floatformat:0 }}</div>
+                        <small class="text-white-50">Bu oy: +{{ stats.month_revenue|floatformat:0 }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-currency-dollar" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-info">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold small mb-1">
+                            Jami buyurtmalar
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.total_orders }}</div>
+                        <small class="text-white-50">Bu oy: +{{ stats.month_orders }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cart" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card-warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-uppercase fw-bold small mb-1">
+                            Tugallangan
+                        </div>
+                        <div class="h4 mb-0 fw-bold">{{ stats.completed_orders }}</div>
+                        <small class="text-white-50">Kutilmoqda: {{ stats.pending_orders }}</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bugungi statistika -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-day me-2"></i>
+                    Bugungi natijalar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h4 class="text-primary">{{ stats.today_orders }}</h4>
+                        <small class="text-muted">Buyurtmalar</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-success">{{ stats.today_payments }}</h4>
+                        <small class="text-muted">To'lovlar</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-info">{{ stats.today_revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Daromad</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Oylik daromad trendi
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalli hisobotlar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Eng faol mijozlar
+                </h5>
+                <a href="{% url 'reports:customers' %}" class="btn btn-sm btn-outline-primary">
+                    Batafsil
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mijoz</th>
+                                <th>Buyurtmalar</th>
+                                <th>Jami xarajat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in top_customers %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'customers:detail' customer.pk %}" class="text-decoration-none">
+                                        {{ customer.get_full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ customer.order_count }}</td>
+                                <td>{{ customer.total_spent|default:0|floatformat:0 }} so'm</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Ma'lumot yo'q</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-award me-2"></i>
+                    Mashhur jalyuzi turlari
+                </h5>
+                <a href="{% url 'reports:orders' %}" class="btn btn-sm btn-outline-primary">
+                    Batafsil
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Jalyuzi turi</th>
+                                <th>Soni</th>
+                                <th>Jami narx</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blind in popular_blinds %}
+                            <tr>
+                                <td>
+                                    {% if blind.blind_type == 'horizontal' %}
+                                        Gorizontal jalyuzi
+                                    {% elif blind.blind_type == 'vertical' %}
+                                        Vertikal jalyuzi
+                                    {% elif blind.blind_type == 'roller' %}
+                                        Rulon parda
+                                    {% elif blind.blind_type == 'roman' %}
+                                        Rim parda
+                                    {% else %}
+                                        Plisse parda
+                                    {% endif %}
+                                </td>
+                                <td>{{ blind.count }}</td>
+                                <td>{{ blind.total_amount|floatformat:0 }} so'm</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Ma'lumot yo'q</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hisobotlar bo'limlariga o'tish -->
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Mijozlar hisoboti</h5>
+                <p class="card-text small text-muted">Mijozlar faolligi va statistikasi</p>
+                <a href="{% url 'reports:customers' %}" class="btn btn-primary">Ko'rish</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-cart text-success" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Buyurtmalar hisoboti</h5>
+                <p class="card-text small text-muted">Buyurtmalar holati va trend</p>
+                <a href="{% url 'reports:orders' %}" class="btn btn-success">Ko'rish</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-credit-card text-info" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">To'lovlar hisoboti</h5>
+                <p class="card-text small text-muted">To'lovlar va kassir hisoboti</p>
+                <a href="{% url 'reports:payments' %}" class="btn btn-info">Ko'rish</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-graph-up text-warning" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Moliyaviy hisobot</h5>
+                <p class="card-text small text-muted">Daromad va qarzdorlik</p>
+                <a href="{% url 'reports:financial' %}" class="btn btn-warning">Ko'rish</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Oylik daromad grafigi
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_labels_json|safe }},
+            datasets: [{
+                label: 'Daromad (so\'m)',
+                data: {{ monthly_revenue_json|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' so\'m';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Daromad: ' + context.parsed.y.toLocaleString() + ' so\'m';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

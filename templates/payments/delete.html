@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}To'lovni o'chirish - To'lovlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2 text-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        To'lovni o'chirish
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'orders:detail' payment.order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Xavfli harakat!
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Diqqat!</h6>
+                    <p class="mb-0">
+                        Siz <strong>{{ payment.amount|floatformat:0 }} so'm</strong> miqdoridagi to'lovni butunlay o'chirmoqchisiz. 
+                        Bu harakat bekor qilib bo'lmaydi!
+                    </p>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>To'lov ma'lumotlari:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Buyurtma:</strong> #{{ payment.order.order_number }}</li>
+                        <li><strong>Mijoz:</strong> {{ payment.order.customer.get_full_name }}</li>
+                        <li><strong>To'lov turi:</strong> {{ payment.get_payment_type_display }}</li>
+                        <li><strong>Miqdor:</strong> {{ payment.amount|floatformat:0 }} so'm</li>
+                        <li><strong>To'lov usuli:</strong> {{ payment.get_payment_method_display }}</li>
+                        <li><strong>Sana:</strong> {{ payment.payment_date|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Qabul qilgan:</strong> {{ payment.received_by.get_full_name|default:payment.received_by.username }}</li>
+                    </ul>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">O'chirish sababini kiriting:</label>
+                        <textarea class="form-control" name="reason" rows="3" 
+                                  placeholder="To'lov noto'g'ri kiritilgan, xato qilingan..." required></textarea>
+                        <div class="form-text">
+                            Bu sabab buyurtma tarixiga qo'shiladi
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'orders:detail' payment.order.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-2"></i>
+                            To'lovni o'chirish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Yordam ma'lumotlari -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Muhim eslatma
+                </h6>
+                <ul class="list-unstyled mb-0 small text-muted">
+                    <li><i class="bi bi-check me-1"></i> Faqat admin to'lovlarni o'chira oladi</li>
+                    <li><i class="bi bi-check me-1"></i> O'chirilgan to'lovni qayta tiklash mumkin emas</li>
+                    <li><i class="bi bi-check me-1"></i> Buyurtma balansiga ta'sir qiladi</li>
+                    <li><i class="bi bi-check me-1"></i> Harakat buyurtma tarixida saqlanadi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submit confirmation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = '{{ payment.amount|floatformat:0 }}';
+            if (!confirm(`Haqiqatan ham ${amount} so'm miqdoridagi to'lovni o'chirmoqchimisiz?\n\nBu harakat bekor qilib bo'lmaydi!`)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

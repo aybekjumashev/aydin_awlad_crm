@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block title %}To'lovlar hisoboti - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-credit-card me-2"></i>
+        To'lovlar hisoboti
+        <small class="text-muted">(Bu oy)</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Hisobotlar
+            </a>
+            <a href="{% url 'payments:daily_report' %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-calendar-day me-1"></i>
+                Kunlik hisobot
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Asosiy statistikalar -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <i class="bi bi-list-check" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                <h4 class="mt-1">{{ stats.total_payments }}</h4>
+                <p class="mb-0 small">Jami to'lovlar</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-success">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                <h4 class="mt-1">{{ stats.total_amount|floatformat:0 }}</h4>
+                <p class="mb-0 small">Jami summa</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.advance_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Avans</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card stats-card-warning">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.partial_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Qisman</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.final_payments|floatformat:0 }}</h4>
+                <p class="mb-0 small">Yakuniy</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2">
+        <div class="card" style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); color: white;">
+            <div class="card-body text-center">
+                <h4 class="mt-1">{{ stats.avg_payment|floatformat:0 }}</h4>
+                <p class="mb-0 small">O'rtacha</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- To'lov usullari va kassirlar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    To'lov usullari bo'yicha
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>To'lov usuli</th>
+                                <th>Soni</th>
+                                <th>Jami summa</th>
+                                <th>Ulush</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for method in payment_methods %}
+                            <tr>
+                                <td>
+                                    {% if method.payment_method == 'cash' %}
+                                        <i class="bi bi-cash text-success me-2"></i>
+                                    {% elif method.payment_method == 'card' %}
+                                        <i class="bi bi-credit-card text-primary me-2"></i>
+                                    {% elif method.payment_method == 'bank_transfer' %}
+                                        <i class="bi bi-bank text-info me-2"></i>
+                                    {% else %}
+                                        <i class="bi bi-phone text-warning me-2"></i>
+                                    {% endif %}
+                                    {% if method.payment_method == 'cash' %}Naqd pul
+                                    {% elif method.payment_method == 'card' %}Plastik karta
+                                    {% elif method.payment_method == 'bank_transfer' %}Bank o'tkazmasi
+                                    {% elif method.payment_method == 'click' %}Click
+                                    {% elif method.payment_method == 'payme' %}Payme
+                                    {% elif method.payment_method == 'uzcard' %}UzCard
+                                    {% elif method.payment_method == 'humo' %}Humo
+                                    {% endif %}
+                                </td>
+                                <td>{{ method.count }}</td>
+                                <td><strong>{{ method.total|floatformat:0 }} so'm</strong></td>
+                                <td>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar" style="width: {{ method.total|mul:100|div:stats.total_amount }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ method.total|mul:100|div:stats.total_amount|floatformat:1 }}%</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    Ma'lumot yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Eng faol kassirlar
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Kassir</th>
+                                <th>To'lovlar soni</th>
+                                <th>Jami summa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cashier in top_cashiers %}
+                            <tr>
+                                <td>
+                                    <strong>{{ cashier.get_full_name|default:cashier.username }}</strong>
+                                    <br><small class="text-muted">{{ cashier.get_role_display }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ cashier.payment_count }}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-success">{{ cashier.total_received|floatformat:0 }} so'm</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">
+                                    Ma'lumot yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kunlik trend grafigi -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>
+            Kunlik to'lovlar trendi (oxirgi 30 kun)
+        </h5>
+    </div>
+    <div class="card-body">
+        <canvas id="paymentsChart" height="100"></canvas>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('paymentsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ daily_labels_json|safe }},
+            datasets: [{
+                label: 'Kunlik to\'lovlar (so\'m)',
+                data: {{ daily_amounts_json|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' so\'m';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Summa: ' + context.parsed.y.toLocaleString() + ' so\'m';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

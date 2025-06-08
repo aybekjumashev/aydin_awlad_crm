@@ -10,16 +10,16 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
-            <a href="" class="btn btn-sm btn-outline-secondary">
+            <a href="{% url 'customers:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
                 Orqaga
             </a>
             {% if user.is_manager or user.is_admin %}
-            <a href="" class="btn btn-sm btn-warning">
+            <a href="{% url 'customers:edit' customer.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
                 Tahrirlash
             </a>
-            <a href="" class="btn btn-sm btn-success">
+            <a href="{% url 'orders:add' %}?customer={{ customer.pk }}" class="btn btn-sm btn-success">
                 <i class="bi bi-cart-plus me-1"></i>
                 Yangi buyurtma
             </a>
@@ -135,7 +135,7 @@
             Buyurtmalar tarixi
         </h5>
         {% if user.is_manager or user.is_admin %}
-        <a href="" class="btn btn-sm btn-primary">
+        <a href="{% url 'orders:add' %}?customer={{ customer.pk }}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus me-1"></i>
             Yangi buyurtma
         </a>
@@ -160,7 +160,7 @@
                     {% for order in orders %}
                     <tr>
                         <td>
-                            <a href="" class="text-decoration-none fw-bold">
+                            <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">
                                 #{{ order.order_number }}
                             </a>
                         </td>
@@ -199,7 +199,7 @@
                             <small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small>
                         </td>
                         <td>
-                            <a href="" class="btn btn-sm btn-outline-info">
+                            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-info">
                                 <i class="bi bi-eye"></i>
                             </a>
                         </td>
@@ -211,7 +211,7 @@
                                 <i class="bi bi-cart" style="font-size: 2rem; opacity: 0.3;"></i>
                                 <p class="mt-2">Bu mijozda hozircha buyurtmalar yo'q</p>
                                 {% if user.is_manager or user.is_admin %}
-                                <a href="" class="btn btn-primary">
+                                <a href="{% url 'orders:add' %}?customer={{ customer.pk }}" class="btn btn-primary">
                                     <i class="bi bi-cart-plus me-2"></i>
                                     Birinchi buyurtmani yaratish
                                 </a>

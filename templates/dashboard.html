@@ -14,11 +14,17 @@
                 <i class="bi bi-calendar me-1"></i>
                 {{ "now"|date:"d.m.Y" }}
             </button>
+            {% if user.is_manager or user.is_admin %}
+            <a href="{% url 'payments:daily_report' %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                Kunlik hisobot
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Statistika kartochkalari -->
+<!-- Asosiy statistika kartochkalari -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card stats-card">
@@ -29,6 +35,9 @@
                             Jami mijozlar
                         </div>
                         <div class="h4 mb-0 fw-bold">{{ stats.total_customers }}</div>
+                        {% if user.is_manager or user.is_admin %}
+                        <small class="text-white-50">Bu oy: +{{ monthly_stats.new_customers }}</small>
+                        {% endif %}
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
@@ -47,6 +56,9 @@
                             Tugallangan
                         </div>
                         <div class="h4 mb-0 fw-bold">{{ stats.completed_orders }}</div>
+                        {% if user.is_manager or user.is_admin %}
+                        <small class="text-white-50">Bu oy: +{{ monthly_stats.completed_orders }}</small>
+                        {% endif %}
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.3;"></i>
@@ -65,6 +77,7 @@
                             Jarayonda
                         </div>
                         <div class="h4 mb-0 fw-bold">{{ stats.processing_orders }}</div>
+                        <small class="text-white-50">O'lchovda: {{ stats.measuring_orders }}</small>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-clock-history" style="font-size: 2rem; opacity: 0.3;"></i>
@@ -80,12 +93,25 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-uppercase fw-bold mb-1">
-                            Yangi buyurtmalar
+                            {% if user.is_manager or user.is_admin %}Jami daromad{% else %}Yangi buyurtmalar{% endif %}
                         </div>
-                        <div class="h4 mb-0 fw-bold">{{ stats.new_orders }}</div>
+                        <div class="h4 mb-0 fw-bold">
+                            {% if user.is_manager or user.is_admin %}
+                                {{ monthly_stats.total_revenue|floatformat:0 }}
+                            {% else %}
+                                {{ stats.new_orders }}
+                            {% endif %}
+                        </div>
+                        {% if user.is_manager or user.is_admin %}
+                        <small class="text-white-50">so'm (bu oy)</small>
+                        {% endif %}
                     </div>
                     <div class="col-auto">
+                        {% if user.is_manager or user.is_admin %}
+                        <i class="bi bi-currency-dollar" style="font-size: 2rem; opacity: 0.3;"></i>
+                        {% else %}
                         <i class="bi bi-plus-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -94,10 +120,38 @@
 </div>
 
 {% if user.is_manager or user.is_admin %}
-<!-- Menejer va Admin uchun -->
-<div class="row">
-    <!-- Bu oylik statistika -->
-    <div class="col-md-6 mb-4">
+<!-- Menejer va Admin uchun kengaytirilgan dashboard -->
+
+<!-- Bugungi statistika -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-day me-2"></i>
+                    Bugungi natijalar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h4 class="text-primary">{{ daily_stats.today_orders }}</h4>
+                        <small class="text-muted">Buyurtmalar</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-success">{{ daily_stats.today_payments }}</h4>
+                        <small class="text-muted">To'lovlar</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-info">{{ daily_stats.today_revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Daromad</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -106,41 +160,32 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row">
+                <div class="row text-center">
                     <div class="col-6">
-                        <div class="text-center">
-                            <h4 class="text-primary">{{ monthly_stats.new_customers }}</h4>
-                            <small class="text-muted">Yangi mijozlar</small>
-                        </div>
+                        <h4 class="text-primary">{{ monthly_stats.new_customers }}</h4>
+                        <small class="text-muted">Yangi mijozlar</small>
                     </div>
                     <div class="col-6">
-                        <div class="text-center">
-                            <h4 class="text-success">{{ monthly_stats.new_orders }}</h4>
-                            <small class="text-muted">Yangi buyurtmalar</small>
-                        </div>
+                        <h4 class="text-success">{{ monthly_stats.new_orders }}</h4>
+                        <small class="text-muted">Yangi buyurtmalar</small>
                     </div>
                 </div>
                 <hr>
-                <div class="row">
+                <div class="row text-center">
                     <div class="col-6">
-                        <div class="text-center">
-                            <h4 class="text-info">{{ monthly_stats.completed_orders }}</h4>
-                            <small class="text-muted">Tugallangan</small>
-                        </div>
+                        <h4 class="text-info">{{ monthly_stats.completed_orders }}</h4>
+                        <small class="text-muted">Tugallangan</small>
                     </div>
                     <div class="col-6">
-                        <div class="text-center">
-                            <h4 class="text-warning">{{ monthly_stats.total_revenue|floatformat:0 }} so'm</h4>
-                            <small class="text-muted">Daromad</small>
-                        </div>
+                        <h4 class="text-warning">{{ monthly_stats.total_revenue|floatformat:0 }}</h4>
+                        <small class="text-muted">Daromad (so'm)</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Tezkor harakatlar -->
-    <div class="col-md-6 mb-4">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -150,15 +195,15 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="#" class="btn btn-outline-primary">
+                    <a href="{% url 'customers:add' %}" class="btn btn-outline-primary">
                         <i class="bi bi-person-plus me-2"></i>
                         Yangi mijoz qo'shish
                     </a>
-                    <a href="#" class="btn btn-outline-success">
+                    <a href="{% url 'orders:add' %}" class="btn btn-outline-success">
                         <i class="bi bi-cart-plus me-2"></i>
                         Yangi buyurtma yaratish
                     </a>
-                    <a href="#" class="btn btn-outline-info">
+                    <a href="{% url 'payments:daily_report' %}" class="btn btn-outline-info">
                         <i class="bi bi-file-earmark-text me-2"></i>
                         Kunlik hisobot
                     </a>
@@ -168,25 +213,135 @@
     </div>
 </div>
 
-<!-- So'nggi buyurtmalar -->
-<div class="row">
-    <div class="col-12">
+<!-- Mashhur jalyuzi turlari va Eng faol mijozlar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-award me-2"></i>
+                    Mashhur jalyuzi turlari
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Turi</th>
+                                <th>Soni</th>
+                                <th>Jami narx</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blind in popular_blinds %}
+                            <tr>
+                                <td>
+                                    {% if blind.blind_type == 'horizontal' %}
+                                        <i class="bi bi-grid-3x3-gap text-primary me-2"></i>Gorizontal
+                                    {% elif blind.blind_type == 'vertical' %}
+                                        <i class="bi bi-grid-1x2 text-success me-2"></i>Vertikal
+                                    {% elif blind.blind_type == 'roller' %}
+                                        <i class="bi bi-circle text-info me-2"></i>Rulon
+                                    {% elif blind.blind_type == 'roman' %}
+                                        <i class="bi bi-layers text-warning me-2"></i>Rim
+                                    {% else %}
+                                        <i class="bi bi-wind text-secondary me-2"></i>Plisse
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ blind.count }}</span></td>
+                                <td><strong>{{ blind.total_amount|floatformat:0 }} so'm</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">Ma'lumot yo'q</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Eng faol mijozlar
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mijoz</th>
+                                <th>Buyurtmalar</th>
+                                <th>Jami xarajat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in top_customers %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'customers:detail' customer.pk %}" class="text-decoration-none">
+                                        {{ customer.get_full_name }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-info">{{ customer.order_count }}</span></td>
+                                <td><strong>{{ customer.total_spent|default:0|floatformat:0 }} so'm</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">Ma'lumot yo'q</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Oylik daromad grafigi -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Oylik daromad trendi (oxirgi 6 oy)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- So'nggi buyurtmalar va to'lovlar -->
+<div class="row mb-4">
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history me-2"></i>
                     So'nggi buyurtmalar
                 </h5>
-                <a href="#" class="btn btn-sm btn-outline-primary">
+                <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">
                     Barchasini ko'rish
                 </a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Buyurtma raqami</th>
+                                <th>Buyurtma</th>
                                 <th>Mijoz</th>
                                 <th>Holat</th>
                                 <th>Yaratilgan</th>
@@ -197,7 +352,7 @@
                             {% for order in recent_orders %}
                             <tr>
                                 <td>
-                                    <a href="#" class="text-decoration-none">
+                                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">
                                         #{{ order.order_number }}
                                     </a>
                                 </td>
@@ -215,13 +370,55 @@
                                         <span class="badge bg-danger">{{ order.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
-                                <td>{{ order.created_by.get_full_name|default:order.created_by.username }}</td>
+                                <td><small>{{ order.created_at|date:"d.m.Y H:i" }}</small></td>
+                                <td><small>{{ order.created_by.get_full_name|default:order.created_by.username }}</small></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">
+                                <td colspan="5" class="text-center text-muted py-3">
                                     Hozircha buyurtmalar yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    So'nggi to'lovlar
+                </h5>
+                <a href="{% url 'payments:list' %}" class="btn btn-sm btn-outline-primary">
+                    Barchasini ko'rish
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:detail' payment.order.pk %}" class="text-decoration-none">
+                                        #{{ payment.order.order_number }}
+                                    </a>
+                                    <br><small class="text-muted">{{ payment.order.customer.get_full_name }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <strong>{{ payment.amount|floatformat:0 }}</strong>
+                                    <br><small class="text-muted">{{ payment.payment_date|date:"d.m H:i" }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-3">
+                                    To'lovlar yo'q
                                 </td>
                             </tr>
                             {% endfor %}
@@ -330,7 +527,7 @@
                     <i class="bi bi-person-workspace me-2"></i>
                     Mening buyurtmalarim
                 </h5>
-                <a href="#" class="btn btn-sm btn-outline-primary">
+                <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">
                     Barchasini ko'rish
                 </a>
             </div>
@@ -350,7 +547,7 @@
                             {% for order in my_orders %}
                             <tr>
                                 <td>
-                                    <a href="#" class="text-decoration-none">
+                                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
                                         #{{ order.order_number }}
                                     </a>
                                 </td>
@@ -398,3 +595,54 @@
 {% endif %}
 
 {% endblock %}
+
+{% if user.is_manager or user.is_admin %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Oylik daromad grafigi
+    const ctx = document.getElementById('revenueChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ monthly_labels_json|safe }},
+                datasets: [{
+                    label: 'Daromad (so\'m)',
+                    data: {{ monthly_revenue_json|safe }},
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' so\'m';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Daromad: ' + context.parsed.y.toLocaleString() + ' so\'m';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endif %}

@@ -116,6 +116,8 @@ def payment_add(request, order_pk):
     
     if request.method == 'POST':
         form = PaymentForm(request.POST)
+        form.order = order  # Form validation uchun
+        
         if form.is_valid():
             payment = form.save(commit=False)
             payment.order = order
@@ -150,6 +152,7 @@ def payment_add(request, order_pk):
             'payment_type': suggested_type,
             'amount': remaining,
         })
+        form.order = order  # Form validation uchun
     
     context = {
         'form': form,
@@ -175,17 +178,21 @@ def payment_edit(request, pk):
     
     if request.method == 'POST':
         form = PaymentForm(request.POST, instance=payment)
+        form.order = payment.order  # Form validation uchun
+        
         if form.is_valid():
             payment = form.save()
             messages.success(request, 'To\'lov ma\'lumotlari yangilandi!')
             return redirect('orders:detail', pk=payment.order.pk)
     else:
         form = PaymentForm(instance=payment)
+        form.order = payment.order  # Form validation uchun
     
     context = {
         'form': form,
         'payment': payment,
         'order': payment.order,
+        'remaining_balance': payment.order.remaining_balance() + payment.amount,
         'title': f'To\'lovni tahrirlash',
     }
     
@@ -208,6 +215,15 @@ def payment_delete(request, pk):
         order_pk = payment.order.pk
         amount = payment.amount
         payment_type = payment.get_payment_type_display()
+        reason = request.POST.get('reason', '')
+        
+        # History yaratish
+        payment.order.create_history(
+            action='payment_received',
+            performed_by=request.user,
+            notes=f'To\'lov o\'chirildi: {amount:,} so\'m ({payment_type}). Sabab: {reason}'
+        )
+        
         payment.delete()
         
         messages.success(
