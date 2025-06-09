@@ -4,7 +4,6 @@ from django.db import models
 from django.urls import reverse
 from customers.models import Customer
 from accounts.models import User
-
 class Order(models.Model):
     """
     Buyurtmalar modeli - Asosiy buyurtma ma'lumotlari
@@ -32,7 +31,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='measuring',  # Default status o'lchovda
+        default='measuring',
         verbose_name='Holat'
     )
     
@@ -63,6 +62,40 @@ class Order(models.Model):
         null=True,
         related_name='updated_orders',
         verbose_name='O\'zgartiruvchi'
+    )
+    
+    # Jarayon mas'ullari
+    measured_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='measured_orders',
+        verbose_name='O\'lchov olgan'
+    )
+    processed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processed_orders',
+        verbose_name='Ishlab chiqargan'
+    )
+    installed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='installed_orders',
+        verbose_name='O\'rnatgan'
+    )
+    cancelled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cancelled_orders',
+        verbose_name='Bekor qilgan'
     )
     
     # Avans to'lovi
@@ -107,58 +140,23 @@ class Order(models.Model):
         null=True,
         verbose_name='O\'lchov sanasi'
     )
-    installation_date = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name='O\'rnatish sanasi'
-    )
-
-
-    # Jarayon mas'ullari
-    measured_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='measured_orders',
-        verbose_name='O\'lchov olgan'
-    )
-    processed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='processed_orders',
-        verbose_name='Ishlab chiqargan'
-    )
-    installed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='installed_orders',
-        verbose_name='O\'rnatgan'
-    )
-    cancelled_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='cancelled_orders',
-        verbose_name='Bekor qilgan'
-    )
-
-    # Qo'shimcha sanalar
     processing_start_date = models.DateField(
         blank=True,
         null=True,
         verbose_name='Ishlab chiqarish boshlangan sana'
+    )
+    installation_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='O\'rnatish sanasi'
     )
     cancelled_date = models.DateField(
         blank=True,
         null=True,
         verbose_name='Bekor qilingan sana'
     )
+    
+    # Bekor qilish sababi
     cancellation_reason = models.TextField(
         blank=True,
         null=True,
@@ -250,8 +248,8 @@ class Order(models.Model):
     def total_items(self):
         """Buyurtmadagi jalyuzilar soni"""
         return self.items.count()
-
-
+    
+    
 class OrderItem(models.Model):
     """
     Buyurtma elementlari - har bir jalyuzi uchun

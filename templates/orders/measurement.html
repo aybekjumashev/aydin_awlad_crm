@@ -20,7 +20,7 @@
 
 <div class="row">
     <!-- Buyurtma ma'lumotlari -->
-    <div class="col-md-5 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
@@ -29,11 +29,6 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted">Buyurtma raqami</label>
-                    <p class="fw-bold">#{{ order.order_number }}</p>
-                </div>
-                
                 <div class="mb-3">
                     <label class="form-label text-muted">Mijoz</label>
                     <p class="fw-bold">{{ order.customer.get_full_name }}</p>
@@ -51,18 +46,6 @@
                     </p>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label text-muted">Status</label>
-                    <p>
-                        <span class="badge bg-info fs-6">{{ order.get_status_display }}</span>
-                    </p>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-muted">Yaratilgan</label>
-                    <p>{{ order.created_at|date:"d.m.Y H:i" }}</p>
-                </div>
-                
                 {% if order.notes %}
                 <div class="mb-0">
                     <label class="form-label text-muted">Buyurtma izohlar</label>
@@ -72,88 +55,205 @@
             </div>
         </div>
         
-        <!-- O'lchov ko'rsatmalari -->
+        <!-- Ko'rsatmalar -->
         <div class="card mt-4">
             <div class="card-header bg-warning text-dark">
                 <h6 class="mb-0">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    O'lchov ko'rsatmalari
+                    <i class="bi bi-lightbulb me-2"></i>
+                    Eslatma
                 </h6>
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0 small">
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Deraza o'lchamlarini aniq o'lchang
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        O'rnatish turini aniqlang (devor/shift/rom)
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Jalyuzi turini mijoz bilan kelishing
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Material va rangni tanlang
-                    </li>
-                    <li class="mb-0">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Narxni hisoblang va avans oling
-                    </li>
+                    <li class="mb-1">✅ Har bir deraza/xona uchun alohida jalyuzi</li>
+                    <li class="mb-1">✅ Aniq o'lchamlarni kiriting</li>
+                    <li class="mb-1">✅ Xona nomlarini yozing</li>
+                    <li class="mb-0">✅ Narxlarni mijoz bilan kelishing</li>
                 </ul>
+            </div>
+        </div>
+        
+        <!-- Jami hisob -->
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-calculator me-2"></i>
+                    Jami hisob
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span>Jalyuzilar soni:</span>
+                    <strong id="total-items">0</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Jami narx:</span>
+                    <strong id="total-price" class="text-success">0 so'm</strong>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- O'lchov formasi -->
-    <div class="col-md-7 mb-4">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-clipboard-check me-2"></i>
-                    O'lchov natijalarini kiritish
-                </h5>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="measurement_date" class="form-label">
-                            O'lchov sanasi <span class="text-danger">*</span>
-                        </label>
-                        <input type="date" class="form-control" id="measurement_date" 
-                               name="measurement_date" value="{{ today|date:'Y-m-d' }}" required>
+    <!-- Jalyuzilar formasi -->
+    <div class="col-md-8 mb-4">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- O'lchov ma'lumotlari -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar me-2"></i>
+                        O'lchov ma'lumotlari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="measurement_date" class="form-label">
+                                O'lchov sanasi <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="measurement_date" 
+                                   name="measurement_date" value="{{ today|date:'Y-m-d' }}" required>
+                        </div>
                     </div>
                     
-                    <div class="mb-4">
-                        <label for="measurement_notes" class="form-label">
-                            O'lchov izohlar va topilmalar
-                        </label>
+                    <div class="mb-0">
+                        <label for="measurement_notes" class="form-label">Umumiy izohlar</label>
                         <textarea class="form-control" id="measurement_notes" name="measurement_notes" 
-                                  rows="6" placeholder="Masalan:
-- Mehmonxona: 150x200 sm, gorizontal jalyuzi, oq rang
-- Oshxona: 120x150 sm, vertikal jalyuzi, kulrang
-- O'rnatish: devorga mahkamlash
-- Mijoz talabi: avtomat mexanizm
-- Qo'shimcha: karniz ham kerak
-- Avans: 500,000 so'm olindi"></textarea>
+                                  rows="3" placeholder="Avans miqdori, qo'shimcha talablar, va boshqalar..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Jalyuzilar -->
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-window me-2"></i>
+                        Jalyuzilar ro'yxati
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" id="add-item-btn">
+                        <i class="bi bi-plus me-1"></i>
+                        Jalyuzi qo'shish
+                    </button>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    
+                    <div id="formset-container">
+                        {% for form in formset %}
+                        <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="{{ forloop.counter0 }}">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-window me-1"></i>
+                                    <span class="item-title">Jalyuzi #<span class="item-number">{{ forloop.counter }}</span></span>
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
+                                        style="{% if forloop.first %}display: none;{% endif %}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">{{ form.blind_type.label }} <span class="text-danger">*</span></label>
+                                    {{ form.blind_type }}
+                                    {% if form.blind_type.errors %}
+                                        <div class="text-danger small">{{ form.blind_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">{{ form.material.label }} <span class="text-danger">*</span></label>
+                                    {{ form.material }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">{{ form.installation_type.label }}</label>
+                                    {{ form.installation_type }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">{{ form.width.label }} <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.width }}
+                                        <span class="input-group-text">sm</span>
+                                    </div>
+                                    {% if form.width.errors %}
+                                        <div class="text-danger small">{{ form.width.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">{{ form.height.label }} <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.height }}
+                                        <span class="input-group-text">sm</span>
+                                    </div>
+                                    {% if form.height.errors %}
+                                        <div class="text-danger small">{{ form.height.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">{{ form.quantity.label }}</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">{{ form.unit_price.label }} <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.unit_price }}
+                                        <span class="input-group-text">so'm</span>
+                                    </div>
+                                    {% if form.unit_price.errors %}
+                                        <div class="text-danger small">{{ form.unit_price.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Hisoblangan narx</label>
+                                    <div class="form-control-plaintext fw-bold text-success item-total">
+                                        0 so'm
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.room_name.label }}</label>
+                                    {{ form.room_name }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Maydon</label>
+                                    <div class="form-control-plaintext text-info item-area">
+                                        0 m²
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if form.notes %}
+                            <div class="mb-0">
+                                <label class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
                     </div>
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-success">
                         <h6 class="alert-heading">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Keyingi qadamlar
+                            <i class="bi bi-check-circle me-2"></i>
+                            O'lchov yakunlanishi
                         </h6>
                         <p class="mb-0">
-                            O'lchov tugagandan keyin:
-                            {% if order.items.exists %}
-                            <br>✅ Jalyuzilar ro'yxati allaqachon mavjud - ishlab chiqarishga o'tadi
-                            {% else %}
-                            <br>📝 Jalyuzilar ro'yxatini qo'shish sahifasiga o'tasiz
-                            {% endif %}
+                            Kamida bitta jalyuzining to'liq ma'lumotlarini kiriting. 
+                            Buyurtma avtomatik ravishda <strong>"Ishlanmoqda"</strong> statusiga o'tadi.
                         </p>
                     </div>
                     
@@ -168,51 +268,9 @@
                             O'lchov yakunlash
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Mavjud jalyuzilar (agar bor bo'lsa) -->
-        {% if order.items.exists %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-list me-2"></i>
-                    Mavjud jalyuzilar
-                </h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Turi</th>
-                                <th>O'lcham</th>
-                                <th>Xona</th>
-                                <th>Narx</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in order.items.all %}
-                            <tr>
-                                <td>{{ item.get_blind_type_display }}</td>
-                                <td>{{ item.width }}×{{ item.height }} sm</td>
-                                <td>{{ item.room_name|default:"-" }}</td>
-                                <td>{{ item.total_price|floatformat:0 }} so'm</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-light">
-                                <th colspan="3">Jami:</th>
-                                <th>{{ order.total_price|floatformat:0 }} so'm</th>
-                            </tr>
-                        </tfoot>
-                    </table>
                 </div>
             </div>
-        </div>
-        {% endif %}
+        </form>
     </div>
 </div>
 
@@ -221,24 +279,243 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('O\'lchov yakunlanganini tasdiqlaysizmi?\n\nBu harakat buyurtma statusini o\'zgartiradi.')) {
-                e.preventDefault();
+    const formsetContainer = document.getElementById('formset-container');
+    const addButton = document.getElementById('add-item-btn');
+    const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
+    let formIndex = parseInt(totalFormsInput.value);
+    
+    // Yangi form qo'shish
+    addButton.addEventListener('click', function() {
+        const emptyFormHtml = createNewFormHtml(formIndex);
+        formsetContainer.insertAdjacentHTML('beforeend', emptyFormHtml);
+        formIndex++;
+        totalFormsInput.value = formIndex;
+        
+        updateItemNumbers();
+        updateCalculations();
+        
+        // Yangi form uchun event listeners qo'shish
+        const newForm = formsetContainer.lastElementChild;
+        addCalculationListeners(newForm);
+    });
+    
+    // Form yaratish funksiyasi
+    function createNewFormHtml(index) {
+        return `
+            <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="${index}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-primary">
+                        <i class="bi bi-window me-1"></i>
+                        <span class="item-title">Jalyuzi #<span class="item-number">${index + 1}</span></span>
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
+                        <select name="items-${index}-blind_type" class="form-select" id="id_items-${index}-blind_type">
+                            <option value="">---------</option>
+                            <option value="horizontal">Gorizontal jalyuzi</option>
+                            <option value="vertical">Vertikal jalyuzi</option>
+                            <option value="roller">Rulon parda</option>
+                            <option value="roman">Rim parda</option>
+                            <option value="plisse">Plisse parda</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Material turi <span class="text-danger">*</span></label>
+                        <select name="items-${index}-material" class="form-select" id="id_items-${index}-material">
+                            <option value="">---------</option>
+                            <option value="aluminum">Alyuminiy</option>
+                            <option value="pvc">PVC</option>
+                            <option value="wood">Yog'och</option>
+                            <option value="fabric">Mato</option>
+                            <option value="bamboo">Bambuk</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">O'rnatish turi</label>
+                        <select name="items-${index}-installation_type" class="form-select" id="id_items-${index}-installation_type">
+                            <option value="">---------</option>
+                            <option value="wall">Devorga o'rnatish</option>
+                            <option value="ceiling">Shiftga o'rnatish</option>
+                            <option value="window_frame">Deraza romiga o'rnatish</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="items-${index}-width" step="0.01" min="0" class="form-control" id="id_items-${index}-width">
+                            <span class="input-group-text">sm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="items-${index}-height" step="0.01" min="0" class="form-control" id="id_items-${index}-height">
+                            <span class="input-group-text">sm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Donasi</label>
+                        <input type="number" name="items-${index}-quantity" value="1" min="1" class="form-control" id="id_items-${index}-quantity">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="items-${index}-unit_price" step="1000" min="0" class="form-control" id="id_items-${index}-unit_price">
+                            <span class="input-group-text">so'm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Hisoblangan narx</label>
+                        <div class="form-control-plaintext fw-bold text-success item-total">
+                            0 so'm
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Xona nomi</label>
+                        <input type="text" name="items-${index}-room_name" class="form-control" id="id_items-${index}-room_name" placeholder="Yotoq xona, Mehmonxona...">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Maydon</label>
+                        <div class="form-control-plaintext text-info item-area">
+                            0 m²
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label">Izohlar</label>
+                    <textarea name="items-${index}-notes" rows="2" class="form-control" id="id_items-${index}-notes" placeholder="Qo'shimcha izohlar..."></textarea>
+                </div>
+                
+                <input type="hidden" name="items-${index}-id" id="id_items-${index}-id">
+            </div>
+        `;
+    }
+    
+    // Form o'chirish
+    formsetContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-item-btn')) {
+            if (confirm('Bu jalyuzini o\'chirmoqchimisiz?')) {
+                const formItem = e.target.closest('.formset-item');
+                formItem.remove();
+                formIndex--;
+                totalFormsInput.value = formIndex;
+                updateItemNumbers();
+                updateCalculations();
+            }
+        }
+    });
+    
+    // Item raqamlarini yangilash
+    function updateItemNumbers() {
+        const items = formsetContainer.querySelectorAll('.formset-item');
+        items.forEach((item, index) => {
+            const numberSpan = item.querySelector('.item-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+        });
+        
+        // Delete tugmalarini ko'rsatish/yashirish
+        items.forEach((item, index) => {
+            const deleteBtn = item.querySelector('.delete-item-btn');
+            if (deleteBtn) {
+                deleteBtn.style.display = index === 0 ? 'none' : 'inline-block';
             }
         });
     }
     
-    // Auto-resize textarea
-    const textarea = document.getElementById('measurement_notes');
-    if (textarea) {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
+    // Hisob-kitoblarni yangilash
+    function updateCalculations() {
+        let totalItems = 0;
+        let totalPrice = 0;
+        
+        const items = formsetContainer.querySelectorAll('.formset-item');
+        items.forEach(function(item) {
+            const width = parseFloat(item.querySelector('input[name$="-width"]')?.value) || 0;
+            const height = parseFloat(item.querySelector('input[name$="-height"]')?.value) || 0;
+            const quantity = parseInt(item.querySelector('input[name$="-quantity"]')?.value) || 1;
+            const unitPrice = parseFloat(item.querySelector('input[name$="-unit_price"]')?.value) || 0;
+            
+            // Maydonni hisoblash
+            const area = (width * height) / 10000; // sm² dan m² ga
+            const areaElement = item.querySelector('.item-area');
+            if (areaElement) {
+                areaElement.textContent = area.toFixed(2) + ' m²';
+            }
+            
+            // Narxni hisoblash
+            const itemTotal = unitPrice * quantity;
+            const totalElement = item.querySelector('.item-total');
+            if (totalElement) {
+                totalElement.textContent = itemTotal.toLocaleString() + ' so\'m';
+            }
+            
+            // Agar to'liq ma'lumot bo'lsa, umumiy hisobga qo'shish
+            if (width && height && unitPrice) {
+                totalItems++;
+                totalPrice += itemTotal;
+            }
+        });
+        
+        // Umumiy hisobni yangilash
+        document.getElementById('total-items').textContent = totalItems;
+        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' so\'m';
+    }
+    
+    // Hisob-kitob event listenerlarini qo'shish
+    function addCalculationListeners(container) {
+        const inputs = container.querySelectorAll('input[type="number"]');
+        inputs.forEach(function(input) {
+            input.addEventListener('input', updateCalculations);
         });
     }
+    
+    // Mavjud formlar uchun event listenerlar
+    const existingItems = formsetContainer.querySelectorAll('.formset-item');
+    existingItems.forEach(addCalculationListeners);
+    
+    // Dastlabki hisoblar
+    updateCalculations();
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        let hasValidForm = false;
+        
+        const items = formsetContainer.querySelectorAll('.formset-item');
+        items.forEach(function(item) {
+            const width = item.querySelector('input[name$="-width"]')?.value;
+            const height = item.querySelector('input[name$="-height"]')?.value;
+            const unitPrice = item.querySelector('input[name$="-unit_price"]')?.value;
+            const blindType = item.querySelector('select[name$="-blind_type"]')?.value;
+            
+            if (width && height && unitPrice && blindType) {
+                hasValidForm = true;
+            }
+        });
+        
+        if (!hasValidForm) {
+            e.preventDefault();
+            alert('Kamida bitta jalyuzining to\'liq ma\'lumotlarini kiriting!\n\nKerakli maydonlar: Turi, En, Bo\'y, Narx');
+            return;
+        }
+        
+        if (!confirm('O\'lchov yakunlanganini tasdiqlaysizmi?\n\nJalyuzilar ma\'lumotlari saqlanadi va buyurtma ishlab chiqarishga o\'tadi.')) {
+            e.preventDefault();
+        }
+    });
 });
 </script>
 {% endblock %}
