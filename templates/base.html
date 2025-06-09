@@ -106,7 +106,15 @@
                                 To'lovlar
                             </a>
                         </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'staff:list' %}" class="nav-link {% if 'staff' in request.resolver_match.namespace %}active{% endif %}">
+                                <i class="bi bi-people-fill me-2"></i>
+                                Texnik xodimlar
+                            </a>
+                        </li>
                         {% endif %}
+                        
                         
                         <hr class="text-white-50">
                         

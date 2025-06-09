@@ -12,8 +12,7 @@ import json
 from customers.models import Customer
 from orders.models import Order, OrderItem
 from payments.models import Payment
-
-
+from accounts.models import User
 @login_required
 def dashboard(request):
     """
@@ -104,6 +103,20 @@ def dashboard(request):
         recent_orders = Order.objects.select_related('customer', 'created_by').order_by('-created_at')[:5]
         recent_payments = Payment.objects.select_related('order__customer', 'received_by').order_by('-payment_date')[:5]
         
+        # Texnik xodimlar statistikasi
+        from accounts.models import User
+        staff_stats = {
+            'total_staff': User.objects.filter(role='technician').count(),
+            'active_staff': User.objects.filter(role='technician', is_active=True).count(),
+            'inactive_staff': User.objects.filter(role='technician', is_active=False).count(),
+        }
+        
+        # Eng faol xodimlar - to'g'ri annotate
+        top_staff = User.objects.filter(role='technician', is_active=True).annotate(
+            orders_created_count=Count('created_orders', distinct=True),
+            payments_received_count=Count('payment', distinct=True)  # 'payment' - related_name
+        ).order_by('-orders_created_count')[:5]
+        
         # Decimal qiymatlarni float ga o'zgartirish
         monthly_stats['total_revenue'] = float(monthly_stats['total_revenue'])
         daily_stats['today_revenue'] = float(daily_stats['today_revenue'])
@@ -118,6 +131,8 @@ def dashboard(request):
             'monthly_revenue': monthly_revenue,
             'monthly_revenue_json': json.dumps([m['revenue'] for m in monthly_revenue]),
             'monthly_labels_json': json.dumps([m['month'] for m in monthly_revenue]),
+            'staff_stats': staff_stats,
+            'top_staff': top_staff,
         })
     else:
         # Texnik xodim uchun - barcha buyurtmalarni ko'rish
@@ -139,8 +154,8 @@ def dashboard(request):
             'recent_orders': recent_orders,
             'my_tasks': my_tasks,
         })
+    
     return render(request, 'dashboard.html', context)
-
 
 def login_view(request):
     """

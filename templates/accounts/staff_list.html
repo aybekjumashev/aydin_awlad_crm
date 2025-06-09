@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Texnik xodimlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-people-fill me-2"></i>
+        Texnik xodimlar
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'staff:add' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-person-plus me-1"></i>
+                Yangi xodim qo'shish
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistika -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card-info">
+            <div class="card-body text-center">
+                <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.total_staff }}</h3>
+                <p class="mb-0">Jami xodimlar</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card-success">
+            <div class="card-body text-center">
+                <i class="bi bi-person-check" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.active_staff }}</h3>
+                <p class="mb-0">Faol xodimlar</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-person-x" style="font-size: 2rem; opacity: 0.3;"></i>
+                <h3 class="mt-2">{{ stats.inactive_staff }}</h3>
+                <p class="mb-0">Nofaol xodimlar</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Qidiruv va filterlar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Ism, familiya, login yoki telefon..." 
+                       value="{{ search|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">Barcha xodimlar</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Faol xodimlar</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Nofaol xodimlar</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search or status %}
+        <a href="{% url 'staff:list' %}" class="btn btn-outline-danger">
+            <i class="bi bi-x me-1"></i>
+            Tozalash
+        </a>
+        {% endif %}
+        <small class="text-muted d-block mt-1">
+            {{ staff.paginator.count }} ta xodim topildi
+        </small>
+    </div>
+</div>
+
+<!-- Xodimlar jadvali -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Xodim</th>
+                        <th>Login</th>
+                        <th>Telefon</th>
+                        <th>Huquqlar</th>
+                        <th>Statistika</th>
+                        <th>Holat</th>
+                        <th>Qo'shilgan</th>
+                        <th width="150">Harakatlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in staff %}
+                    <tr class="{% if not employee.is_active %}table-secondary{% endif %}">
+                        <td>
+                            <a href="{% url 'staff:detail' employee.pk %}" class="text-decoration-none fw-bold">
+                                {{ employee.get_full_name|default:employee.username }}
+                            </a>
+                            {% if employee.email %}
+                                <br><small class="text-muted">{{ employee.email }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <code>{{ employee.username }}</code>
+                        </td>
+                        <td>
+                            {% if employee.phone %}
+                                <a href="tel:{{ employee.phone }}" class="text-decoration-none">
+                                    {{ employee.phone }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="small">
+                                {% if employee.can_create_order %}
+                                    <span class="badge bg-primary">Buyurtma</span>
+                                {% endif %}
+                                {% if employee.can_measure %}
+                                    <span class="badge bg-info">O'lchov</span>
+                                {% endif %}
+                                {% if employee.can_manufacture %}
+                                    <span class="badge bg-warning text-dark">Ishlab ch.</span>
+                                {% endif %}
+                                {% if employee.can_install %}
+                                    <span class="badge bg-success">O'rnatish</span>
+                                {% endif %}
+                                {% if employee.can_cancel_order %}
+                                    <span class="badge bg-danger">Bekor qilish</span>
+                                {% endif %}
+                                {% if not employee.can_create_order and not employee.can_measure and not employee.can_manufacture and not employee.can_install and not employee.can_cancel_order %}
+                                    <span class="text-muted">Huquq berilmagan</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div><strong>{{ employee.total_orders }}</strong> yaratgan</div>
+                                <div><strong>{{ employee.measured_orders }}</strong> o'lchagan</div>
+                                <div><strong>{{ employee.installed_orders }}</strong> o'rnatgan</div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if employee.is_active %}
+                                <span class="badge bg-success">Faol</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Nofaol</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ employee.created_at|date:"d.m.Y" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'staff:detail' employee.pk %}" 
+                                   class="btn btn-outline-info" title="Ko'rish">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'staff:edit' employee.pk %}" 
+                                   class="btn btn-outline-warning" title="Tahrirlash">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                            data-bs-toggle="dropdown" title="Ko'proq">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'staff:reset_password' employee.pk %}">
+                                                <i class="bi bi-key me-2"></i>
+                                                Parol yangilash
+                                            </a>
+                                        </li>
+                                        {% if user.is_admin %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="{% url 'staff:toggle_status' employee.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    {% if employee.is_active %}
+                                                        <i class="bi bi-person-x me-2"></i>
+                                                        O'chirish
+                                                    {% else %}
+                                                        <i class="bi bi-person-check me-2"></i>
+                                                        Faollashtirish
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{% url 'staff:delete' employee.pk %}">
+                                                <i class="bi bi-trash me-2"></i>
+                                                O'chirish
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <p class="mt-3">
+                                    {% if search or status %}
+                                        Filter bo'yicha xodimlar topilmadi
+                                    {% else %}
+                                        Hozircha texnik xodimlar yo'q
+                                    {% endif %}
+                                </p>
+                                {% if not search and not status %}
+                                <a href="{% url 'staff:add' %}" class="btn btn-primary">
+                                    <i class="bi bi-person-plus me-2"></i>
+                                    Birinchi xodimni qo'shish
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if staff.has_other_pages %}
+<nav aria-label="Xodimlar pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if staff.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ staff.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        {% endif %}
+        
+        {% for num in staff.paginator.page_range %}
+            {% if staff.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > staff.number|add:'-3' and num < staff.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if staff.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ staff.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ staff.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

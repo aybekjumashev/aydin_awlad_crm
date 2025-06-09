@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ staff_member.get_full_name|default:staff_member.username }} - Texnik xodimlar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person me-2"></i>
+        {{ staff_member.get_full_name|default:staff_member.username }}
+        {% if not staff_member.is_active %}
+            <span class="badge bg-secondary ms-2">Nofaol</span>
+        {% else %}
+            <span class="badge bg-success ms-2">Faol</span>
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'staff:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+            <a href="{% url 'staff:edit' staff_member.pk %}" class="btn btn-sm btn-warning">
+                <i class="bi bi-pencil me-1"></i>
+                Tahrirlash
+            </a>
+            <a href="{% url 'staff:reset_password' staff_member.pk %}" class="btn btn-sm btn-info">
+                <i class="bi bi-key me-1"></i>
+                Parol yangilash
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Xodim ma'lumotlari -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Shaxsiy ma'lumotlar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-circle text-primary" style="font-size: 5rem;"></i>
+                    <h4 class="mt-2">{{ staff_member.get_full_name|default:staff_member.username }}</h4>
+                    <span class="badge bg-info">Texnik xodim</span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Login:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p><code>{{ staff_member.username }}</code></p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Ism:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>{{ staff_member.first_name|default:"-" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Familiya:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>{{ staff_member.last_name|default:"-" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Telefon:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>
+                            {% if staff_member.phone %}
+                                <a href="tel:{{ staff_member.phone }}" class="text-decoration-none">
+                                    {{ staff_member.phone }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Email:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>
+                            {% if staff_member.email %}
+                                <a href="mailto:{{ staff_member.email }}" class="text-decoration-none">
+                                    {{ staff_member.email }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">Qo'shilgan:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>{{ staff_member.created_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label class="form-label text-muted">So'ngi kirish:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <p>
+                            {% if staff_member.last_login %}
+                                {{ staff_member.last_login|date:"d.m.Y H:i" }}
+                            {% else %}
+                                Hech qachon kirmagan
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Huquqlar -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Ishchi huquqlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if staff_member.can_create_order %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>
+                            <i class="bi bi-cart-plus text-primary me-2"></i>
+                            Buyurtma yaratish
+                        </span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if staff_member.can_measure %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>
+                            <i class="bi bi-ruler text-info me-2"></i>
+                            O'lchov olish
+                        </span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if staff_member.can_manufacture %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>
+                            <i class="bi bi-tools text-warning me-2"></i>
+                            Ishlab chiqarish
+                        </span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if staff_member.can_install %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>
+                            <i class="bi bi-hammer text-success me-2"></i>
+                            O'rnatish
+                        </span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if staff_member.can_cancel_order %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            Bekor qilish
+                        </span>
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not staff_member.can_create_order and not staff_member.can_measure and not staff_member.can_manufacture and not staff_member.can_install and not staff_member.can_cancel_order %}
+                    <div class="text-muted text-center py-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Hozircha maxsus huquqlar berilmagan
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistika -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Ish statistikasi
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-primary">{{ stats.created_orders }}</h4>
+                        <small class="text-muted">Yaratgan buyurtmalar</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-info">{{ stats.measured_orders }}</h4>
+                        <small class="text-muted">O'lchov olgan</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-warning">{{ stats.processed_orders }}</h4>
+                        <small class="text-muted">Ishlab chiqargan</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ stats.installed_orders }}</h4>
+                        <small class="text-muted">O'rnatgan</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="text-secondary">{{ stats.received_payments }}</h5>
+                        <small class="text-muted">Qabul qilgan to'lovlar</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-secondary">{{ stats.total_received|floatformat:0 }}</h5>
+                        <small class="text-muted">Jami summa (so'm)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- So'nggi faoliyat -->
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    So'nggi buyurtmalar
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Buyurtma</th>
+                                <th>Mijoz</th>
+                                <th>Status</th>
+                                <th>Rol</th>
+                                <th>Sana</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">
+                                        #{{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td>{{ order.customer.get_full_name }}</td>
+                                <td>
+                                    {% if order.status == 'new' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'measuring' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'installed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
