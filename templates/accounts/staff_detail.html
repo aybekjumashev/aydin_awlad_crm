@@ -298,3 +298,67 @@
                                         <span class="badge bg-danger">{{ order.get_status_display }}</span>
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if order.created_by == staff_member %}
+                                        <span class="badge bg-primary">Yaratgan</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ order.created_at|date:"d.m.Y H:i" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Hozircha buyurtmalar yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    So'nggi to'lovlar
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:detail' payment.order.pk %}" class="text-decoration-none">
+                                        #{{ payment.order.order_number }}
+                                    </a>
+                                    <br><small class="text-muted">{{ payment.order.customer.get_full_name }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <strong>{{ payment.amount|floatformat:0 }}</strong>
+                                    <br><small class="text-muted">{{ payment.payment_date|date:"d.m H:i" }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-3">
+                                    To'lovlar yo'q
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

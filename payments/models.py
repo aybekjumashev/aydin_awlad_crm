@@ -68,6 +68,7 @@ class Payment(models.Model):
         User,
         on_delete=models.SET_NULL,
         null=True,
+        related_name='received_payments',  # Bu qatorni qo'shamiz
         verbose_name='Qabul qiluvchi'
     )
     

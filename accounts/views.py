@@ -13,6 +13,7 @@ from customers.models import Customer
 from orders.models import Order, OrderItem
 from payments.models import Payment
 from accounts.models import User
+
 @login_required
 def dashboard(request):
     """
@@ -104,7 +105,6 @@ def dashboard(request):
         recent_payments = Payment.objects.select_related('order__customer', 'received_by').order_by('-payment_date')[:5]
         
         # Texnik xodimlar statistikasi
-        from accounts.models import User
         staff_stats = {
             'total_staff': User.objects.filter(role='technician').count(),
             'active_staff': User.objects.filter(role='technician', is_active=True).count(),
@@ -114,7 +114,7 @@ def dashboard(request):
         # Eng faol xodimlar - to'g'ri annotate
         top_staff = User.objects.filter(role='technician', is_active=True).annotate(
             orders_created_count=Count('created_orders', distinct=True),
-            payments_received_count=Count('payment', distinct=True)  # 'payment' - related_name
+            payments_received_count=Count('received_payments', distinct=True)  # 'received_payments' - related_name
         ).order_by('-orders_created_count')[:5]
         
         # Decimal qiymatlarni float ga o'zgartirish
@@ -198,9 +198,9 @@ def profile_view(request):
     # Foydalanuvchi statistikasi
     if user.is_technician():
         stats = {
-            'measured_orders': Order.objects.filter(measured_by=user).count() if hasattr(Order, 'measured_by') else 0,
-            'processed_orders': Order.objects.filter(processed_by=user).count() if hasattr(Order, 'processed_by') else 0,
-            'installed_orders': Order.objects.filter(installed_by=user).count() if hasattr(Order, 'installed_by') else 0,
+            'measured_orders': 0,  # Order modelida measured_by maydon yo'q
+            'processed_orders': 0,  # Order modelida processed_by maydon yo'q
+            'installed_orders': 0,  # Order modelida installed_by maydon yo'q
         }
     elif user.is_manager():
         stats = {

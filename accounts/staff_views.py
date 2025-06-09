@@ -23,8 +23,11 @@ def staff_list(request):
         messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
-    # Faqat texnik xodimlarni olish
-    staff = User.objects.filter(role='technician').order_by('-created_at')
+    # Faqat texnik xodimlarni olish - prefetch bilan statistika
+    staff = User.objects.filter(role='technician').select_related().prefetch_related(
+        'created_orders',
+        'received_payments'
+    ).order_by('-created_at')
     
     # Qidiruv
     search = request.GET.get('search')
@@ -43,17 +46,17 @@ def staff_list(request):
     elif status == 'inactive':
         staff = staff.filter(is_active=False)
     
-    # Har bir xodim uchun statistika qo'shish
-    for employee in staff:
-        employee.total_orders = Order.objects.filter(created_by=employee).count()
-        employee.measured_orders = Order.objects.filter(measured_by=employee).count() if hasattr(Order, 'measured_by') else 0
-        employee.processed_orders = Order.objects.filter(processed_by=employee).count() if hasattr(Order, 'processed_by') else 0
-        employee.installed_orders = Order.objects.filter(installed_by=employee).count() if hasattr(Order, 'installed_by') else 0
+    # Annotation bilan statistika qo'shish
+    staff = staff.annotate(
+        total_orders_count=Count('created_orders', distinct=True),
+        received_payments_count=Count('received_payments', distinct=True),
+        total_payments_sum=Sum('received_payments__amount')
+    )
     
     # Pagination
     paginator = Paginator(staff, 20)
     page_number = request.GET.get('page')
-    staff = paginator.get_page(page_number)
+    staff_page = paginator.get_page(page_number)
     
     # Umumiy statistika
     stats = {
@@ -63,7 +66,7 @@ def staff_list(request):
     }
     
     context = {
-        'staff': staff,
+        'staff': staff_page,
         'search': search,
         'status': status,
         'stats': stats,
@@ -84,31 +87,25 @@ def staff_detail(request, pk):
     
     staff_member = get_object_or_404(User, pk=pk, role='technician')
     
-    # Xodim statistikasi
+    # Xodim statistikasi - to'g'ri usul bilan
     stats = {
-        'created_orders': Order.objects.filter(created_by=staff_member).count(),
-        'measured_orders': Order.objects.filter(measured_by=staff_member).count() if hasattr(Order, 'measured_by') else 0,
-        'processed_orders': Order.objects.filter(processed_by=staff_member).count() if hasattr(Order, 'processed_by') else 0,
-        'installed_orders': Order.objects.filter(installed_by=staff_member).count() if hasattr(Order, 'installed_by') else 0,
-        'received_payments': Payment.objects.filter(received_by=staff_member).count(),
-        'total_received': Payment.objects.filter(
-            received_by=staff_member, 
+        'created_orders': staff_member.created_orders.count(),
+        'measured_orders': 0,  # Bu maydon Order modelida yo'q
+        'processed_orders': 0,  # Bu maydon Order modelida yo'q  
+        'installed_orders': 0,  # Bu maydon Order modelida yo'q
+        'received_payments': staff_member.received_payments.count(),
+        'total_received': staff_member.received_payments.filter(
             is_confirmed=True
         ).aggregate(total=Sum('amount'))['total'] or 0,
     }
     
-    # So'nggi buyurtmalar
-    recent_orders = Order.objects.filter(
-        Q(created_by=staff_member) |
-        Q(measured_by=staff_member) |
-        Q(processed_by=staff_member) |
-        Q(installed_by=staff_member)
-    ).distinct().select_related('customer').order_by('-created_at')[:10]
+    # So'nggi buyurtmalar - faqat yaratgan buyurtmalari
+    recent_orders = staff_member.created_orders.select_related('customer').order_by('-created_at')[:10]
     
     # So'nggi to'lovlar
-    recent_payments = Payment.objects.filter(
-        received_by=staff_member
-    ).select_related('order__customer').order_by('-payment_date')[:10]
+    recent_payments = staff_member.received_payments.select_related(
+        'order__customer'
+    ).order_by('-payment_date')[:10]
     
     context = {
         'staff_member': staff_member,
@@ -257,12 +254,7 @@ def staff_delete(request, pk):
         return redirect('staff:detail', pk=pk)
     
     # Buyurtmalari bo'lgan xodimni o'chirish mumkin emas
-    if Order.objects.filter(
-        Q(created_by=staff_member) |
-        Q(measured_by=staff_member) |
-        Q(processed_by=staff_member) |
-        Q(installed_by=staff_member)
-    ).exists():
+    if staff_member.created_orders.exists():
         messages.error(
             request, 
             'Bu xodimning buyurtmalari mavjud. Avval buyurtmalarni boshqa xodimlarga o\'tkazing!'
