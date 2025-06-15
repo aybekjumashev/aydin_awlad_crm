@@ -1,126 +1,228 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kirish - AYDIN AWLAD CRM</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .login-card {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-            max-width: 400px;
-            width: 100%;
-        }
-        
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            padding: 2rem;
-            border-radius: 1rem 1rem 0 0;
-        }
-        
-        .form-floating label {
-            color: #6c757d;
-        }
-        
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .btn-login:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-1px);
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Kirish - AYDIN AWLAD CRM{% endblock %}
+
+{% block login_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="login-card">
-                    <div class="login-header">
-                        <i class="bi bi-shield-lock" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <h3 class="fw-bold mb-0">AYDIN AWLAD</h3>
-                        <p class="mb-0 opacity-75">CRM Tizimiga kirish</p>
-                    </div>
-                    
-                    <div class="card-body p-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <!-- Logo -->
+                        <div class="text-center mb-4">
+                            <div class="mb-3">
+                                <i class="bi bi-house-door-fill" style="font-size: 3rem; color: #667eea;"></i>
+                            </div>
+                            <h3 class="fw-bold text-dark">AYDIN AWLAD</h3>
+                            <p class="text-muted mb-0">CRM Tizimiga kirish</p>
+                        </div>
+                        
+                        <!-- Messages -->
                         {% if messages %}
                             {% for message in messages %}
                                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {% if message.tags == 'error' %}
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle me-2"></i>
+                                    {% endif %}
                                     {{ message }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             {% endfor %}
                         {% endif %}
                         
-                        <form method="post">
+                        <!-- Form errors -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Xatolik!</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Login form -->
+                        <form method="post" class="needs-validation" novalidate>
                             {% csrf_token %}
                             
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="username" name="username" 
-                                       placeholder="Foydalanuvchi nomi" required>
-                                <label for="username">
-                                    <i class="bi bi-person me-2"></i>
-                                    Foydalanuvchi nomi
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-2"></i>Foydalanuvchi nomi
                                 </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control form-control-lg" 
+                                    id="username" 
+                                    name="username" 
+                                    value="{{ form.username.value|default:'' }}"
+                                    required
+                                    autocomplete="username"
+                                    placeholder="Foydalanuvchi nomingizni kiriting"
+                                >
+                                <div class="invalid-feedback">
+                                    Foydalanuvchi nomini kiriting
+                                </div>
                             </div>
                             
-                            <div class="form-floating mb-4">
-                                <input type="password" class="form-control" id="password" name="password" 
-                                       placeholder="Parol" required>
-                                <label for="password">
-                                    <i class="bi bi-key me-2"></i>
-                                    Parol
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-semibold">
+                                    <i class="bi bi-lock me-2"></i>Parol
+                                </label>
+                                <div class="position-relative">
+                                    <input 
+                                        type="password" 
+                                        class="form-control form-control-lg" 
+                                        id="password" 
+                                        name="password"
+                                        required
+                                        autocomplete="current-password"
+                                        placeholder="Parolingizni kiriting"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted"
+                                        onclick="togglePassword()"
+                                        style="border: none; background: none; z-index: 5;"
+                                    >
+                                        <i class="bi bi-eye" id="toggleIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Parolni kiriting
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input 
+                                    type="checkbox" 
+                                    class="form-check-input" 
+                                    id="remember_me" 
+                                    name="remember_me"
+                                >
+                                <label class="form-check-label" for="remember_me">
+                                    Meni eslab qol
                                 </label>
                             </div>
                             
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-login">
+                                <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>
                                     Kirish
                                 </button>
                             </div>
                         </form>
                         
-                        <hr class="my-4">
-                        
-                        <div class="text-center">
+                        <!-- Footer -->
+                        <div class="text-center mt-4">
                             <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Administrator bilan bog'laning agar login ma'lumotlaringiz yo'q bo'lsa
+                                <i class="bi bi-shield-check me-1"></i>
+                                Xavfsiz va ishonchli tizim
                             </small>
                         </div>
                     </div>
-                    
-                    <div class="card-footer text-center text-muted py-3">
-                        <small>&copy; 2024 AYDIN AWLAD. Barcha huquqlar himoyalangan.</small>
-                    </div>
+                </div>
+                
+                <!-- Company info -->
+                <div class="text-center mt-4">
+                    <p class="text-white-50 mb-1">
+                        <i class="bi bi-building me-2"></i>
+                        AYDIN AWLAD jalyuzi o'rnatish korxonasi
+                    </p>
+                    <small class="text-white-50">
+                        Mijozlar va buyurtmalarni boshqarish tizimi
+                    </small>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+    }
     
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    }
+    
+    .alert {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        transform: scale(1.02);
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 2rem !important;
+        }
+    }
+</style>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.className = 'bi bi-eye-slash';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.className = 'bi bi-eye';
+        }
+    }
+    
+    // Auto-focus on username field
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('username').focus();
+    });
+    
+    // Add loading state to submit button
+    document.querySelector('form').addEventListener('submit', function() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Kuzatilmoqda...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}

@@ -2,192 +2,145 @@
 
 {% block title %}Profil - AYDIN AWLAD CRM{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="bi bi-person me-2"></i>
-        Mening profilim
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>
-                Bosh sahifa
-            </a>
-        </div>
-    </div>
-</div>
+{% block page_title %}Foydalanuvchi profili{% endblock %}
+{% block page_subtitle %}Shaxsiy ma'lumotlar va statistika{% endblock %}
 
+{% block content %}
 <div class="row">
-    <!-- Foydalanuvchi ma'lumotlari -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-person-badge me-2"></i>
-                    Shaxsiy ma'lumotlar
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <i class="bi bi-person-circle text-primary" style="font-size: 5rem;"></i>
-                    <h4 class="mt-2">{{ user.get_full_name|default:user.username }}</h4>
-                    <span class="badge bg-primary">{{ user.get_role_display }}</span>
+    <!-- Profile info -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <!-- Avatar -->
+                <div class="mb-4">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="mb-1">{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-2">{{ user.get_role_display }}</p>
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Faol</span>
+                    {% else %}
+                        <span class="badge bg-danger">Nofaol</span>
+                    {% endif %}
                 </div>
                 
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Username:</label>
+                <!-- Contact info -->
+                <div class="text-start">
+                    <h6 class="text-muted mb-3">Aloqa ma'lumotlari</h6>
+                    
+                    <div class="mb-3">
+                        <i class="bi bi-person me-2 text-primary"></i>
+                        <strong>Foydalanuvchi nomi:</strong><br>
+                        <span class="ms-4">{{ user.username }}</span>
                     </div>
-                    <div class="col-sm-8">
-                        <p class="fw-bold">{{ user.username }}</p>
+                    
+                    {% if user.email %}
+                    <div class="mb-3">
+                        <i class="bi bi-envelope me-2 text-primary"></i>
+                        <strong>Email:</strong><br>
+                        <span class="ms-4">{{ user.email }}</span>
                     </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Ism:</label>
+                    {% endif %}
+                    
+                    {% if user.phone %}
+                    <div class="mb-3">
+                        <i class="bi bi-telephone me-2 text-primary"></i>
+                        <strong>Telefon:</strong><br>
+                        <span class="ms-4">{{ user.phone }}</span>
                     </div>
-                    <div class="col-sm-8">
-                        <p>{{ user.first_name|default:"-" }}</p>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <i class="bi bi-calendar-event me-2 text-primary"></i>
+                        <strong>Ro'yxatdan o'tgan:</strong><br>
+                        <span class="ms-4">{{ user.date_joined|date:"d.m.Y" }}</span>
                     </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Familiya:</label>
+                    
+                    {% if user.last_login %}
+                    <div class="mb-3">
+                        <i class="bi bi-clock me-2 text-primary"></i>
+                        <strong>Oxirgi kirish:</strong><br>
+                        <span class="ms-4">{{ user.last_login|date:"d.m.Y H:i" }}</span>
                     </div>
-                    <div class="col-sm-8">
-                        <p>{{ user.last_name|default:"-" }}</p>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Email:</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <p>{{ user.email|default:"-" }}</p>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Telefon:</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <p>
-                            {% if user.phone %}
-                                <a href="tel:{{ user.phone }}" class="text-decoration-none">
-                                    {{ user.phone }}
-                                </a>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-sm-4">
-                        <label class="form-label text-muted">Qo'shilgan:</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <p>{{ user.date_joined|date:"d.m.Y H:i" }}</p>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Rol va huquqlar -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
+    <!-- Statistics and permissions -->
+    <div class="col-lg-8">
+        <!-- Permissions (for technicians) -->
+        {% if user.is_technician %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
                 <h5 class="mb-0">
                     <i class="bi bi-shield-check me-2"></i>
-                    Rol va huquqlar
+                    Huquqlar
                 </h5>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted">Rol:</label>
-                    <p>
-                        <span class="badge bg-primary fs-6">{{ user.get_role_display }}</span>
-                    </p>
-                </div>
-                
-                {% if user.is_technician %}
-                <div class="mb-3">
-                    <label class="form-label text-muted">Texnik huquqlar:</label>
-                    <div class="list-group list-group-flush">
-                        {% if user.can_create_order %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>Buyurtma yaratish</span>
-                            <i class="bi bi-check-circle text-success"></i>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if user.can_create_order %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% endif %}
+                            Buyurtma yaratish
                         </div>
-                        {% endif %}
-                        
-                        {% if user.can_measure %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>O'lchov olish</span>
-                            <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if user.can_measure %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% endif %}
+                            O'lchov olish
                         </div>
-                        {% endif %}
-                        
-                        {% if user.can_manufacture %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>Ishlab chiqarish</span>
-                            <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if user.can_manufacture %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% endif %}
+                            Ishlab chiqarish
                         </div>
-                        {% endif %}
-                        
-                        {% if user.can_install %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>O'rnatish</span>
-                            <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if user.can_install %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% endif %}
+                            O'rnatish
                         </div>
-                        {% endif %}
-                        
-                        {% if user.can_cancel_order %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span>Bekor qilish</span>
-                            <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if user.can_cancel_order %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                            {% endif %}
+                            Buyurtmani bekor qilish
                         </div>
-                        {% endif %}
-                        
-                        {% if not user.can_create_order and not user.can_measure and not user.can_manufacture and not user.can_install and not user.can_cancel_order %}
-                        <div class="text-muted text-center">
-                            Hozircha maxsus huquqlar berilmagan
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
-                
-                {% if user.is_manager %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <strong>Menejer</strong> sifatida siz buyurtmalar, mijozlar va to'lovlar bilan to'liq ishlash huquqiga egasiz.
-                </div>
-                {% endif %}
-                
-                {% if user.is_admin %}
-                <div class="alert alert-success">
-                    <i class="bi bi-shield-check me-2"></i>
-                    <strong>Administrator</strong> sifatida siz barcha funksiyalardan foydalanish huquqiga egasiz.
-                </div>
-                {% endif %}
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Faoliyat statistikasi -->
-<div class="row">
-    <div class="col-md-12">
+        {% endif %}
+        
+        <!-- Personal Statistics -->
+        {% if personal_stats %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-white">
                 <h5 class="mb-0">
                     <i class="bi bi-graph-up me-2"></i>
                     Mening statistikam
@@ -196,47 +149,116 @@
             <div class="card-body">
                 {% if user.is_technician %}
                 <div class="row text-center">
-                    <div class="col-md-3">
-                        <h4 class="text-info">{{ stats.measured_orders|default:0 }}</h4>
-                        <small class="text-muted">O'lchov olgan buyurtmalar</small>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-primary bg-opacity-10">
+                            <h3 class="text-primary mb-1">{{ personal_stats.my_orders|default:0 }}</h3>
+                            <small class="text-muted">Mening buyurtmalarim</small>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <h4 class="text-warning">{{ stats.processed_orders|default:0 }}</h4>
-                        <small class="text-muted">Ishlab chiqargan</small>
+                    {% if user.can_measure %}
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-warning bg-opacity-10">
+                            <h3 class="text-warning mb-1">{{ personal_stats.pending_measures|default:0 }}</h3>
+                            <small class="text-muted">O'lchov kutilayotgan</small>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <h4 class="text-success">{{ stats.installed_orders|default:0 }}</h4>
-                        <small class="text-muted">O'rnatgan</small>
+                    {% endif %}
+                    {% if user.can_install %}
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-info bg-opacity-10">
+                            <h3 class="text-info mb-1">{{ personal_stats.pending_installs|default:0 }}</h3>
+                            <small class="text-muted">O'rnatish kutilayotgan</small>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <h4 class="text-primary">{{ stats.measured_orders|add:stats.processed_orders|add:stats.installed_orders }}</h4>
-                        <small class="text-muted">Jami ishlagan</small>
-                    </div>
+                    {% endif %}
                 </div>
                 {% elif user.is_manager %}
                 <div class="row text-center">
-                    <div class="col-md-4">
-                        <h4 class="text-primary">{{ stats.created_orders|default:0 }}</h4>
-                        <small class="text-muted">Yaratgan buyurtmalar</small>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-success bg-opacity-10">
+                            <h3 class="text-success mb-1">{{ personal_stats.created_orders|default:0 }}</h3>
+                            <small class="text-muted">Yaratgan buyurtmalar</small>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <h4 class="text-success">{{ stats.received_payments|default:0 }}</h4>
-                        <small class="text-muted">Qabul qilgan to'lovlar</small>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-info bg-opacity-10">
+                            <h3 class="text-info mb-1">{{ personal_stats.received_payments|default:0 }}</h3>
+                            <small class="text-muted">Qabul qilgan to'lovlar</small>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <h4 class="text-info">{{ stats.total_received|default:0|floatformat:0 }} so'm</h4>
-                        <small class="text-muted">Jami qabul qilgan summa</small>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-warning bg-opacity-10">
+                            <h3 class="text-warning mb-1">{{ personal_stats.total_received|floatformat:0 }}</h3>
+                            <small class="text-muted">Jami qabul qilingan (so'm)</small>
+                        </div>
                     </div>
-                </div>
-                {% else %}
-                <div class="text-center text-muted">
-                    <i class="bi bi-shield-check" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <p class="mt-3">Administrator hisobida ishlayapsiz</p>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Quick actions -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>
+                    Tez amallar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Dashboard
+                        </a>
+                    </div>
+                    {% if user.can_manage_orders %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'orders:list' %}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-cart me-2"></i>
+                            Buyurtmalar
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if user.can_manage_customers %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'customers:list' %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-people me-2"></i>
+                            Mijozlar
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-box-arrow-right me-2"></i>
+                            Chiqish
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    .avatar-circle {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        transition: transform 0.2s ease;
+    }
+    
+    .avatar-circle:hover {
+        transform: scale(1.05);
+    }
+    
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+</style>
 {% endblock %}

@@ -12,6 +12,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('staff/', include('accounts.staff_urls')),
     path('payments/', include('payments.urls')),
+    path('reports/', include('reports.urls')),  # ✅ BU QATOR QO'SHILDI!
 ]
 
 # Media fayllar uchun (development muhitida)

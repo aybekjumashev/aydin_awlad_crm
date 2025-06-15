@@ -3,7 +3,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -93,7 +93,37 @@ def payment_list(request):
 
 
 @login_required
-def payment_add(request, order_pk):
+def payment_add(request):
+    """
+    Yangi to'lov qo'shish (buyurtmasiz)
+    """
+    # Faqat menejer va admin qo'sha oladi
+    if not (request.user.is_manager() or request.user.is_admin()):
+        messages.error(request, 'Sizda to\'lov qo\'shish huquqi yo\'q!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.received_by = request.user
+            payment.save()
+            
+            messages.success(request, f'To\'lov #{payment.id} qo\'shildi!')
+            return redirect('payments:detail', pk=payment.pk)
+    else:
+        form = PaymentForm()
+    
+    context = {
+        'form': form,
+        'title': 'Yangi to\'lov qo\'shish',
+    }
+    
+    return render(request, 'payments/form.html', context)
+
+
+@login_required
+def payment_add_to_order(request, order_pk):
     """
     Buyurtmaga to'lov qo'shish
     """
@@ -109,59 +139,46 @@ def payment_add(request, order_pk):
         messages.error(request, 'Bekor qilingan buyurtmalarga to\'lov qo\'shish mumkin emas!')
         return redirect('orders:detail', pk=order_pk)
     
-    # To'liq to'langan buyurtmalarga to'lov qo'shish mumkin emas
-    if order.is_fully_paid():
-        messages.error(request, 'Bu buyurtma to\'liq to\'langan!')
-        return redirect('orders:detail', pk=order_pk)
-    
     if request.method == 'POST':
         form = PaymentForm(request.POST)
-        form.order = order  # Form validation uchun
-        
         if form.is_valid():
             payment = form.save(commit=False)
             payment.order = order
             payment.received_by = request.user
+            payment.save()
             
-            # To'lov miqdorini tekshirish
-            remaining = order.remaining_balance()
-            if payment.amount > remaining:
-                form.add_error('amount', f'To\'lov miqdori qolgan summadan ko\'p bo\'lmasligi kerak: {remaining:,} so\'m')
-            else:
-                payment.save()
-                
-                messages.success(
-                    request, 
-                    f'To\'lov qo\'shildi: {payment.amount:,} so\'m ({payment.get_payment_type_display()})'
-                )
-                return redirect('orders:detail', pk=order_pk)
+            messages.success(request, f'To\'lov {payment.amount:,.0f} so\'m buyurtmaga qo\'shildi!')
+            return redirect('orders:detail', pk=order_pk)
     else:
-        # Initial values
-        remaining = order.remaining_balance()
-        has_payments = order.payments.exists()
-        
-        # To'lov turini aniqlash
-        if not has_payments:
-            suggested_type = 'advance'
-        elif remaining > 0:
-            suggested_type = 'partial'
-        else:
-            suggested_type = 'final'
-        
-        form = PaymentForm(initial={
-            'payment_type': suggested_type,
-            'amount': remaining,
-        })
-        form.order = order  # Form validation uchun
+        # Buyurtma ma'lumotlari bilan form ni to'ldirish
+        initial = {
+            'order': order,
+            'payment_type': 'partial',  # Default qisman to'lov
+        }
+        form = PaymentForm(initial=initial)
     
     context = {
         'form': form,
         'order': order,
-        'remaining_balance': order.remaining_balance(),
-        'title': f'#{order.order_number} ga to\'lov qo\'shish',
+        'title': f'Buyurtma #{order.order_number}ga to\'lov qo\'shish',
     }
     
     return render(request, 'payments/form.html', context)
+
+
+@login_required
+def payment_detail(request, pk):
+    """
+    To'lov tafsilotlari
+    """
+    payment = get_object_or_404(Payment, pk=pk)
+    
+    context = {
+        'payment': payment,
+        'order': payment.order,
+    }
+    
+    return render(request, 'payments/detail.html', context)
 
 
 @login_required
@@ -171,29 +188,29 @@ def payment_edit(request, pk):
     """
     payment = get_object_or_404(Payment, pk=pk)
     
-    # Faqat admin tahrirlaya oladi
-    if not request.user.is_admin():
+    # Faqat menejer va admin tahrirlaya oladi
+    if not (request.user.is_manager() or request.user.is_admin()):
         messages.error(request, 'Sizda to\'lovni tahrirlash huquqi yo\'q!')
-        return redirect('orders:detail', pk=payment.order.pk)
+        return redirect('payments:detail', pk=pk)
+    
+    # Tasdiqlangan to'lovlarni tahrirlash mumkin emas
+    if payment.is_confirmed:
+        messages.error(request, 'Tasdiqlangan to\'lovlarni tahrirlash mumkin emas!')
+        return redirect('payments:detail', pk=pk)
     
     if request.method == 'POST':
         form = PaymentForm(request.POST, instance=payment)
-        form.order = payment.order  # Form validation uchun
-        
         if form.is_valid():
-            payment = form.save()
+            form.save()
             messages.success(request, 'To\'lov ma\'lumotlari yangilandi!')
-            return redirect('orders:detail', pk=payment.order.pk)
+            return redirect('payments:detail', pk=pk)
     else:
         form = PaymentForm(instance=payment)
-        form.order = payment.order  # Form validation uchun
     
     context = {
         'form': form,
         'payment': payment,
-        'order': payment.order,
-        'remaining_balance': payment.order.remaining_balance() + payment.amount,
-        'title': f'To\'lovni tahrirlash',
+        'title': f'To\'lov #{payment.id} tahrirlash',
     }
     
     return render(request, 'payments/form.html', context)
@@ -209,34 +226,92 @@ def payment_delete(request, pk):
     # Faqat admin o'chira oladi
     if not request.user.is_admin():
         messages.error(request, 'Sizda to\'lovni o\'chirish huquqi yo\'q!')
-        return redirect('orders:detail', pk=payment.order.pk)
+        return redirect('payments:detail', pk=pk)
+    
+    # Tasdiqlangan to'lovlarni o'chirish mumkin emas
+    if payment.is_confirmed:
+        messages.error(request, 'Tasdiqlangan to\'lovlarni o\'chirish mumkin emas!')
+        return redirect('payments:detail', pk=pk)
     
     if request.method == 'POST':
-        order_pk = payment.order.pk
-        amount = payment.amount
-        payment_type = payment.get_payment_type_display()
-        reason = request.POST.get('reason', '')
-        
-        # History yaratish
-        payment.order.create_history(
-            action='payment_received',
-            performed_by=request.user,
-            notes=f'To\'lov o\'chirildi: {amount:,} so\'m ({payment_type}). Sabab: {reason}'
-        )
-        
+        order_pk = payment.order.pk if payment.order else None
         payment.delete()
+        messages.success(request, 'To\'lov o\'chirildi!')
         
-        messages.success(
-            request, 
-            f'To\'lov o\'chirildi: {amount:,} so\'m ({payment_type})'
-        )
-        return redirect('orders:detail', pk=order_pk)
+        if order_pk:
+            return redirect('orders:detail', pk=order_pk)
+        else:
+            return redirect('payments:list')
     
     context = {
         'payment': payment,
     }
     
     return render(request, 'payments/delete.html', context)
+
+@login_required
+def payment_confirm(request, pk):
+    """
+    To'lovni tasdiqlash
+    """
+    payment = get_object_or_404(Payment, pk=pk)
+    
+    # Faqat menejer va admin tasdiqlaya oladi
+    if not (request.user.is_manager() or request.user.is_admin()):
+        messages.error(request, 'Sizda to\'lovni tasdiqlash huquqi yo\'q!')
+        return redirect('payments:detail', pk=pk)
+    
+    if not payment.is_confirmed:
+        payment.is_confirmed = True
+        payment.confirmed_by = request.user
+        payment.confirmed_at = timezone.now()
+        payment.save()
+        
+        messages.success(request, f'To\'lov #{payment.id} tasdiqlandi!')
+    else:
+        messages.info(request, 'To\'lov allaqachon tasdiqlangan!')
+    
+    return redirect('payments:detail', pk=pk)
+@login_required
+def payment_reports(request):
+    """
+    To'lovlar hisoboti (payments app ichida)
+    """
+    # Bu funksiya reports.views.payment_report ga redirect qiladi
+    return redirect('reports:payments')
+
+@login_required
+def payment_ajax_order_info(request):
+    """
+    AJAX orqali buyurtma ma'lumotlari
+    """
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'error': 'Faqat AJAX so\'rovlar'}, status=400)
+    
+    order_id = request.GET.get('order_id')
+    if not order_id:
+        return JsonResponse({'error': 'Buyurtma ID kiritilmagan'}, status=400)
+    
+    try:
+        order = Order.objects.get(pk=order_id)
+        
+        data = {
+            'order_number': order.order_number,
+            'customer_name': order.customer.get_full_name(),
+            'total_price': float(order.total_price()),
+            'total_paid': float(order.total_paid()),
+            'remaining': float(order.remaining_balance()),
+            'status': order.get_status_display(),
+        }
+        
+        return JsonResponse(data)
+    
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Buyurtma topilmadi'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 
 
 @login_required
@@ -253,6 +328,7 @@ def daily_payment_report(request):
     date_str = request.GET.get('date')
     if date_str:
         try:
+            from datetime import datetime
             selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
             selected_date = timezone.now().date()

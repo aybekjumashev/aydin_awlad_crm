@@ -171,17 +171,30 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Telefon raqam formatlash
     const phoneInput = document.querySelector('input[name="phone"]');
+
     if (phoneInput) {
         phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 0 && !value.startsWith('998')) {
-                if (value.length === 9) {
-                    value = '998' + value;
-                }
+            let value = e.target.value;
+
+            // Barcha belgilar ichidan raqamlar va + ni qoldiramiz
+            value = value.replace(/[^\d\+]/g, '');
+
+            // + belgisini faqat boshida qoldiramiz
+            if (value.indexOf('+') > 0) {
+                value = value.replace(/\+/g, ''); // hamma + belgilarni olib tashla
+                value = '+' + value;             // faqat boshiga qo‘sh
             }
-            if (value.length > 12) {
-                value = value.substr(0, 12);
+
+            // Faqat +998 bilan boshlanishiga ruxsat beramiz
+            if (!value.startsWith('+998')) {
+                value = '+998' + value.replace(/^\+?998?/, '');
             }
+
+            // Maksimal 13 ta belgi (masalan: +998901234567)
+            if (value.length > 13) {
+                value = value.substring(0, 13);
+            }
+
             e.target.value = value;
         });
     }

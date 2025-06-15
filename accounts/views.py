@@ -14,6 +14,59 @@ from orders.models import Order, OrderItem
 from payments.models import Payment
 from accounts.models import User
 
+
+def login_view(request):
+    """
+    Login sahifasi
+    """
+    # Agar foydalanuvchi allaqachon login qilgan bo'lsa, dashboard ga yo'naltirish
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
+        
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    
+                    # "Meni eslab qol" funksiyasi
+                    if not remember_me:
+                        request.session.set_expiry(0)  # Browser yopilganda session o'chadi
+                    
+                    messages.success(request, f'Xush kelibsiz, {user.get_full_name()}!')
+                    
+                    # next parametri bo'yicha yo'naltirish
+                    next_url = request.GET.get('next')
+                    if next_url:
+                        return redirect(next_url)
+                    else:
+                        return redirect('dashboard')
+                else:
+                    messages.error(request, 'Sizning hisobingiz bloklangan!')
+            else:
+                messages.error(request, 'Foydalanuvchi nomi yoki parol noto\'g\'ri!')
+        else:
+            messages.error(request, 'Foydalanuvchi nomi va parolni kiriting!')
+    
+    return render(request, 'accounts/login.html')
+
+
+@login_required
+def logout_view(request):
+    """
+    Logout
+    """
+    user_name = request.user.get_full_name()
+    logout(request)
+    messages.info(request, f'{user_name}, tizimdan muvaffaqiyatli chiqdingiz!')
+    return redirect('login')
+
+
 @login_required
 def dashboard(request):
     """
@@ -47,145 +100,38 @@ def dashboard(request):
                 installation_date__gte=this_month_start
             ).count(),
             'total_revenue': Payment.objects.filter(
+                is_confirmed=True
+            ).aggregate(total=Sum('amount'))['total'] or 0,
+            'month_revenue': Payment.objects.filter(
                 payment_date__gte=this_month_start,
                 is_confirmed=True
             ).aggregate(total=Sum('amount'))['total'] or 0,
         }
         
-        # Bugungi statistika
-        daily_stats = {
-            'today_orders': Order.objects.filter(created_at__date=today).count(),
-            'today_payments': Payment.objects.filter(payment_date__date=today).count(),
-            'today_revenue': Payment.objects.filter(
-                payment_date__date=today, is_confirmed=True
-            ).aggregate(total=Sum('amount'))['total'] or 0,
-        }
-        
-        # Eng faol mijozlar
-        top_customers = Customer.objects.annotate(
-            order_count=Count('orders'),
-            total_spent=Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True))
-        ).filter(order_count__gt=0).order_by('-total_spent')[:5]
-        
-        # Decimal qiymatlarni float ga o'zgartirish
-        for customer in top_customers:
-            customer.total_spent = float(customer.total_spent or 0)
-        
-        # Eng mashhur jalyuzi turlari
-        popular_blinds = OrderItem.objects.values('blind_type').annotate(
-            count=Count('id'),
-            total_amount=Sum('total_price')
-        ).order_by('-count')[:5]
-        
-        # total_amount ni float ga o'zgartirish
-        for blind in popular_blinds:
-            blind['total_amount'] = float(blind['total_amount'] or 0)
-        
-        # Oylik daromad grafigi (oxirgi 6 oy)
-        monthly_revenue = []
-        for i in range(6):
-            month_start = (today.replace(day=1) - timedelta(days=32*i)).replace(day=1)
-            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-            
-            revenue = Payment.objects.filter(
-                payment_date__date__gte=month_start,
-                payment_date__date__lte=month_end,
-                is_confirmed=True
-            ).aggregate(total=Sum('amount'))['total'] or 0
-            
-            monthly_revenue.append({
-                'month': month_start.strftime('%B %Y'),
-                'revenue': float(revenue)
-            })
-        
-        monthly_revenue.reverse()  # Eskidan yangiga
-        
-        # So'nggi buyurtmalar va to'lovlar
-        recent_orders = Order.objects.select_related('customer', 'created_by').order_by('-created_at')[:5]
-        recent_payments = Payment.objects.select_related('order__customer', 'received_by').order_by('-payment_date')[:5]
-        
-        # Texnik xodimlar statistikasi
-        staff_stats = {
-            'total_staff': User.objects.filter(role='technician').count(),
-            'active_staff': User.objects.filter(role='technician', is_active=True).count(),
-            'inactive_staff': User.objects.filter(role='technician', is_active=False).count(),
-        }
-        
-        # Eng faol xodimlar - to'g'ri annotate
-        top_staff = User.objects.filter(role='technician', is_active=True).annotate(
-            orders_created_count=Count('created_orders', distinct=True),
-            payments_received_count=Count('received_payments', distinct=True)  # 'received_payments' - related_name
-        ).order_by('-orders_created_count')[:5]
-        
-        # Decimal qiymatlarni float ga o'zgartirish
-        monthly_stats['total_revenue'] = float(monthly_stats['total_revenue'])
-        daily_stats['today_revenue'] = float(daily_stats['today_revenue'])
+        # So'nggi buyurtmalar
+        recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:5]
         
         context.update({
             'monthly_stats': monthly_stats,
-            'daily_stats': daily_stats,
             'recent_orders': recent_orders,
-            'recent_payments': recent_payments,
-            'top_customers': top_customers,
-            'popular_blinds': popular_blinds,
-            'monthly_revenue': monthly_revenue,
-            'monthly_revenue_json': json.dumps([m['revenue'] for m in monthly_revenue]),
-            'monthly_labels_json': json.dumps([m['month'] for m in monthly_revenue]),
-            'staff_stats': staff_stats,
-            'top_staff': top_staff,
-        })
-    else:
-        # Texnik xodim uchun - barcha buyurtmalarni ko'rish
-        recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:5]
-        
-        # Texnik xodim vazifalariga qarab statistika
-        my_tasks = {}
-        
-        if user.can_measure:
-            my_tasks['to_measure'] = Order.objects.filter(status='measuring').count()
-        
-        if user.can_manufacture:
-            my_tasks['to_process'] = Order.objects.filter(status='processing').count()
-        
-        if user.can_install:
-            my_tasks['to_install'] = Order.objects.filter(status='processing').count()  # O'rnatishga tayyor
-        
-        context.update({
-            'recent_orders': recent_orders,
-            'my_tasks': my_tasks,
         })
     
-    return render(request, 'dashboard.html', context)
-
-def login_view(request):
-    """
-    Login sahifasi
-    """
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    elif user.is_technician():
+        # Texnik xodim uchun shaxsiy statistika
+        personal_stats = user.get_dashboard_stats()
+        context['personal_stats'] = personal_stats
         
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            next_url = request.GET.get('next', 'dashboard')
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Login yoki parol noto\'g\'ri!')
+        # Faqat o'ziga tegishli buyurtmalar
+        recent_orders = Order.objects.filter(
+            Q(measured_by=user) |
+            Q(processed_by=user) |
+            Q(installed_by=user) |
+            Q(created_by=user)
+        ).distinct().select_related('customer').order_by('-created_at')[:5]
+        
+        context['recent_orders'] = recent_orders
     
-    return render(request, 'accounts/login.html')
-
-
-@login_required
-def logout_view(request):
-    """
-    Logout
-    """
-    logout(request)
-    return redirect('login')
+    return render(request, 'accounts/dashboard.html', context)
 
 
 @login_required
@@ -196,28 +142,14 @@ def profile_view(request):
     user = request.user
     
     # Foydalanuvchi statistikasi
-    if user.is_technician():
-        stats = {
-            'measured_orders': 0,  # Order modelida measured_by maydon yo'q
-            'processed_orders': 0,  # Order modelida processed_by maydon yo'q
-            'installed_orders': 0,  # Order modelida installed_by maydon yo'q
-        }
-    elif user.is_manager():
-        stats = {
-            'created_orders': Order.objects.filter(created_by=user).count(),
-            'received_payments': Payment.objects.filter(received_by=user).count(),
-            'total_received': Payment.objects.filter(
-                received_by=user, 
-                is_confirmed=True
-            ).aggregate(total=Sum('amount'))['total'] or 0,
-        }
-        stats['total_received'] = float(stats['total_received'])
-    else:
-        stats = {}
+    personal_stats = user.get_dashboard_stats()
+    
+    # Login tarixi (oxirgi 10 ta)
+    # Bu qism kelajakda LoginHistory modeli yaratilganda implement qilinadi
     
     context = {
         'user': user,
-        'stats': stats,
+        'personal_stats': personal_stats,
     }
     
     return render(request, 'accounts/profile.html', context)

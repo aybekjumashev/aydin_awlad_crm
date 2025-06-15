@@ -1,150 +1,248 @@
-# accounts/forms.py - mavjud faylga qo'shish
+# accounts/forms.py
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.core.validators import RegexValidator
 from .models import User
 
 
 class TechnicianForm(UserCreationForm):
     """
-    Texnik xodim yaratish/tahrirlash formasi
+    Texnik xodim yaratish formasi
     """
+    
+    phone_validator = RegexValidator(
+        regex=r'^\+998\d{9}$',
+        message='Telefon raqam +998XXXXXXXXX formatida bo\'lishi kerak'
+    )
     
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'phone', 'email', 'password1', 'password2',
-                  'can_create_order', 'can_measure', 'can_manufacture', 'can_install', 'can_cancel_order']
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'phone',
+            'password1', 'password2', 'can_create_order', 'can_measure', 
+            'can_manufacture', 'can_install', 'can_cancel_order'
+        ]
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Login nomi'
+                'placeholder': 'Foydalanuvchi nomi...',
+                'required': True
             }),
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ism'
+                'placeholder': 'Ism...',
+                'required': True
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Familiya'
+                'placeholder': 'Familiya...',
+                'required': True
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'email@example.com',
+                'required': True
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '+998901234567'
             }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'email@example.com'
+            'can_create_order': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_measure': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_manufacture': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_install': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_cancel_order': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
             }),
         }
         labels = {
-            'username': 'Login nomi',
+            'username': 'Foydalanuvchi nomi',
             'first_name': 'Ism',
             'last_name': 'Familiya',
-            'phone': 'Telefon raqam',
             'email': 'Email',
+            'phone': 'Telefon raqam',
+            'password1': 'Parol',
+            'password2': 'Parolni tasdiqlash',
             'can_create_order': 'Buyurtma yarata oladi',
-            'can_measure': 'O\'lchash huquqi',
-            'can_manufacture': 'Ishlab chiqarish huquqi',
-            'can_install': 'O\'rnatish huquqi',
-            'can_cancel_order': 'Bekor qilish huquqi',
+            'can_measure': 'O\'lchov olish',
+            'can_manufacture': 'Ishlab chiqarish',
+            'can_install': 'O\'rnatish',
+            'can_cancel_order': 'Buyurtmani bekor qila oladi',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Password fieldlarini styling
+        self.fields['phone'].validators = [self.phone_validator]
+        
+        # Required fieldlar
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+        self.fields['email'].required = True
+        
+        # Password fieldlarni to'g'rilash
         self.fields['password1'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Parol'
+            'placeholder': 'Kamida 8 ta belgi...'
         })
         self.fields['password2'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Parolni tasdiqlang'
+            'placeholder': 'Parolni qayta kiriting...'
         })
-        
-        # Permission fieldlarini styling
-        for field_name in ['can_create_order', 'can_measure', 'can_manufacture', 'can_install', 'can_cancel_order']:
-            self.fields[field_name].widget.attrs.update({
-                'class': 'form-check-input'
-            })
     
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.role = 'technician'  # Avtomatik texnik xodim sifatida belgilash
-        user.is_staff = False  # Admin panelga kirish huquqi yo'q
+        user.role = 'technician'  # Avtomatik texnik xodim
+        user.is_staff = False  # Texnik xodim admin panelga kira olmaydi
+        
         if commit:
             user.save()
         return user
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username:
+            # Faqat harflar, raqamlar va _ belgisi
+            if not username.replace('_', '').isalnum():
+                raise forms.ValidationError('Foydalanuvchi nomi faqat harflar, raqamlar va _ belgisidan iborat bo\'lishi kerak')
+            
+            # Takrorlanishni tekshirish
+            if User.objects.filter(username=username).exists():
+                raise forms.ValidationError('Bu foydalanuvchi nomi allaqachon mavjud')
+            
+            return username.lower()
+        return username
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # Takrorlanishni tekshirish
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError('Bu email allaqachon mavjud')
+            return email.lower()
+        return email
 
 
-class TechnicianEditForm(forms.ModelForm):
+class TechnicianEditForm(UserChangeForm):
     """
-    Texnik xodimni tahrirlash formasi (parolsiz)
+    Texnik xodimni tahrirlash formasi
     """
+    
+    phone_validator = RegexValidator(
+        regex=r'^\+998\d{9}$',
+        message='Telefon raqam +998XXXXXXXXX formatida bo\'lishi kerak'
+    )
     
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'phone', 'email', 'is_active',
-                  'can_create_order', 'can_measure', 'can_manufacture', 'can_install', 'can_cancel_order']
+        fields = [
+            'first_name', 'last_name', 'email', 'phone', 'is_active',
+            'can_create_order', 'can_measure', 'can_manufacture', 
+            'can_install', 'can_cancel_order'
+        ]
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ism'
+                'required': True
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Familiya'
-            }),
-            'phone': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '+998901234567'
+                'required': True
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'email@example.com'
+                'required': True
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control'
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
             }),
+            'can_create_order': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_measure': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_manufacture': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_install': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'can_cancel_order': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
         }
         labels = {
             'first_name': 'Ism',
             'last_name': 'Familiya',
-            'phone': 'Telefon raqam',
             'email': 'Email',
+            'phone': 'Telefon raqam',
             'is_active': 'Faol',
             'can_create_order': 'Buyurtma yarata oladi',
-            'can_measure': 'O\'lchash huquqi',
-            'can_manufacture': 'Ishlab chiqarish huquqi',
-            'can_install': 'O\'rnatish huquqi',
-            'can_cancel_order': 'Bekor qilish huquqi',
+            'can_measure': 'O\'lchov olish',
+            'can_manufacture': 'Ishlab chiqarish',
+            'can_install': 'O\'rnatish',
+            'can_cancel_order': 'Buyurtmani bekor qila oladi',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Permission fieldlarini styling
-        for field_name in ['can_create_order', 'can_measure', 'can_manufacture', 'can_install', 'can_cancel_order']:
-            self.fields[field_name].widget.attrs.update({
-                'class': 'form-check-input'
-            })
+        self.fields['phone'].validators = [self.phone_validator]
+        
+        # Password fieldini o'chirish (alohida form uchun)
+        if 'password' in self.fields:
+            del self.fields['password']
+        
+        # Required fieldlar
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+        self.fields['email'].required = True
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # O'zi bundan mustasno takrorlanishni tekshirish
+            existing_user = User.objects.filter(email=email)
+            if self.instance.pk:
+                existing_user = existing_user.exclude(pk=self.instance.pk)
+            
+            if existing_user.exists():
+                raise forms.ValidationError('Bu email allaqachon mavjud')
+            return email.lower()
+        return email
 
 
 class StaffPasswordResetForm(forms.Form):
     """
-    Texnik xodim parolini yangilash formasi
+    Xodim parolini qayta tiklash formasi
     """
     new_password1 = forms.CharField(
         label='Yangi parol',
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Yangi parol'
-        })
+            'placeholder': 'Yangi parolni kiriting...'
+        }),
+        min_length=8,
+        help_text='Kamida 8 ta belgi bo\'lishi kerak'
     )
     new_password2 = forms.CharField(
-        label='Parolni tasdiqlang',
+        label='Yangi parolni tasdiqlash',
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Parolni qayta kiriting'
-        })
+            'placeholder': 'Yangi parolni qayta kiriting...'
+        }),
+        min_length=8
     )
     
     def clean(self):
@@ -154,9 +252,6 @@ class StaffPasswordResetForm(forms.Form):
         
         if password1 and password2:
             if password1 != password2:
-                raise forms.ValidationError('Parollar mos kelmaydi!')
-            
-            if len(password1) < 8:
-                raise forms.ValidationError('Parol kamida 8 ta belgidan iborat bo\'lishi kerak!')
+                raise forms.ValidationError('Parollar bir xil emas!')
         
         return cleaned_data

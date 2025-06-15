@@ -1,5 +1,3 @@
-# customers/urls.py
-
 from django.urls import path
 from . import views
 
@@ -11,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/', views.customer_detail, name='detail'),
     path('<int:pk>/edit/', views.customer_edit, name='edit'),
     path('<int:pk>/delete/', views.customer_delete, name='delete'),
+    path('ajax/search/', views.customer_ajax_search, name='ajax_search'),
 ]

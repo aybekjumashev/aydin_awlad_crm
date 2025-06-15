@@ -78,15 +78,30 @@ def report_dashboard(request):
     for customer in top_customers:
         customer.total_spent = decimal_to_float(customer.total_spent or 0)
     
-    # Eng mashhur jalyuzi turlari
+    # Eng mashhur jalyuzi turlari - TO'G'RILANADI
     popular_blinds = OrderItem.objects.values('blind_type').annotate(
         count=Count('id'),
-        total_amount=Sum('total_price')
+        total_amount=Sum('unit_price') * Sum('quantity')  # ✅ total_price o'rniga
     ).order_by('-count')[:5]
     
-    # total_amount ni float ga o'zgartirish
-    for blind in popular_blinds:
-        blind['total_amount'] = decimal_to_float(blind['total_amount'] or 0)
+    # Yoki yanada to'g'ri:
+    popular_blinds_corrected = []
+    blind_types = OrderItem.objects.values_list('blind_type', flat=True).distinct()
+    
+    for blind_type in blind_types:
+        items = OrderItem.objects.filter(blind_type=blind_type)
+        total_amount = sum(item.total_price() for item in items)  # Method chaqirish
+        count = items.count()
+        
+        popular_blinds_corrected.append({
+            'blind_type': blind_type,
+            'count': count,
+            'total_amount': decimal_to_float(total_amount)
+        })
+    
+    # Count bo'yicha saralash
+    popular_blinds_corrected.sort(key=lambda x: x['count'], reverse=True)
+    popular_blinds = popular_blinds_corrected[:5]
     
     # Oylik daromad grafigi (oxirgi 6 oy)
     monthly_revenue = []
@@ -122,29 +137,38 @@ def report_dashboard(request):
 @login_required
 def customer_report(request):
     """
-    Mijozlar hisoboti
+    Mijozlar hisoboti - TO'G'RILANADI
     """
     if not (request.user.is_manager() or request.user.is_admin()):
         messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
-    # Mijozlar statistikasi
+    # Mijozlar statistikasi - TO'G'RILANADI
     customers = Customer.objects.annotate(
         order_count=Count('orders'),
         completed_orders=Count('orders', filter=Q(orders__status='installed')),
-        total_spent=Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True)),
-        outstanding_balance=Sum('orders__items__total_price') - Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True))
+        total_spent=Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True))
+        # outstanding_balance ni alohida hisoblash kerak
     ).order_by('-total_spent')
     
-    # Decimal qiymatlarni float ga o'zgartirish
+    # Outstanding balance ni alohida hisoblaymiz
     for customer in customers:
         customer.total_spent = decimal_to_float(customer.total_spent or 0)
-        customer.outstanding_balance = decimal_to_float(customer.outstanding_balance or 0)
+        
+        # Qarzdorlikni hisoblash
+        total_orders_value = 0
+        total_paid = 0
+        
+        for order in customer.orders.exclude(status='cancelled'):
+            total_orders_value += order.total_price()  # Method chaqirish
+            total_paid += order.total_paid()  # Method chaqirish
+        
+        customer.outstanding_balance = decimal_to_float(max(total_orders_value - total_paid, 0))
     
     # Umumiy statistika
     total_customers = customers.count()
     active_customers = customers.filter(order_count__gt=0).count()
-    paying_customers = customers.filter(total_spent__gt=0).count()
+    paying_customers = [c for c in customers if c.total_spent > 0]
     
     # Top 10 mijozlar
     top_customers = [c for c in customers if c.order_count > 0][:10]
@@ -157,7 +181,7 @@ def customer_report(request):
     context = {
         'total_customers': total_customers,
         'active_customers': active_customers,
-        'paying_customers': paying_customers,
+        'paying_customers': len(paying_customers),
         'top_customers': top_customers,
         'debtor_customers': debtor_customers,
     }
@@ -168,7 +192,7 @@ def customer_report(request):
 @login_required
 def order_report(request):
     """
-    Buyurtmalar hisoboti
+    Buyurtmalar hisoboti - TO'G'RILANADI
     """
     if not (request.user.is_manager() or request.user.is_admin()):
         messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
@@ -188,11 +212,20 @@ def order_report(request):
         start_date = today.replace(month=1, day=1)
         period_name = "Bu yil"
     
-    # Buyurtmalar statistikasi
+    # Buyurtmalar statistikasi - TO'G'RILANADI
     orders = Order.objects.filter(created_at__gte=start_date)
     
-    total_value = orders.aggregate(total=Sum('items__total_price'))['total']
-    avg_value = orders.aggregate(avg=Avg('items__total_price'))['avg']
+    # Total value ni alohida hisoblash
+    total_value = 0
+    total_count = 0
+    
+    for order in orders:
+        order_total = order.total_price()  # Method chaqirish
+        total_value += order_total
+        if order_total > 0:
+            total_count += 1
+    
+    avg_value = total_value / total_count if total_count > 0 else 0
     
     stats = {
         'total_orders': orders.count(),
@@ -201,8 +234,8 @@ def order_report(request):
         'processing_orders': orders.filter(status='processing').count(),
         'completed_orders': orders.filter(status='installed').count(),
         'cancelled_orders': orders.filter(status='cancelled').count(),
-        'total_value': decimal_to_float(total_value or 0),
-        'avg_order_value': decimal_to_float(avg_value or 0),
+        'total_value': decimal_to_float(total_value),
+        'avg_order_value': decimal_to_float(avg_value),
     }
     
     # Kunlik statistika (oxirgi 30 kun)
@@ -228,10 +261,6 @@ def order_report(request):
     ).annotate(
         orders_created_count=Count('created_orders', filter=Q(created_orders__created_at__gte=start_date))
     ).order_by('-orders_created_count')[:5]
-    
-    # Texnik xodimlar uchun qo'shimcha statistika qo'shish mumkin
-    # Ammo hozircha Order modelida measured_by, processed_by, installed_by maydonlari yo'q
-    # Shuning uchun faqat created_orders bilan cheklanamiz
     
     context = {
         'stats': stats,
@@ -329,7 +358,7 @@ def payment_report(request):
 @login_required
 def financial_report(request):
     """
-    Moliyaviy hisobot
+    Moliyaviy hisobot - TO'G'RILANADI
     """
     if not (request.user.is_manager() or request.user.is_admin()):
         messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
@@ -345,24 +374,16 @@ def financial_report(request):
         payment_date__gte=this_month_start, is_confirmed=True
     ).aggregate(total=Sum('amount'))['total']
     
-    this_month_orders_value = Order.objects.filter(
-        created_at__gte=this_month_start
-    ).aggregate(total=Sum('items__total_price'))['total']
-    
-    this_month_pending = Order.objects.filter(
-        status__in=['new', 'measuring', 'processing'],
-        created_at__gte=this_month_start
-    ).aggregate(
-        total=Sum('items__total_price') - Sum('payments__amount', filter=Q(payments__is_confirmed=True))
-    )['total']
+    # Orders value ni alohida hisoblash
+    this_month_orders = Order.objects.filter(created_at__gte=this_month_start)
+    this_month_orders_value = sum(order.total_price() for order in this_month_orders)
     
     this_month = {
         'revenue': decimal_to_float(this_month_revenue or 0),
-        'orders_value': decimal_to_float(this_month_orders_value or 0),
+        'orders_value': decimal_to_float(this_month_orders_value),
         'completed_orders': Order.objects.filter(
             status='installed', installation_date__gte=this_month_start
         ).count(),
-        'pending_revenue': decimal_to_float(this_month_pending or 0),
     }
     
     # O'tgan oylik moliyaviy ma'lumotlar
@@ -372,14 +393,15 @@ def financial_report(request):
         is_confirmed=True
     ).aggregate(total=Sum('amount'))['total']
     
-    last_month_orders_value = Order.objects.filter(
+    last_month_orders = Order.objects.filter(
         created_at__gte=last_month_start,
         created_at__lte=last_month_end
-    ).aggregate(total=Sum('items__total_price'))['total']
+    )
+    last_month_orders_value = sum(order.total_price() for order in last_month_orders)
     
     last_month = {
         'revenue': decimal_to_float(last_month_revenue or 0),
-        'orders_value': decimal_to_float(last_month_orders_value or 0),
+        'orders_value': decimal_to_float(last_month_orders_value),
         'completed_orders': Order.objects.filter(
             status='installed',
             installation_date__gte=last_month_start,
@@ -394,20 +416,27 @@ def financial_report(request):
         'completed_orders': ((this_month['completed_orders'] - last_month['completed_orders']) / last_month['completed_orders'] * 100) if last_month['completed_orders'] > 0 else 0,
     }
     
-    # Qarzdorlik ma'lumotlari
-    outstanding_orders = Order.objects.annotate(
-        total_price=Sum('items__total_price'),
-        total_paid=Sum('payments__amount', filter=Q(payments__is_confirmed=True)),
-        remaining=Sum('items__total_price') - Sum('payments__amount', filter=Q(payments__is_confirmed=True))
-    ).filter(remaining__gt=0, status__in=['new', 'measuring', 'processing', 'installed']).order_by('-remaining')[:10]
+    # Qarzdorlik ma'lumotlari - TO'G'RILANADI
+    outstanding_orders = []
     
-    # Decimal qiymatlarni float ga o'zgartirish
-    for order in outstanding_orders:
-        order.total_price = decimal_to_float(order.total_price or 0)
-        order.total_paid = decimal_to_float(order.total_paid or 0)
-        order.remaining = decimal_to_float(order.remaining or 0)
+    for order in Order.objects.filter(status__in=['new', 'measuring', 'processing', 'installed']):
+        total_price = order.total_price()
+        total_paid = order.total_paid()
+        remaining = max(total_price - total_paid, 0)
+        
+        if remaining > 0:
+            outstanding_orders.append({
+                'order': order,
+                'total_price': decimal_to_float(total_price),
+                'total_paid': decimal_to_float(total_paid),
+                'remaining': decimal_to_float(remaining)
+            })
     
-    total_outstanding = sum([order.remaining for order in outstanding_orders])
+    # Remaining bo'yicha saralash
+    outstanding_orders.sort(key=lambda x: x['remaining'], reverse=True)
+    outstanding_orders = outstanding_orders[:10]
+    
+    total_outstanding = sum([order['remaining'] for order in outstanding_orders])
     
     context = {
         'this_month': this_month,

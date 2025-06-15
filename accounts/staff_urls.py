@@ -1,4 +1,4 @@
-# accounts/staff_urls.py
+# accounts/staff_urls.py - QAYTA YARATILGAN
 
 from django.urls import path
 from . import staff_views

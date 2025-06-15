@@ -1,8 +1,12 @@
 # payments/models.py
 
 from django.db import models
+from django.core.validators import MinValueValidator
+from django.utils import timezone
+from decimal import Decimal
 from orders.models import Order
 from accounts.models import User
+
 
 class Payment(models.Model):
     """
@@ -39,6 +43,7 @@ class Payment(models.Model):
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
         verbose_name='To\'lov miqdori'
     )
     payment_method = models.CharField(
@@ -68,11 +73,11 @@ class Payment(models.Model):
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='received_payments',  # Bu qatorni qo'shamiz
+        related_name='received_payments',
         verbose_name='Qabul qiluvchi'
     )
     
-    # Maydonga bog'liq maydonlar
+    # Tasdiqlash maydonlari
     is_confirmed = models.BooleanField(
         default=True,
         verbose_name='Tasdiqlangan'
@@ -91,28 +96,40 @@ class Payment(models.Model):
         verbose_name='Tasdiqlangan vaqt'
     )
     
+    # Sanalar
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Yaratilgan vaqt'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='O\'zgartirilgan vaqt'
+    )
+    
     class Meta:
         verbose_name = 'To\'lov'
         verbose_name_plural = 'To\'lovlar'
         ordering = ['-payment_date']
     
     def __str__(self):
-        return f"{self.order.order_number} - {self.get_payment_type_display()} - {self.amount:,} so'm"
+        return f"#{self.order.order_number} - {self.amount:,.0f} so'm ({self.get_payment_type_display()})"
     
     def save(self, *args, **kwargs):
-        # Agar tasdiqlanmagan bo'lsa, avtomatik tasdiqlash
-        if not self.confirmed_at and self.is_confirmed:
-            from django.utils import timezone
+        """Saqlashda avtomatik tasdiqlash vaqtini belgilash"""
+        if self.is_confirmed and not self.confirmed_at:
             self.confirmed_at = timezone.now()
-        
-        # Yangi to'lov yaratilganda history ga yozish
-        is_new = self.pk is None
         super().save(*args, **kwargs)
-        
-        if is_new and self.order:
-            # Order history ga to'lov qabul qilingani haqida yozuv
-            self.order.create_history(
-                action='payment_received',
-                performed_by=self.received_by,
-                notes=f"{self.get_payment_type_display()}: {self.amount:,} so'm ({self.get_payment_method_display()})"
-            )
+    
+    def get_payment_status_display(self):
+        """To'lov holati ko'rsatish"""
+        if self.is_confirmed:
+            return "Tasdiqlangan"
+        else:
+            return "Tasdiqlanmagan"
+    
+    def get_payment_status_class(self):
+        """Bootstrap class"""
+        if self.is_confirmed:
+            return "success"
+        else:
+            return "warning"

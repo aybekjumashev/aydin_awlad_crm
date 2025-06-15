@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 
 from .models import User
-from .forms import TechnicianForm, TechnicianEditForm, StaffPasswordResetForm
+from .forms import TechnicianForm, TechnicianEditForm, StaffPasswordResetForm  # ✅ BU IMPORT QO'SHILDI
 from orders.models import Order
 from payments.models import Payment
 
@@ -76,48 +76,6 @@ def staff_list(request):
 
 
 @login_required
-def staff_detail(request, pk):
-    """
-    Texnik xodim tafsilotlari
-    """
-    # Faqat menejer va admin ko'ra oladi
-    if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
-        return redirect('dashboard')
-    
-    staff_member = get_object_or_404(User, pk=pk, role='technician')
-    
-    # Xodim statistikasi - to'g'ri usul bilan
-    stats = {
-        'created_orders': staff_member.created_orders.count(),
-        'measured_orders': 0,  # Bu maydon Order modelida yo'q
-        'processed_orders': 0,  # Bu maydon Order modelida yo'q  
-        'installed_orders': 0,  # Bu maydon Order modelida yo'q
-        'received_payments': staff_member.received_payments.count(),
-        'total_received': staff_member.received_payments.filter(
-            is_confirmed=True
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-    }
-    
-    # So'nggi buyurtmalar - faqat yaratgan buyurtmalari
-    recent_orders = staff_member.created_orders.select_related('customer').order_by('-created_at')[:10]
-    
-    # So'nggi to'lovlar
-    recent_payments = staff_member.received_payments.select_related(
-        'order__customer'
-    ).order_by('-payment_date')[:10]
-    
-    context = {
-        'staff_member': staff_member,
-        'stats': stats,
-        'recent_orders': recent_orders,
-        'recent_payments': recent_payments,
-    }
-    
-    return render(request, 'accounts/staff_detail.html', context)
-
-
-@login_required
 def staff_add(request):
     """
     Yangi texnik xodim qo'shish
@@ -145,6 +103,45 @@ def staff_add(request):
     }
     
     return render(request, 'accounts/staff_form.html', context)
+
+
+@login_required  
+def staff_detail(request, pk):
+    """
+    Texnik xodim tafsilotlari
+    """
+    # Faqat menejer va admin ko'ra oladi
+    if not (request.user.is_manager() or request.user.is_admin()):
+        messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
+        return redirect('dashboard')
+    
+    staff_member = get_object_or_404(User, pk=pk, role='technician')
+    
+    # Xodim statistikasi
+    stats = {
+        'created_orders': staff_member.created_orders.count(),
+        'received_payments': staff_member.received_payments.count(),
+        'total_received': staff_member.received_payments.filter(
+            is_confirmed=True
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+    }
+    
+    # So'nggi buyurtmalar
+    recent_orders = staff_member.created_orders.select_related('customer').order_by('-created_at')[:10]
+    
+    # So'nggi to'lovlar
+    recent_payments = staff_member.received_payments.select_related(
+        'order__customer'
+    ).order_by('-payment_date')[:10]
+    
+    context = {
+        'staff_member': staff_member,
+        'stats': stats,
+        'recent_orders': recent_orders,
+        'recent_payments': recent_payments,
+    }
+    
+    return render(request, 'accounts/staff_detail.html', context)
 
 
 @login_required

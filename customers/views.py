@@ -149,3 +149,37 @@ def customer_delete(request, pk):
     }
     
     return render(request, 'customers/delete.html', context)
+
+
+@login_required
+def customer_ajax_search(request):
+    """
+    AJAX orqali mijozlarni qidiruv
+    """
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'error': 'Faqat AJAX so\'rovlar'}, status=400)
+    
+    search = request.GET.get('q', '').strip()
+    customers = []
+    
+    if search and len(search) >= 2:
+        results = Customer.objects.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(phone__icontains=search)
+        )[:10]  # Faqat 10 ta natija
+        
+        customers = [
+            {
+                'id': customer.id,
+                'name': customer.get_full_name(),
+                'phone': customer.phone,
+                'address': customer.address[:50] + '...' if len(customer.address) > 50 else customer.address
+            }
+            for customer in results
+        ]
+    
+    return JsonResponse({
+        'customers': customers,
+        'count': len(customers)
+    })
