@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-pencil me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Buyurtmaga qaytish
+            </a>
+            <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-list me-1"></i>
+                Ro'yxatga qaytish
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Buyurtma asosiy ma'lumotlari -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Buyurtma ma'lumotlari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Buyurtma raqami</label>
+                        <input type="text" class="form-control" value="{{ order.order_number }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.customer|as_crispy_field }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address|as_crispy_field }}
+                    </div>
+                    
+                    <div class="mb-0">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Jalyuzilar formset -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-window me-2"></i>
+                        Jalyuzilar ro'yxati
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" id="add-item-btn">
+                        <i class="bi bi-plus me-1"></i>
+                        Jalyuzi qo'shish
+                    </button>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    
+                    <div id="formset-container">
+                        {% for form in formset %}
+                        <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="{{ forloop.counter0 }}">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-window me-1"></i>
+                                    <span class="item-title">Jalyuzi #<span class="item-number">{{ forloop.counter }}</span></span>
+                                </h6>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
+                                        {% if formset.forms|length == 1 %}style="display: none;"{% endif %}>
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Hidden fields -->
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            
+                            <!-- Form fields -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
+                                    {{ form.blind_type }}
+                                    {% if form.blind_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.blind_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Material</label>
+                                    {{ form.material }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">O'rnatish turi</label>
+                                    {{ form.installation_type }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Xona nomi</label>
+                                    {{ form.room_name }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.width }}
+                                        <span class="input-group-text">sm</span>
+                                    </div>
+                                    {% if form.width.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.width.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.height }}
+                                        <span class="input-group-text">sm</span>
+                                    </div>
+                                    {% if form.height.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.height.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Donasi</label>
+                                    {{ form.quantity }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        {{ form.unit_price }}
+                                        <span class="input-group-text">so'm</span>
+                                    </div>
+                                    {% if form.unit_price.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.unit_price.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Jami narx</label>
+                                    <div class="alert alert-info p-2 mb-0">
+                                        <span class="item-total">0 so'm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mexanizm turi</label>
+                                    {{ form.mechanism_type }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Karniz turi</label>
+                                    {{ form.cornice_type }}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label class="form-label">Qo'shimcha izohlar</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Umumiy hisob -->
+                    <div class="row mt-4">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Jami elementlar:</span>
+                                        <strong id="total-items">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Umumiy narx:</span>
+                                        <strong id="total-price" class="text-primary">0 so'm</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Saqlash tugmalari -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            O'zgarishlar darhol saqlanadi
+                        </div>
+                        
+                        <div>
+                            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary me-2">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Bekor qilish
+                            </a>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                O'zgarishlarni saqlash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formsetContainer = document.getElementById('formset-container');
+    const addButton = document.getElementById('add-item-btn');
+    const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+    let formIndex = parseInt(totalFormsInput.value);
+    
+    // Yangi form qo'shish
+    addButton.addEventListener('click', function() {
+        const emptyFormHtml = createNewFormHtml(formIndex);
+        formsetContainer.insertAdjacentHTML('beforeend', emptyFormHtml);
+        formIndex++;
+        totalFormsInput.value = formIndex;
+        
+        updateItemNumbers();
+        updateRemoveButtons();
+        updateCalculations();
+        
+        // Yangi form uchun event listeners qo'shish
+        const newForm = formsetContainer.lastElementChild;
+        addCalculationListeners(newForm);
+        addRemoveListener(newForm);
+    });
+    
+    // Remove tugmalarini faollashtirish
+    const removeButtons = formsetContainer.querySelectorAll('.remove-item-btn');
+    removeButtons.forEach(addRemoveListener);
+    
+    function addRemoveListener(container) {
+        const removeBtn = container.querySelector ? container.querySelector('.remove-item-btn') : container;
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                if (confirm('Bu jalyuzini o\'chirmoqchimisiz?')) {
+                    const formDiv = this.closest('.formset-item');
+                    
+                    // DELETE checkbox ni belgilash
+                    const deleteCheckbox = formDiv.querySelector('input[name$="-DELETE"]');
+                    if (deleteCheckbox) {
+                        deleteCheckbox.checked = true;
+                        formDiv.style.display = 'none';
+                    } else {
+                        // Yangi element bo'lsa, to'liq o'chirish
+                        formDiv.remove();
+                        formIndex--;
+                        totalFormsInput.value = formIndex;
+                    }
+                    
+                    updateItemNumbers();
+                    updateRemoveButtons();
+                    updateCalculations();
+                }
+            });
+        }
+    }
+    
+    // Form yaratish funksiyasi
+    function createNewFormHtml(index) {
+        return `
+            <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="${index}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-primary">
+                        <i class="bi bi-window me-1"></i>
+                        <span class="item-title">Jalyuzi #<span class="item-number">${index + 1}</span></span>
+                    </h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                
+                <input type="hidden" name="form-${index}-id" id="id_form-${index}-id">
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
+                        <select name="form-${index}-blind_type" class="form-select" id="id_form-${index}-blind_type">
+                            <option value="">---------</option>
+                            <option value="horizontal">Gorizontal</option>
+                            <option value="vertical">Vertikal</option>
+                            <option value="roller">Roller</option>
+                            <option value="roman">Roman</option>
+                            <option value="zebra">Zebra</option>
+                            <option value="pleated">Bükümlü</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Material</label>
+                        <select name="form-${index}-material" class="form-select" id="id_form-${index}-material">
+                            <option value="">---------</option>
+                            <option value="wood">Yog'och</option>
+                            <option value="aluminum">Alyuminiy</option>
+                            <option value="plastic">Plastik</option>
+                            <option value="fabric">Mato</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">O'rnatish turi</label>
+                        <select name="form-${index}-installation_type" class="form-select" id="id_form-${index}-installation_type">
+                            <option value="">---------</option>
+                            <option value="wall">Devorga o'rnatish</option>
+                            <option value="ceiling">Shiftga o'rnatish</option>
+                            <option value="window_frame">Deraza romiga o'rnatish</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Xona nomi</label>
+                        <input type="text" name="form-${index}-room_name" class="form-control" id="id_form-${index}-room_name">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="form-${index}-width" step="0.01" min="0" class="form-control" id="id_form-${index}-width">
+                            <span class="input-group-text">sm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="form-${index}-height" step="0.01" min="0" class="form-control" id="id_form-${index}-height">
+                            <span class="input-group-text">sm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Donasi</label>
+                        <input type="number" name="form-${index}-quantity" value="1" min="1" class="form-control" id="id_form-${index}-quantity">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="form-${index}-unit_price" step="0.01" min="0" class="form-control" id="id_form-${index}-unit_price">
+                            <span class="input-group-text">so'm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Jami narx</label>
+                        <div class="alert alert-info p-2 mb-0">
+                            <span class="item-total">0 so'm</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mexanizm turi</label>
+                        <input type="text" name="form-${index}-mechanism_type" class="form-control" id="id_form-${index}-mechanism_type">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Karniz turi</label>
+                        <input type="text" name="form-${index}-cornice_type" class="form-control" id="id_form-${index}-cornice_type">
+                    </div>
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label">Qo'shimcha izohlar</label>
+                    <textarea name="form-${index}-notes" class="form-control" rows="2" id="id_form-${index}-notes"></textarea>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Raqamlarni yangilash
+    function updateItemNumbers() {
+        const visibleItems = formsetContainer.querySelectorAll('.formset-item:not([style*="display: none"])');
+        visibleItems.forEach(function(item, index) {
+            const numberSpan = item.querySelector('.item-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+        });
+    }
+    
+    // Remove tugmalarini ko'rsatish/yashirish
+    function updateRemoveButtons() {
+        const visibleItems = formsetContainer.querySelectorAll('.formset-item:not([style*="display: none"])');
+        visibleItems.forEach(function(item) {
+            const removeBtn = item.querySelector('.remove-item-btn');
+            if (removeBtn) {
+                removeBtn.style.display = visibleItems.length > 1 ? 'inline-block' : 'none';
+            }
+        });
+    }
+    
+    // Hisob-kitoblarni yangilash
+    function updateCalculations() {
+        let totalItems = 0;
+        let totalPrice = 0;
+        
+        const visibleItems = formsetContainer.querySelectorAll('.formset-item:not([style*="display: none"])');
+        visibleItems.forEach(function(item) {
+            const quantity = parseInt(item.querySelector('input[name$="-quantity"]')?.value) || 1;
+            const unitPrice = parseFloat(item.querySelector('input[name$="-unit_price"]')?.value) || 0;
+            
+            const itemTotal = unitPrice * quantity;
+            const totalElement = item.querySelector('.item-total');
+            if (totalElement) {
+                totalElement.textContent = itemTotal.toLocaleString() + ' so\'m';
+            }
+            
+            if (unitPrice > 0) {
+                totalItems++;
+                totalPrice += itemTotal;
+            }
+        });
+        
+        document.getElementById('total-items').textContent = totalItems;
+        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' so\'m';
+    }
+    
+    // Hisob-kitob event listenerlarini qo'shish
+    function addCalculationListeners(container) {
+        const inputs = container.querySelectorAll('input[type="number"]');
+        inputs.forEach(function(input) {
+            input.addEventListener('input', updateCalculations);
+        });
+    }
+    
+    // Mavjud formlar uchun event listenerlar
+    const existingItems = formsetContainer.querySelectorAll('.formset-item');
+    existingItems.forEach(function(item) {
+        addCalculationListeners(item);
+        addRemoveListener(item);
+    });
+    
+    // Dastlabki hisob-kitoblar
+    updateCalculations();
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}

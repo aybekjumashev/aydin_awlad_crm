@@ -196,46 +196,9 @@
                                 {% if order.status == 'measuring' and user.can_measure or user.is_manager or user.is_admin %}
                                 <a href="{% url 'orders:measurement' order.pk %}" 
                                    class="btn btn-outline-success" title="O'lchov olish">
-                                    <i class="bi bi-ruler"></i>
+                                    <i class="bi bi-rulers"></i>
                                 </a>
                                 {% endif %}
-                                {% if user.is_manager or user.is_admin %}
-                                <a href="{% url 'orders:edit' order.pk %}" 
-                                   class="btn btn-outline-warning" title="Tahrirlash">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                {% endif %}
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
-                                            data-bs-toggle="dropdown" title="Ko'proq">
-                                        <i class="bi bi-three-dots"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        {% if order.status != 'cancelled' and order.remaining_balance > 0 %}
-                                        <li>
-                                            <a class="dropdown-item" href="{% url 'payments:add' order.pk %}">
-                                                <i class="bi bi-credit-card me-2"></i>
-                                                To'lov qo'shish
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                        <li>
-                                            <a class="dropdown-item" href="{% url 'orders:print' order.pk %}">
-                                                <i class="bi bi-printer me-2"></i>
-                                                Chop etish
-                                            </a>
-                                        </li>
-                                        {% if user.is_manager or user.is_admin %}
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item" href="{% url 'orders:status_update' order.pk %}">
-                                                <i class="bi bi-arrow-repeat me-2"></i>
-                                                Status o'zgartirish
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
                             </div>
                         </td>
                     </tr>

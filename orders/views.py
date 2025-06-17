@@ -149,6 +149,86 @@ def order_add(request):
 
 
 @login_required
+def order_measurement(request, pk):
+    """
+    O'lchov olish sahifasi
+    """
+    order = get_object_or_404(Order, pk=pk)
+    
+    # Huquqlarni tekshirish
+    if not (request.user.can_measure or request.user.is_manager() or request.user.is_admin()):
+        messages.error(request, 'Sizda o\'lchov olish huquqi yo\'q!')
+        return redirect('orders:detail', pk=pk)
+    
+    # Faqat "measuring" statusdagi buyurtmalar uchun
+    if order.status != 'measuring':
+        messages.warning(request, 'Bu buyurtma o\'lchov olish bosqichida emas!')
+        return redirect('orders:detail', pk=pk)
+    
+    # OrderItem formset yaratish
+    OrderItemFormSet = inlineformset_factory(
+        Order, OrderItem, 
+        form=OrderItemForm,
+        extra=1,
+        min_num=1,
+        validate_min=True,
+        can_delete=True
+    )
+    
+    if request.method == 'POST':
+        formset = OrderItemFormSet(request.POST, instance=order)
+        measurement_date = request.POST.get('measurement_date')
+        measurement_notes = request.POST.get('measurement_notes')
+        
+        if formset.is_valid():
+            # O'lchov ma'lumotlarini saqlash
+            if measurement_date:
+                from datetime import datetime
+                order.measurement_date = datetime.strptime(measurement_date, '%Y-%m-%d').date()
+            
+            if measurement_notes:
+                if order.notes:
+                    order.notes += f"\n\nO'lchov izohlar ({timezone.now().strftime('%d.%m.%Y')}): {measurement_notes}"
+                else:
+                    order.notes = f"O'lchov izohlar: {measurement_notes}"
+            
+            # Mas'ul xodimni belgilash
+            order.measured_by = request.user
+            order.status = 'processing'  # Ishlab chiqarishga o'tkazish
+            order.save()
+            
+            # Jalyuzi ma'lumotlarini saqlash
+            formset.save()
+            
+            messages.success(
+                request, 
+                f'O\'lchov muvaffaqiyatli yakunlandi! Buyurtma #{order.order_number} ishlab chiqarishga o\'tkazildi.'
+            )
+            return redirect('orders:detail', pk=order.pk)
+        else:
+            # Formset xatolarini ko'rsatish
+            for form in formset:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'Jalyuzi ma\'lumotlari: {error}')
+            
+            # Non-form errors
+            for error in formset.non_form_errors():
+                messages.error(request, f'Umumiy xato: {error}')
+    else:
+        formset = OrderItemFormSet(instance=order)
+    
+    context = {
+        'order': order,
+        'formset': formset,
+        'today': timezone.now().date(),
+        'title': f'O\'lchov olish - #{order.order_number}',
+    }
+    
+    return render(request, 'orders/measurement.html', context)
+
+
+@login_required
 def order_edit(request, pk):
     """
     Buyurtmani tahrirlash
@@ -248,34 +328,24 @@ def order_status_update(request, pk):
     
     if request.method == 'POST':
         new_status = request.POST.get('status')
-        notes = request.POST.get('notes', '')
-        
-        if new_status in dict(Order.STATUS_CHOICES):
-            old_status = order.status
+        if new_status and new_status in dict(Order.STATUS_CHOICES):
+            old_status = order.get_status_display()
             order.status = new_status
-            order.updated_by = request.user
             
-            # Status bo'yicha qo'shimcha ma'lumotlarni yangilash
-            if new_status == 'measuring' and not order.measured_by:
+            # Status bo'yicha mas'ul xodimlarni belgilash
+            if new_status == 'measuring' and request.user.can_measure:
                 order.measured_by = request.user
-                order.measurement_date = timezone.now().date()
-            elif new_status == 'processing' and not order.processed_by:
+            elif new_status == 'processing' and request.user.can_process:
                 order.processed_by = request.user
-                order.processing_start_date = timezone.now().date()
-            elif new_status == 'installed' and not order.installed_by:
+            elif new_status == 'installed' and request.user.can_install:
                 order.installed_by = request.user
                 order.installation_date = timezone.now().date()
-            elif new_status == 'cancelled':
-                order.cancelled_by = request.user
-                order.cancelled_date = timezone.now().date()
-                if notes:
-                    order.cancellation_reason = notes
             
             order.save()
             
             messages.success(
-                request, 
-                f'Buyurtma #{order.order_number} holati "{old_status}" dan "{new_status}" ga o\'zgartirildi!'
+                request,
+                f'Buyurtma #{order.order_number} statusi {old_status} dan {order.get_status_display()} ga o\'zgartirildi!'
             )
         else:
             messages.error(request, 'Noto\'g\'ri status tanlandi!')
@@ -286,13 +356,18 @@ def order_status_update(request, pk):
 @login_required
 def order_item_add(request, pk):
     """
-    Buyurtmaga jalyuzi qo'shish
+    Buyurtmaga element qo'shish
     """
     order = get_object_or_404(Order, pk=pk)
     
     # Huquqlarni tekshirish
     if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda jalyuzi qo\'shish huquqi yo\'q!')
+        messages.error(request, 'Sizda element qo\'shish huquqi yo\'q!')
+        return redirect('orders:detail', pk=pk)
+    
+    # Tugallangan buyurtmalarga element qo'shish mumkin emas
+    if order.status == 'installed':
+        messages.error(request, 'Tugallangan buyurtmalarga element qo\'shish mumkin emas!')
         return redirect('orders:detail', pk=pk)
     
     if request.method == 'POST':
@@ -302,38 +377,43 @@ def order_item_add(request, pk):
             item.order = order
             item.save()
             
-            messages.success(request, 'Jalyuzi buyurtmaga qo\'shildi!')
-            return redirect('orders:detail', pk=pk)
+            messages.success(request, 'Element buyurtmaga qo\'shildi!')
+            return redirect('orders:detail', pk=order.pk)
     else:
         form = OrderItemForm()
     
     context = {
         'form': form,
         'order': order,
-        'title': f'Buyurtma #{order.order_number}ga jalyuzi qo\'shish',
+        'title': f'#{order.order_number} ga element qo\'shish',
     }
     
-    return render(request, 'orders/item_form.html', context)
+    return render(request, 'orders/add_item.html', context)
 
 
 @login_required
 def order_item_edit(request, pk):
     """
-    Jalyuzini tahrirlash
+    Buyurtma elementini tahrirlash
     """
     item = get_object_or_404(OrderItem, pk=pk)
     order = item.order
     
     # Huquqlarni tekshirish
     if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda jalyuzini tahrirlash huquqi yo\'q!')
+        messages.error(request, 'Sizda element tahrirlash huquqi yo\'q!')
+        return redirect('orders:detail', pk=order.pk)
+    
+    # Tugallangan buyurtmalar elementlarini tahrirlash mumkin emas
+    if order.status == 'installed':
+        messages.error(request, 'Tugallangan buyurtmalar elementlarini tahrirlash mumkin emas!')
         return redirect('orders:detail', pk=order.pk)
     
     if request.method == 'POST':
         form = OrderItemForm(request.POST, instance=item)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Jalyuzi ma\'lumotlari yangilandi!')
+            messages.success(request, 'Element ma\'lumotlari yangilandi!')
             return redirect('orders:detail', pk=order.pk)
     else:
         form = OrderItemForm(instance=item)
@@ -342,43 +422,56 @@ def order_item_edit(request, pk):
         'form': form,
         'item': item,
         'order': order,
-        'title': f'Jalyuzini tahrirlash',
+        'title': f'Element tahrirlash - #{order.order_number}',
     }
     
-    return render(request, 'orders/item_form.html', context)
+    return render(request, 'orders/edit_item.html', context)
 
 
 @login_required
 def order_item_delete(request, pk):
     """
-    Jalyuzini o'chirish
+    Buyurtma elementini o'chirish
     """
     item = get_object_or_404(OrderItem, pk=pk)
     order = item.order
     
     # Huquqlarni tekshirish
     if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda jalyuzini o\'chirish huquqi yo\'q!')
+        messages.error(request, 'Sizda element o\'chirish huquqi yo\'q!')
+        return redirect('orders:detail', pk=order.pk)
+    
+    # Tugallangan buyurtmalar elementlarini o'chirish mumkin emas
+    if order.status == 'installed':
+        messages.error(request, 'Tugallangan buyurtmalar elementlarini o\'chirish mumkin emas!')
         return redirect('orders:detail', pk=order.pk)
     
     if request.method == 'POST':
         item.delete()
-        messages.success(request, 'Jalyuzi o\'chirildi!')
+        messages.success(request, 'Element o\'chirildi!')
         return redirect('orders:detail', pk=order.pk)
     
-    return redirect('orders:detail', pk=order.pk)
+    context = {
+        'item': item,
+        'order': order,
+    }
+    
+    return render(request, 'orders/delete_item.html', context)
 
 
 @login_required
 def order_pdf(request, pk):
     """
-    Buyurtmani PDF formatida export qilish
+    Buyurtmani PDF sifatida yuklab olish (print version)
     """
     order = get_object_or_404(Order, pk=pk)
     
-    # Bu funksiya kelajakda WeasyPrint bilan implement qilinadi
-    messages.info(request, 'PDF export funksiyasi hali tayyor emas')
-    return redirect('orders:detail', pk=pk)
+    context = {
+        'order': order,
+    }
+    
+    # PDF uchun alohida template
+    return render(request, 'orders/print.html', context)
 
 
 @login_required
@@ -386,15 +479,14 @@ def order_ajax_stats(request):
     """
     AJAX orqali buyurtmalar statistikasi
     """
-    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'error': 'Faqat AJAX so\'rovlar'}, status=400)
-    
+    # Umumiy statistika
     stats = {
-        'new_orders': Order.objects.filter(status='new').count(),
-        'measuring_orders': Order.objects.filter(status='measuring').count(),
-        'processing_orders': Order.objects.filter(status='processing').count(),
-        'completed_orders': Order.objects.filter(status='installed').count(),
-        'cancelled_orders': Order.objects.filter(status='cancelled').count(),
+        'total': Order.objects.count(),
+        'new': Order.objects.filter(status='new').count(),
+        'measuring': Order.objects.filter(status='measuring').count(),
+        'processing': Order.objects.filter(status='processing').count(),
+        'installed': Order.objects.filter(status='installed').count(),
+        'cancelled': Order.objects.filter(status='cancelled').count(),
     }
     
     return JsonResponse(stats)

@@ -177,32 +177,28 @@
     </style>
 </head>
 <body>
-    <button class="print-btn no-print" onclick="window.print()">
-        🖨️ Chop etish
+    <!-- Print tugmasi -->
+    <button onclick="window.print()" class="print-btn no-print">
+        <i class="bi bi-printer"></i> Chop etish
     </button>
     
     <!-- Header -->
     <div class="header">
         <div class="company-name">AYDIN AWLAD</div>
-        <div class="company-info">
-            Jalyuzi va parda o'rnatish xizmatlari<br>
-            Tel: +998 90 123 45 67 | Email: info@aydinawlad.uz
-        </div>
+        <div class="company-info">Jalyuzi o'rnatish xizmatlari</div>
     </div>
     
-    <!-- Order Info -->
+    <!-- Buyurtma ma'lumotlari -->
     <div class="order-info">
         <div class="info-section">
             <div class="section-title">Buyurtma ma'lumotlari</div>
             <div class="info-row">
-                <span class="info-label">Buyurtma raqami:</span>
-                <strong>#{{ order.order_number }}</strong>
+                <span class="info-label">Raqam:</span>
+                #{{ order.order_number }}
             </div>
             <div class="info-row">
                 <span class="info-label">Holat:</span>
-                <span class="status-badge status-{{ order.status }}">
-                    {{ order.get_status_display }}
-                </span>
+                <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Yaratilgan:</span>
@@ -225,7 +221,7 @@
         <div class="info-section">
             <div class="section-title">Mijoz ma'lumotlari</div>
             <div class="info-row">
-                <span class="info-label">F.I.Sh:</span>
+                <span class="info-label">Ism:</span>
                 {{ order.customer.get_full_name }}
             </div>
             <div class="info-row">
@@ -245,20 +241,36 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
             <div>
                 <strong>Qabul qilgan:</strong><br>
-                {{ order.created_by.get_full_name|default:order.created_by.username|default:"-" }}
+                {% if order.created_by %}
+                    {{ order.created_by.get_full_name|default:order.created_by.username|default:"-" }}
+                {% else %}
+                    -
+                {% endif %}
             </div>
             <div>
                 <strong>O'lchov olgan:</strong><br>
-                {{ order.measured_by.get_full_name|default:order.measured_by.username|default:"Tayinlanmagan" }}
+                {% if order.measured_by %}
+                    {{ order.measured_by.get_full_name|default:order.measured_by.username|default:"Tayinlanmagan" }}
+                {% else %}
+                    Tayinlanmagan
+                {% endif %}
             </div>
             <div>
                 <strong>Ishlab chiqargan:</strong><br>
-                {{ order.processed_by.get_full_name|default:order.processed_by.username|default:"Tayinlanmagan" }}
+                {% if order.processed_by %}
+                    {{ order.processed_by.get_full_name|default:order.processed_by.username|default:"Tayinlanmagan" }}
+                {% else %}
+                    Tayinlanmagan
+                {% endif %}
             </div>
         </div>
         <div style="margin-top: 10px;">
             <strong>O'rnatgan:</strong>
-            {{ order.installed_by.get_full_name|default:order.installed_by.username|default:"Tayinlanmagan" }}
+            {% if order.installed_by %}
+                {{ order.installed_by.get_full_name|default:order.installed_by.username|default:"Tayinlanmagan" }}
+            {% else %}
+                Tayinlanmagan
+            {% endif %}
         </div>
     </div>
     
@@ -283,113 +295,100 @@
                 <td class="text-center">{{ forloop.counter }}</td>
                 <td>
                     <strong>{{ item.get_blind_type_display }}</strong>
-                    {% if item.notes %}
-                        <br><small style="color: #666;">{{ item.notes }}</small>
+                    {% if item.installation_type %}
+                        <br><small>{{ item.get_installation_type_display }}</small>
                     {% endif %}
                 </td>
                 <td class="text-center">
-                    {{ item.width }} × {{ item.height }}
-                    <br><small>({{ item.area|floatformat:2 }} m²)</small>
+                    {{ item.width|floatformat:0 }} × {{ item.height|floatformat:0 }}
+                    <br><small>({{ item.total_area_sqm|floatformat:2 }} m²)</small>
                 </td>
-                <td>{{ item.get_material_display }}</td>
-                <td class="text-center">
-                    {{ item.room_name|default:"-" }}
-                </td>
+                <td>{{ item.get_material_display|default:"-" }}</td>
+                <td>{{ item.room_name|default:"-" }}</td>
                 <td class="text-center">{{ item.quantity }}</td>
                 <td class="text-right">{{ item.unit_price|floatformat:0 }} so'm</td>
-                <td class="text-right"><strong>{{ item.total_price|floatformat:0 }} so'm</strong></td>
+                <td class="text-right">{{ item.total_price|floatformat:0 }} so'm</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">
+                    Hozircha jalyuzilar qo'shilmagan
+                </td>
             </tr>
             {% endfor %}
-        </tbody>
-        <tfoot>
+            
+            {% if order.items.all %}
             <tr class="total-row">
-                <td colspan="7" class="text-right"><strong>JAMI:</strong></td>
+                <td colspan="7" class="text-right"><strong>Jami:</strong></td>
                 <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
             </tr>
-        </tfoot>
-    </table>
-    
-    <!-- Payments Table -->
-    {% if payments %}
-    <div class="section-title">To'lovlar tarixi</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Sana</th>
-                <th>To'lov turi</th>
-                <th>Miqdor</th>
-                <th>To'lov usuli</th>
-                <th>Qabul qilgan</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for payment in payments %}
-            <tr>
-                <td>{{ payment.payment_date|date:"d.m.Y H:i" }}</td>
-                <td>{{ payment.get_payment_type_display }}</td>
-                <td class="text-right"><strong>{{ payment.amount|floatformat:0 }} so'm</strong></td>
-                <td>{{ payment.get_payment_method_display }}</td>
-                <td>{{ payment.received_by.get_full_name|default:payment.received_by.username|default:"-" }}</td>
-            </tr>
-            {% endfor %}
+            {% endif %}
         </tbody>
     </table>
-    {% endif %}
     
-    <!-- Summary -->
+    <!-- Moliyaviy ma'lumotlar -->
+    {% if order.total_price > 0 %}
     <div class="summary">
-        <div class="section-title">Xulosa</div>
+        <div class="section-title">Moliyaviy ma'lumotlar</div>
         <div class="summary-grid">
             <div>
-                <strong>Umumiy narx:</strong> {{ order.total_price|floatformat:0 }} so'm<br>
-                <strong>To'langan:</strong> {{ order.total_paid|floatformat:0 }} so'm<br>
-                <strong>Qolgan:</strong> {{ order.remaining_balance|floatformat:0 }} so'm
+                <div class="info-row">
+                    <span class="info-label">Umumiy narx:</span>
+                    {{ order.total_price|floatformat:0 }} so'm
+                </div>
+                <div class="info-row">
+                    <span class="info-label">To'langan:</span>
+                    {{ order.total_paid|floatformat:0 }} so'm
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Qolgan:</span>
+                    {{ order.remaining_balance|floatformat:0 }} so'm
+                </div>
             </div>
             <div>
-                <strong>Jalyuzilar soni:</strong> {{ order.total_items }} ta<br>
-                <strong>Status:</strong> {{ order.get_status_display }}<br>
-                {% if order.is_fully_paid %}
-                    <strong style="color: green;">✓ To'liq to'langan</strong>
-                {% else %}
-                    <strong style="color: red;">⚠ To'lov kutilmoqda</strong>
-                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">To'lov holati:</span>
+                    {% if order.is_fully_paid %}
+                        <span style="color: green; font-weight: bold;">To'liq to'langan</span>
+                    {% elif order.total_paid > 0 %}
+                        <span style="color: orange; font-weight: bold;">Qisman to'langan</span>
+                    {% else %}
+                        <span style="color: red; font-weight: bold;">To'lanmagan</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
+    {% endif %}
     
-    <!-- Notes -->
+    <!-- Qo'shimcha izohlar -->
     {% if order.notes %}
-    <div style="margin-top: 20px;">
+    <div class="info-section" style="margin-top: 30px;">
         <div class="section-title">Qo'shimcha izohlar</div>
-        <p style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
-            {{ order.notes }}
-        </p>
+        <p>{{ order.notes|linebreaksbr }}</p>
     </div>
     {% endif %}
     
-    <!-- Signatures -->
+    <!-- Imzolar -->
     <div class="signatures">
         <div class="signature">
             <div class="signature-line"></div>
             <div>Mijoz imzosi</div>
-            <div style="font-size: 12px; color: #666;">{{ order.customer.get_full_name }}</div>
+            <small>{{ order.customer.get_full_name }}</small>
         </div>
         
         <div class="signature">
             <div class="signature-line"></div>
-            <div>Kompaniya vakili</div>
-            <div style="font-size: 12px; color: #666;">AYDIN AWLAD</div>
+            <div>Kompaniya vakilining imzosi</div>
+            <small>AYDIN AWLAD</small>
         </div>
     </div>
     
     <!-- Footer -->
     <div class="footer">
-        <div class="text-center">
-            <p>Bu hujjat {{ "now"|date:"d.m.Y H:i" }} da chop etilgan.</p>
-            <p style="font-size: 10px;">
-                AYDIN AWLAD - Professional jalyuzi va parda xizmatlari<br>
-                Manzil: Toshkent sh. | Tel: +998 90 123 45 67 | www.aydinawlad.uz
-            </p>
+        <div style="text-align: center;">
+            <strong>AYDIN AWLAD</strong> - Professional jalyuzi xizmatlari<br>
+            Chop etilgan sana: {{ "now"|date:"d.m.Y H:i" }}
         </div>
     </div>
 </body>
