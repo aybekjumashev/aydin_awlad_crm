@@ -1,13 +1,13 @@
-# customers/forms.py - TOZALANGAN VERSIYA
+# customers/forms.py - TO'G'IRLANGAN VERSIYA
 
 from django import forms
 from django.core.validators import RegexValidator
-from .models import Customer
+from .models import Customer, CustomerPhone, CustomerNote
 
 
 class CustomerForm(forms.ModelForm):
     """
-    Mijoz yaratish/tahrirlash formasi
+    Mijoz yaratish/tahrirlash formasi - Yangilangan
     """
     
     phone_validator = RegexValidator(
@@ -17,7 +17,10 @@ class CustomerForm(forms.ModelForm):
     
     class Meta:
         model = Customer
-        fields = ['first_name', 'last_name', 'phone', 'address', 'notes']
+        fields = [
+            'first_name', 'last_name', 'birth_date', 'category', 
+            'phone', 'address', 'notes'
+        ]
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -28,6 +31,14 @@ class CustomerForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Mijoz familiyasi...',
                 'required': True
+            }),
+            'birth_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'placeholder': 'Tug\'ilgan kun'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -50,6 +61,8 @@ class CustomerForm(forms.ModelForm):
         labels = {
             'first_name': 'Ism',
             'last_name': 'Familiya',
+            'birth_date': 'Tug\'ilgan kun',
+            'category': 'Kategoriya',
             'phone': 'Telefon raqam',
             'address': 'Manzil',
             'notes': 'Izoh',
@@ -58,11 +71,15 @@ class CustomerForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['phone'].validators.append(self.phone_validator)
+        
+        # Birth_date va category majburiy emas
+        self.fields['birth_date'].required = False
+        self.fields['notes'].required = False
 
 
 class CustomerSearchForm(forms.Form):
     """
-    Mijozlarni qidirish formasi
+    Mijozlarni qidirish formasi - Yangilangan
     """
     
     search = forms.CharField(
@@ -75,6 +92,82 @@ class CustomerSearchForm(forms.Form):
             'id': 'search-input'
         })
     )
+    
+    category = forms.ChoiceField(
+        choices=[('', 'Barcha kategoriyalar')] + Customer.CATEGORY_CHOICES,
+        required=False,
+        label='Kategoriya',
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
+    
+    has_birthday_soon = forms.BooleanField(
+        required=False,
+        label='Tez orada tug\'ilgan kun',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        help_text='Keyingi 30 kun ichida tug\'ilgan kuni bo\'lganlar'
+    )
+
+
+class CustomerPhoneForm(forms.ModelForm):
+    """
+    Mijoz telefon raqami formasi
+    """
+    
+    class Meta:
+        model = CustomerPhone
+        fields = ['phone_number', 'phone_type', 'is_primary', 'notes']
+        widgets = {
+            'phone_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+998901234567',
+                'required': True
+            }),
+            'phone_type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'is_primary': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'notes': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Izoh...'
+            }),
+        }
+        labels = {
+            'phone_number': 'Telefon raqam',
+            'phone_type': 'Telefon turi',
+            'is_primary': 'Asosiy telefon',
+            'notes': 'Izoh',
+        }
+
+
+class CustomerNoteForm(forms.ModelForm):
+    """
+    Mijoz eslatmasi formasi
+    """
+    
+    class Meta:
+        model = CustomerNote
+        fields = ['note', 'is_important']
+        widgets = {
+            'note': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Eslatma matni...',
+                'required': True
+            }),
+            'is_important': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+        labels = {
+            'note': 'Eslatma',
+            'is_important': 'Muhim eslatma',
+        }
 
 
 class PublicCustomerOrderForm(forms.Form):
@@ -87,7 +180,7 @@ class PublicCustomerOrderForm(forms.Form):
         max_length=100,
         label='To\'liq ism',
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': 'form-control form-control-lg',
             'placeholder': 'To\'liq ismingizni kiriting...',
             'required': True
         })
@@ -103,7 +196,7 @@ class PublicCustomerOrderForm(forms.Form):
             )
         ],
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
+            'class': 'form-control form-control-lg',
             'placeholder': '+998901234567',
             'required': True,
             'value': '+998'
@@ -134,7 +227,7 @@ class PublicCustomerOrderForm(forms.Form):
         ],
         label='Jalyuzi turi',
         widget=forms.Select(attrs={
-            'class': 'form-select',
+            'class': 'form-select form-select-lg',
             'required': True
         })
     )
@@ -211,7 +304,7 @@ class QuickOrderForm(forms.Form):
         widget=forms.Textarea(attrs={
             'class': 'form-control',
             'rows': 3,
-            'placeholder': 'To\'liq manzil (o\'lchov olish uchun)...',
+            'placeholder': 'To\'liq manzil kiriting...',
             'required': True
         })
     )
@@ -219,60 +312,22 @@ class QuickOrderForm(forms.Form):
     # Jalyuzi ma'lumotlari
     blind_type = forms.ChoiceField(
         choices=[
-            ('', 'Jalyuzi turini tanlang...'),
             ('horizontal', 'Gorizontal'),
             ('vertical', 'Vertikal'),
             ('roller', 'Rulon'),
             ('roman', 'Rim'),
-            ('pleated', 'Plisse'),
-            ('wooden', 'Yog\'och'),
-            ('aluminum', 'Alyuminiy'),
         ],
         label='Jalyuzi turi',
         widget=forms.Select(attrs={
-            'class': 'form-select form-select-lg',
-            'required': True
+            'class': 'form-select form-select-lg'
         })
     )
     
-    room_count = forms.IntegerField(
-        min_value=1,
-        max_value=20,
-        initial=1,
-        label='Xonalar soni',
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control form-control-lg text-center',
-            'min': '1',
-            'max': '20'
-        })
-    )
-    
-    approximate_size = forms.CharField(
-        max_length=100,
+    urgent = forms.BooleanField(
         required=False,
-        label='Taxminiy o\'lcham',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Masalan: 150x120 sm yoki katta xona...'
-        })
-    )
-    
-    preferred_contact_time = forms.CharField(
-        max_length=100,
-        required=False,
-        label='Qulay aloqa vaqti',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Masalan: 9:00-18:00 yoki faqat kechqurun...'
-        })
-    )
-    
-    notes = forms.CharField(
-        required=False,
-        label='Qo\'shimcha ma\'lumot',
-        widget=forms.Textarea(attrs={
-            'class': 'form-control',
-            'rows': 4,
-            'placeholder': 'Maxsus talablar, rang afzalliklari va h.k...'
-        })
+        label='Shoshilinch buyurtma',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        help_text='Tezkor o\'lchov olish uchun'
     )

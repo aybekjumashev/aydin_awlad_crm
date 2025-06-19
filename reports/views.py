@@ -1,4 +1,4 @@
-# reports/views.py
+# reports/views.py - TO'LIQ TO'G'IRLANGAN VERSIYA
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -25,7 +25,7 @@ def decimal_to_float(obj):
 @login_required
 def report_dashboard(request):
     """
-    Hisobotlar asosiy sahifasi
+    Hisobotlar asosiy sahifasi - TO'G'IRLANGAN
     """
     # Faqat menejer va admin ko'ra oladi
     if not (request.user.is_manager() or request.user.is_admin()):
@@ -78,124 +78,168 @@ def report_dashboard(request):
     for customer in top_customers:
         customer.total_spent = decimal_to_float(customer.total_spent or 0)
     
-    # Eng mashhur jalyuzi turlari - TO'G'RILANADI
-    popular_blinds = OrderItem.objects.values('blind_type').annotate(
-        count=Count('id'),
-        total_amount=Sum('unit_price') * Sum('quantity')  # ✅ total_price o'rniga
-    ).order_by('-count')[:5]
-    
-    # Yoki yanada to'g'ri:
-    popular_blinds_corrected = []
+    # ✅ TO'G'RILANDI: Eng mashhur jalyuzi turlari
+    popular_blinds = []
     blind_types = OrderItem.objects.values_list('blind_type', flat=True).distinct()
     
     for blind_type in blind_types:
         items = OrderItem.objects.filter(blind_type=blind_type)
-        total_amount = sum(item.total_price() for item in items)  # Method chaqirish
         count = items.count()
         
-        popular_blinds_corrected.append({
+        # Total amount ni to'g'ri hisoblash
+        total_amount = 0
+        for item in items:
+            total_amount += item.total_price()  # Method chaqirish
+        
+        popular_blinds.append({
             'blind_type': blind_type,
+            'blind_type_display': dict(OrderItem.BLIND_TYPE_CHOICES).get(blind_type, blind_type),
             'count': count,
             'total_amount': decimal_to_float(total_amount)
         })
     
-    # Count bo'yicha saralash
-    popular_blinds_corrected.sort(key=lambda x: x['count'], reverse=True)
-    popular_blinds = popular_blinds_corrected[:5]
+    # Eng ko'p sotilgan turlari bo'yicha saralash
+    popular_blinds.sort(key=lambda x: x['count'], reverse=True)
+    popular_blinds = popular_blinds[:5]
     
-    # Oylik daromad grafigi (oxirgi 6 oy)
-    monthly_revenue = []
-    for i in range(6):
-        month_start = (today.replace(day=1) - timedelta(days=32*i)).replace(day=1)
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
-        revenue = Payment.objects.filter(
-            payment_date__date__gte=month_start,
-            payment_date__date__lte=month_end,
-            is_confirmed=True
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        
-        monthly_revenue.append({
-            'month': month_start.strftime('%B %Y'),
-            'revenue': decimal_to_float(revenue)
+    # Status bo'yicha taqsimlash
+    status_distribution = []
+    for status_code, status_name in Order.STATUS_CHOICES:
+        count = Order.objects.filter(status=status_code).count()
+        status_distribution.append({
+            'status': status_code,
+            'status_display': status_name,
+            'count': count
         })
     
-    monthly_revenue.reverse()  # Eskidan yangiga
+    # JSON formatga o'tkazish (JavaScript uchun)
+    charts_data = {
+        'status_labels': [item['status_display'] for item in status_distribution],
+        'status_data': [item['count'] for item in status_distribution],
+        'blinds_labels': [item['blind_type_display'] for item in popular_blinds],
+        'blinds_data': [item['count'] for item in popular_blinds],
+    }
     
     context = {
         'stats': stats,
         'top_customers': top_customers,
         'popular_blinds': popular_blinds,
-        'monthly_revenue': monthly_revenue,
-        'monthly_revenue_json': json.dumps([m['revenue'] for m in monthly_revenue]),
-        'monthly_labels_json': json.dumps([m['month'] for m in monthly_revenue]),
+        'status_distribution': status_distribution,
+        'charts_data': json.dumps(charts_data),
     }
     
     return render(request, 'reports/dashboard.html', context)
 
 
 @login_required
-def customer_report(request):
+def financial_report(request):
     """
-    Mijozlar hisoboti - TO'G'RILANADI
+    Moliyaviy hisobot - TO'G'IRLANGAN
     """
     if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
+        messages.error(request, 'Sizda moliyaviy hisobotni ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
-    # Mijozlar statistikasi - TO'G'RILANADI
-    customers = Customer.objects.annotate(
-        order_count=Count('orders'),
-        completed_orders=Count('orders', filter=Q(orders__status='installed')),
-        total_spent=Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True))
-        # outstanding_balance ni alohida hisoblash kerak
-    ).order_by('-total_spent')
+    # Sana filtri
+    today = timezone.now().date()
+    this_month_start = today.replace(day=1)
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = this_month_start - timedelta(days=1)
     
-    # Outstanding balance ni alohida hisoblaymiz
-    for customer in customers:
-        customer.total_spent = decimal_to_float(customer.total_spent or 0)
-        
-        # Qarzdorlikni hisoblash
-        total_orders_value = 0
-        total_paid = 0
-        
-        for order in customer.orders.exclude(status='cancelled'):
-            total_orders_value += order.total_price()  # Method chaqirish
-            total_paid += order.total_paid()  # Method chaqirish
-        
-        customer.outstanding_balance = decimal_to_float(max(total_orders_value - total_paid, 0))
+    # Bu oylik ma'lumotlar
+    this_month_orders = Order.objects.filter(created_at__gte=this_month_start)
+    this_month_payments = Payment.objects.filter(
+        payment_date__gte=this_month_start,
+        is_confirmed=True
+    )
     
-    # Umumiy statistika
-    total_customers = customers.count()
-    active_customers = customers.filter(order_count__gt=0).count()
-    paying_customers = [c for c in customers if c.total_spent > 0]
+    # ✅ TO'G'RILANDI: Total value ni alohida hisoblash
+    this_month_total_value = 0
+    for order in this_month_orders:
+        this_month_total_value += order.total_price()  # Method chaqirish
     
-    # Top 10 mijozlar
-    top_customers = [c for c in customers if c.order_count > 0][:10]
-    
-    # Qarzdor mijozlar
-    debtor_customers = [c for c in customers if c.outstanding_balance > 0]
-    debtor_customers.sort(key=lambda x: x.outstanding_balance, reverse=True)
-    debtor_customers = debtor_customers[:10]
-    
-    context = {
-        'total_customers': total_customers,
-        'active_customers': active_customers,
-        'paying_customers': len(paying_customers),
-        'top_customers': top_customers,
-        'debtor_customers': debtor_customers,
+    this_month = {
+        'orders_count': this_month_orders.count(),
+        'total_value': decimal_to_float(this_month_total_value),
+        'total_received': decimal_to_float(this_month_payments.aggregate(
+            total=Sum('amount'))['total'] or 0),
     }
     
-    return render(request, 'reports/customers.html', context)
+    # O'tgan oylik ma'lumotlar
+    last_month_orders = Order.objects.filter(
+        created_at__gte=last_month_start,
+        created_at__lte=last_month_end
+    )
+    last_month_payments = Payment.objects.filter(
+        payment_date__gte=last_month_start,
+        payment_date__lte=last_month_end,
+        is_confirmed=True
+    )
+    
+    # ✅ TO'G'RILANDI: O'tgan oy total value
+    last_month_total_value = 0
+    for order in last_month_orders:
+        last_month_total_value += order.total_price()  # Method chaqirish
+    
+    last_month = {
+        'orders_count': last_month_orders.count(),
+        'total_value': decimal_to_float(last_month_total_value),
+        'total_received': decimal_to_float(last_month_payments.aggregate(
+            total=Sum('amount'))['total'] or 0),
+    }
+    
+    # O'sish foizi
+    def calculate_growth(current, previous):
+        if previous == 0:
+            return 100 if current > 0 else 0
+        return ((current - previous) / previous) * 100
+    
+    growth = {
+        'orders': calculate_growth(this_month['orders_count'], last_month['orders_count']),
+        'value': calculate_growth(this_month['total_value'], last_month['total_value']),
+        'received': calculate_growth(this_month['total_received'], last_month['total_received']),
+    }
+    
+    # ✅ TO'G'RILANDI: Qarzdorlik ma'lumotlari
+    outstanding_orders = []
+    
+    for order in Order.objects.filter(status__in=['new', 'measuring', 'processing', 'installed']):
+        total_price = order.total_price()  # Method chaqirish
+        total_paid = order.total_paid()    # Method chaqirish
+        remaining = max(total_price - total_paid, 0)
+        
+        if remaining > 0:
+            outstanding_orders.append({
+                'order': order,
+                'total_price': decimal_to_float(total_price),
+                'total_paid': decimal_to_float(total_paid),
+                'remaining': decimal_to_float(remaining)
+            })
+    
+    # Remaining bo'yicha saralash
+    outstanding_orders.sort(key=lambda x: x['remaining'], reverse=True)
+    outstanding_orders = outstanding_orders[:10]
+    
+    total_outstanding = sum([order['remaining'] for order in outstanding_orders])
+    
+    context = {
+        'this_month': this_month,
+        'last_month': last_month,
+        'growth': growth,
+        'outstanding_orders': outstanding_orders,
+        'total_outstanding': total_outstanding,
+    }
+    
+    return render(request, 'reports/financial.html', context)
 
 
 @login_required
-def order_report(request):
+def orders_report(request):
     """
-    Buyurtmalar hisoboti - TO'G'RILANADI
+    Buyurtmalar hisoboti - TO'G'IRLANGAN
     """
     if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
+        messages.error(request, 'Sizda buyurtmalar hisobotini ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
     # Sana filtri
@@ -212,7 +256,7 @@ def order_report(request):
         start_date = today.replace(month=1, day=1)
         period_name = "Bu yil"
     
-    # Buyurtmalar statistikasi - TO'G'RILANADI
+    # ✅ TO'G'IRLANDI: Buyurtmalar statistikasi
     orders = Order.objects.filter(created_at__gte=start_date)
     
     # Total value ni alohida hisoblash
@@ -253,29 +297,99 @@ def order_report(request):
             'revenue': decimal_to_float(daily_revenue)
         })
     
-    daily_stats.reverse()
+    daily_stats.reverse()  # Eskidan yangiga
     
-    # Eng yaxshi xodimlar
-    top_employees = User.objects.filter(
-        role__in=['manager', 'technician']
-    ).annotate(
-        orders_created_count=Count('created_orders', filter=Q(created_orders__created_at__gte=start_date))
-    ).order_by('-orders_created_count')[:5]
+    # Jalyuzi turlari bo'yicha statistika
+    blind_stats = []
+    for blind_type, blind_name in OrderItem.BLIND_TYPE_CHOICES:
+        items = OrderItem.objects.filter(
+            blind_type=blind_type,
+            order__created_at__gte=start_date
+        )
+        count = items.count()
+        
+        # Total amount ni to'g'ri hisoblash
+        total_amount = 0
+        for item in items:
+            total_amount += item.total_price()
+        
+        if count > 0:
+            blind_stats.append({
+                'type': blind_name,
+                'count': count,
+                'total_amount': decimal_to_float(total_amount),
+                'avg_price': decimal_to_float(total_amount / count) if count > 0 else 0
+            })
+    
+    # Eng ko'p sotilgan turlari bo'yicha saralash
+    blind_stats.sort(key=lambda x: x['count'], reverse=True)
     
     context = {
-        'stats': stats,
-        'period': period,
         'period_name': period_name,
+        'period': period,
+        'stats': stats,
         'daily_stats': daily_stats,
-        'daily_orders_json': json.dumps([d['orders'] for d in daily_stats]),
-        'daily_revenue_json': json.dumps([d['revenue'] for d in daily_stats]),
-        'daily_labels_json': json.dumps([d['date'] for d in daily_stats]),
-        'top_employees': top_employees,
+        'blind_stats': blind_stats,
+        'charts_data': json.dumps({
+            'daily_labels': [item['date'] for item in daily_stats],
+            'daily_orders': [item['orders'] for item in daily_stats],
+            'daily_revenue': [item['revenue'] for item in daily_stats],
+        }),
     }
     
     return render(request, 'reports/orders.html', context)
 
 
+@login_required
+def customers_report(request):
+    """
+    Mijozlar hisoboti
+    """
+    if not (request.user.is_manager() or request.user.is_admin()):
+        messages.error(request, 'Sizda mijozlar hisobotini ko\'rish huquqi yo\'q!')
+        return redirect('dashboard')
+    
+    # Asosiy statistikalar
+    total_customers = Customer.objects.count()
+    active_customers = Customer.objects.filter(orders__isnull=False).distinct().count()
+    
+    # Eng faol mijozlar
+    top_customers = Customer.objects.annotate(
+        order_count=Count('orders'),
+        total_spent=Sum('orders__payments__amount', filter=Q(orders__payments__is_confirmed=True))
+    ).filter(order_count__gt=0).order_by('-order_count')[:10]
+    
+    # total_spent ni float ga o'zgartirish
+    for customer in top_customers:
+        customer.total_spent = decimal_to_float(customer.total_spent or 0)
+    
+    # Kategoriya bo'yicha taqsimlash
+    category_stats = []
+    for category_code, category_name in Customer.CATEGORY_CHOICES:
+        count = Customer.objects.filter(category=category_code).count()
+        category_stats.append({
+            'category': category_name,
+            'count': count
+        })
+    
+    # Yaqinda qo'shilgan mijozlar (oxirgi 30 kun)
+    recent_customers = Customer.objects.filter(
+        created_at__gte=timezone.now() - timedelta(days=30)
+    ).order_by('-created_at')[:10]
+    
+    context = {
+        'total_customers': total_customers,
+        'active_customers': active_customers,
+        'inactive_customers': total_customers - active_customers,
+        'top_customers': top_customers,
+        'category_stats': category_stats,
+        'recent_customers': recent_customers,
+    }
+    
+    return render(request, 'reports/customers.html', context)
+
+
+# ✅ QO'SHILDI: payment_report funksiyasi
 @login_required
 def payment_report(request):
     """
@@ -293,7 +407,7 @@ def payment_report(request):
     payments = Payment.objects.filter(payment_date__gte=start_date, is_confirmed=True)
     
     total_amount = payments.aggregate(total=Sum('amount'))['total']
-    advance_amount = payments.filter(payment_type='advance').aggregate(total=Sum('amount'))['total']
+    prepayment_amount = payments.filter(payment_type='prepayment').aggregate(total=Sum('amount'))['total']
     partial_amount = payments.filter(payment_type='partial').aggregate(total=Sum('amount'))['total']
     final_amount = payments.filter(payment_type='final').aggregate(total=Sum('amount'))['total']
     avg_payment = payments.aggregate(avg=Avg('amount'))['avg']
@@ -301,9 +415,9 @@ def payment_report(request):
     stats = {
         'total_payments': payments.count(),
         'total_amount': decimal_to_float(total_amount or 0),
-        'advance_payments': decimal_to_float(advance_amount or 0),
-        'partial_payments': decimal_to_float(partial_amount or 0),
-        'final_payments': decimal_to_float(final_amount or 0),
+        'prepayment_amount': decimal_to_float(prepayment_amount or 0),
+        'partial_amount': decimal_to_float(partial_amount or 0),
+        'final_amount': decimal_to_float(final_amount or 0),
         'avg_payment': decimal_to_float(avg_payment or 0),
     }
     
@@ -315,6 +429,7 @@ def payment_report(request):
     
     for method in payment_methods:
         method['total'] = decimal_to_float(method['total'] or 0)
+        method['method_display'] = dict(Payment.PAYMENT_METHOD_CHOICES).get(method['payment_method'], method['payment_method'])
     
     # Eng faol kassirlar
     top_cashiers = User.objects.filter(
@@ -353,97 +468,3 @@ def payment_report(request):
     }
     
     return render(request, 'reports/payments.html', context)
-
-
-@login_required
-def financial_report(request):
-    """
-    Moliyaviy hisobot - TO'G'RILANADI
-    """
-    if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda hisobotlarni ko\'rish huquqi yo\'q!')
-        return redirect('dashboard')
-    
-    today = timezone.now().date()
-    this_month_start = today.replace(day=1)
-    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
-    last_month_end = this_month_start - timedelta(days=1)
-    
-    # Bu oylik moliyaviy ma'lumotlar
-    this_month_revenue = Payment.objects.filter(
-        payment_date__gte=this_month_start, is_confirmed=True
-    ).aggregate(total=Sum('amount'))['total']
-    
-    # Orders value ni alohida hisoblash
-    this_month_orders = Order.objects.filter(created_at__gte=this_month_start)
-    this_month_orders_value = sum(order.total_price() for order in this_month_orders)
-    
-    this_month = {
-        'revenue': decimal_to_float(this_month_revenue or 0),
-        'orders_value': decimal_to_float(this_month_orders_value),
-        'completed_orders': Order.objects.filter(
-            status='installed', installation_date__gte=this_month_start
-        ).count(),
-    }
-    
-    # O'tgan oylik moliyaviy ma'lumotlar
-    last_month_revenue = Payment.objects.filter(
-        payment_date__gte=last_month_start,
-        payment_date__lte=last_month_end,
-        is_confirmed=True
-    ).aggregate(total=Sum('amount'))['total']
-    
-    last_month_orders = Order.objects.filter(
-        created_at__gte=last_month_start,
-        created_at__lte=last_month_end
-    )
-    last_month_orders_value = sum(order.total_price() for order in last_month_orders)
-    
-    last_month = {
-        'revenue': decimal_to_float(last_month_revenue or 0),
-        'orders_value': decimal_to_float(last_month_orders_value),
-        'completed_orders': Order.objects.filter(
-            status='installed',
-            installation_date__gte=last_month_start,
-            installation_date__lte=last_month_end
-        ).count(),
-    }
-    
-    # O'sish foizlari
-    growth = {
-        'revenue': ((this_month['revenue'] - last_month['revenue']) / last_month['revenue'] * 100) if last_month['revenue'] > 0 else 0,
-        'orders_value': ((this_month['orders_value'] - last_month['orders_value']) / last_month['orders_value'] * 100) if last_month['orders_value'] > 0 else 0,
-        'completed_orders': ((this_month['completed_orders'] - last_month['completed_orders']) / last_month['completed_orders'] * 100) if last_month['completed_orders'] > 0 else 0,
-    }
-    
-    # Qarzdorlik ma'lumotlari - TO'G'RILANADI
-    outstanding_orders = []
-    
-    for order in Order.objects.filter(status__in=['new', 'measuring', 'processing', 'installed']):
-        total_price = order.total_price()
-        total_paid = order.total_paid()
-        remaining = max(total_price - total_paid, 0)
-        
-        if remaining > 0:
-            outstanding_orders.append({
-                'order': order,
-                'total_price': decimal_to_float(total_price),
-                'total_paid': decimal_to_float(total_paid),
-                'remaining': decimal_to_float(remaining)
-            })
-    
-    # Remaining bo'yicha saralash
-    outstanding_orders.sort(key=lambda x: x['remaining'], reverse=True)
-    outstanding_orders = outstanding_orders[:10]
-    
-    total_outstanding = sum([order['remaining'] for order in outstanding_orders])
-    
-    context = {
-        'this_month': this_month,
-        'last_month': last_month,
-        'growth': growth,
-        'outstanding_orders': outstanding_orders,
-        'total_outstanding': total_outstanding,
-    }
-    
-    return render(request, 'reports/financial.html', context)

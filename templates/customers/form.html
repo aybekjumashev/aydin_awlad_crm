@@ -1,376 +1,259 @@
-<!-- templates/orders/form.html -->
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
-{% block title %}{{ title }}{% endblock %}
-
-{% block extra_css %}
-<style>
-    .order-form-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px 0;
-    }
-    
-    .form-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    }
-    
-    .item-form {
-        background: rgba(116, 75, 162, 0.05);
-        border: 2px solid rgba(116, 75, 162, 0.1);
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
-        transition: all 0.3s;
-    }
-    
-    .item-form:hover {
-        border-color: rgba(116, 75, 162, 0.3);
-        box-shadow: 0 10px 25px rgba(116, 75, 162, 0.1);
-    }
-    
-    .form-control-lg, .form-select-lg {
-        font-size: 1.1rem;
-        padding: 15px 20px;
-        border-radius: 10px;
-        border: 2px solid #e1e5e9;
-        transition: all 0.3s;
-    }
-    
-    .form-control-lg:focus, .form-select-lg:focus {
-        border-color: #764ba2;
-        box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.25);
-        transform: translateY(-2px);
-    }
-    
-    .btn-custom {
-        border-radius: 25px;
-        padding: 12px 30px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s;
-    }
-    
-    .btn-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-    
-    .price-calculator {
-        background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .area-display {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-    }
-    
-    .measurement-section {
-        background: rgba(40, 167, 69, 0.05);
-        border: 2px solid rgba(40, 167, 69, 0.1);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .gps-button {
-        background: linear-gradient(45deg, #ff6b6b, #ffa726);
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .gps-button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-    }
-    
-    .item-header {
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
-        padding: 15px 20px;
-        border-radius: 10px 10px 0 0;
-        margin: -25px -25px 20px -25px;
-        position: relative;
-    }
-    
-    .delete-item {
-        position: absolute;
-        top: 10px;
-        right: 15px;
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        transition: all 0.3s;
-    }
-    
-    .delete-item:hover {
-        background: rgba(255,255,255,0.3);
-        transform: scale(1.1);
-    }
-</style>
-{% endblock %}
+{% block title %}{{ title }} - Mijozlar - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
-<div class="order-form-container">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-12 col-xl-10">
-                <div class="form-card">
-                    <div class="card-header bg-primary text-white text-center py-4">
-                        <h3 class="mb-0">
-                            <i class="fas fa-clipboard-list"></i> {{ title }}
-                        </h3>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-plus me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'customers:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Mijozlar ro'yxati
+            </a>
+            {% if customer %}
+            <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-person me-1"></i>
+                Mijoz profili
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Mijoz ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                {{ form.first_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                {{ form.last_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                     
-                    <div class="card-body p-4">
-                        <form method="post" id="order-form">
-                            {% csrf_token %}
-                            
-                            <!-- Asosiy buyurtma ma'lumotlari -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <h5 class="text-primary mb-3">
-                                        <i class="fas fa-info-circle"></i> Asosiy ma'lumotlar
-                                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                {{ form.phone.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone.errors.0 }}
                                 </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.customer|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.status|as_crispy_field }}
-                                </div>
-                                
-                                <div class="col-12">
-                                    {{ form.address|as_crispy_field }}
-                                </div>
-                                
-                                <div class="col-12">
-                                    {{ form.notes|as_crispy_field }}
-                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Masalan: +998901234567
                             </div>
-                            
-                            <!-- GPS ma'lumotlari -->
-                            <div class="measurement-section">
-                                <h6 class="text-success mb-3">
-                                    <i class="fas fa-map-marker-alt"></i> Joylashuv ma'lumotlari
-                                </h6>
-                                
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        {{ form.latitude|as_crispy_field }}
-                                    </div>
-                                    <div class="col-md-4">
-                                        {{ form.longitude|as_crispy_field }}
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label class="form-label">GPS joylashuvni olish</label>
-                                            <div>
-                                                <button type="button" class="gps-button" id="get-location">
-                                                    <i class="fas fa-location-arrow"></i> Joylashuvni olish
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.birth_date.id_for_label }}" class="form-label">
+                                {{ form.birth_date.label }}
+                            </label>
+                            {{ form.birth_date }}
+                            {% if form.birth_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.birth_date.errors.0 }}
                                 </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        {{ form.location_accuracy|as_crispy_field }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        {{ form.measurement_date|as_crispy_field }}
-                                    </div>
-                                </div>
-                                
-                                {{ form.measurement_notes|as_crispy_field }}
+                            {% endif %}
+                            <div class="form-text">
+                                Tug'ilgan kunni kiritish tabriklash uchun foydali
                             </div>
-                            
-                            <!-- Jalyuzi ma'lumotlari -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="text-primary mb-0">
-                                            <i class="fas fa-blinds"></i> Jalyuzi ma'lumotlari
-                                        </h5>
-                                        <button type="button" class="btn btn-success btn-custom" id="add-item">
-                                            <i class="fas fa-plus"></i> Jalyuzi qo'shish
-                                        </button>
-                                    </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                {{ form.category.label }}
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors.0 }}
                                 </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">
+                            {{ form.address.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.address.errors.0 }}
                             </div>
-                            
-                            <!-- Jalyuzi formset -->
-                            <div id="item-formset">
-                                {{ formset.management_form }}
-                                
-                                {% for form in formset %}
-                                <div class="item-form">
-                                    <div class="item-header">
-                                        <h6 class="mb-0">
-                                            <i class="fas fa-window-maximize"></i> 
-                                            Jalyuzi #<span class="item-number">{{ forloop.counter }}</span>
-                                        </h6>
-                                        
-                                        {% if form.instance.pk %}
-                                            {{ form.id }}
-                                        {% endif %}
-                                        
-                                        {% if not form.instance.pk or formset.can_delete %}
-                                        <button type="button" class="delete-item" onclick="deleteItem(this)">
-                                            <i class="fas fa-trash"></i> O'chirish
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <!-- Jalyuzi turi va material -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            {{ form.blind_type|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.material|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- O'lchov va maydon -->
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            {{ form.width|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-3">
-                                            {{ form.height|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-3">
-                                            {{ form.quantity|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="area-display">
-                                                <strong>Maydon:</strong>
-                                                <div class="area-result">0.00 m²</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Narx kalkulyatori -->
-                                    <div class="price-calculator">
-                                        <h6 class="mb-3">
-                                            <i class="fas fa-calculator"></i> Narx kalkulyatori
-                                        </h6>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                {{ form.unit_price_per_sqm|as_crispy_field }}
-                                            </div>
-                                            <div class="col-md-6">
-                                                {{ form.unit_price_total|as_crispy_field }}
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row mt-3">
-                                            <div class="col-md-6">
-                                                <div class="area-display">
-                                                    <strong>Bir dona uchun narx:</strong>
-                                                    <div class="unit-price-result">0 so'm</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="area-display">
-                                                    <strong>Umumiy narx:</strong>
-                                                    <div class="total-price-result">0 so'm</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Qo'shimcha ma'lumotlar -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            {{ form.installation_type|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.mechanism|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            {{ form.cornice_type|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            {{ form.room_name|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            {{ form.color|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Bo'sh joy qoldirish -->
-                                        </div>
-                                    </div>
-                                    
-                                    {{ form.notes|as_crispy_field }}
-                                    
-                                    {% if formset.can_delete %}
-                                        <div style="display: none;">
-                                            {{ form.DELETE }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
+                        {% endif %}
+                        <div class="form-text">
+                            To'liq manzilni kiriting (shahar, tuman, ko'cha, uy raqami)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
                             </div>
-                            
-                            <!-- Umumiy hisobot -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="price-calculator">
-                                        <h5 class="mb-3">
-                                            <i class="fas fa-chart-line"></i> Umumiy hisobot
-                                        </h5>
-                                        
-                                        <div class="row text-center">
-                                            <div class="col-md-3">
-                                                <div class="area-display">
-                                                    <h6>Jami donalar</h6>
-                                                    <div id="total-items">0</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="area-display">
-                                                    <h6>Jami maydon</h6>
-                                                    <div id="total-area">0.00 m²</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="area-display">
-                                                    <h6>O'rtacha narx (m²)</h6>
-                                                    <div id="avg-price-sqm">0 so'm</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="area-display">
-                                                    <h6>Umumiy narx</h6>
-                                                    <div id="total-price">0 so'm</div>
-                                                </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Mijoz haqida qo'shimcha ma'lumotlar, afzalliklari, eslatmalar
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'customers:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {% if customer %}
+                                Yangilash
+                            {% else %}
+                                Saqlash
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Ma'lumot kartasi -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Eslatma
+                </h6>
+                <ul class="mb-0">
+                    <li>Telefon raqami +998 bilan boshlanishi kerak</li>
+                    <li>Barcha maydonlar to'ldirilishi shart emas</li>
+                    <li>Tug'ilgan kun kiritsangiz, avtomatik tabriklash funksiyasi ishlaydi</li>
+                    <li>Mijoz kategoriyasi keyinchalik o'zgartirilishi mumkin</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Telefon raqam formatlash
+    const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, ''); // Faqat raqamlar
+            
+            if (value.length === 0) {
+                this.value = '+998';
+            } else if (!value.startsWith('998')) {
+                if (value.startsWith('8')) {
+                    this.value = '+99' + value;
+                } else {
+                    this.value = '+998' + value;
+                }
+            } else {
+                this.value = '+' + value;
+            }
+        });
+        
+        // Focus bo'lganda cursor ni oxiriga qo'yish
+        phoneInput.addEventListener('focus', function() {
+            if (this.value === '+998') {
+                this.setSelectionRange(this.value.length, this.value.length);
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const firstName = document.getElementById('{{ form.first_name.id_for_label }}').value.trim();
+            const lastName = document.getElementById('{{ form.last_name.id_for_label }}').value.trim();
+            const phone = document.getElementById('{{ form.phone.id_for_label }}').value.trim();
+            const address = document.getElementById('{{ form.address.id_for_label }}').value.trim();
+            
+            if (!firstName) {
+                e.preventDefault();
+                alert('Ismni kiriting!');
+                document.getElementById('{{ form.first_name.id_for_label }}').focus();
+                return;
+            }
+            
+            if (!lastName) {
+                e.preventDefault();
+                alert('Familiyani kiriting!');
+                document.getElementById('{{ form.last_name.id_for_label }}').focus();
+                return;
+            }
+            
+            if (!phone || phone.length < 13) {
+                e.preventDefault();
+                alert('To\'g\'ri telefon raqam kiriting! (+998901234567)');
+                phoneInput.focus();
+                return;
+            }
+            
+            if (!address) {
+                e.preventDefault();
+                alert('Manzilni kiriting!');
+                document.getElementById('{{ form.address.id_for_label }}').focus();
+                return;
+            }
+        });
+    }
+    
+    // Auto-resize textarea
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(function(textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}
