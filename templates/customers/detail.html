@@ -17,11 +17,13 @@
             {% if user.is_manager or user.is_admin %}
             <a href="{% url 'customers:edit' customer.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
-                Tahrirlash
+            </a>
+            <a href="{% url 'customers:delete' customer.pk %}" 
+                class="btn btn-danger" title="O'chirish">
+                <i class="bi bi-trash"></i>
             </a>
             <a href="{% url 'orders:add' %}?customer={{ customer.pk }}" class="btn btn-sm btn-success">
                 <i class="bi bi-cart-plus me-1"></i>
-                Yangi buyurtma
             </a>
             {% endif %}
         </div>
