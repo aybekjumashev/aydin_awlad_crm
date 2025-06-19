@@ -1,0 +1,451 @@
+<!-- templates/customers/public_detail.html -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ customer.get_full_name }} - AYDIN AWLAD</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .customer-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+        }
+        
+        .order-card {
+            transition: transform 0.2s;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .btn-custom {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .quick-stats {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .phone-item {
+            background: rgba(116, 75, 162, 0.1);
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-blinds"></i> AYDIN AWLAD
+                </h1>
+                <p class="text-white-50">Mijoz shaxsiy sahifasi</p>
+            </div>
+        </div>
+        
+        <!-- Mijoz ma'lumotlari -->
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card customer-card h-100">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-user-circle"></i> 
+                            {{ customer.get_full_name }}
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Asosiy ma'lumotlar -->
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-info-circle"></i> Asosiy ma'lumotlar
+                            </h6>
+                            
+                            {% if customer.get_age %}
+                            <p class="mb-2">
+                                <i class="fas fa-birthday-cake text-warning"></i>
+                                <strong>Yoshi:</strong> {{ customer.get_age }} yosh
+                            </p>
+                            {% endif %}
+                            
+                            <p class="mb-2">
+                                <i class="fas fa-calendar text-info"></i>
+                                <strong>Ro'yxatga olingan:</strong> {{ customer.created_at|date:"d.m.Y" }}
+                            </p>
+                            
+                            <p class="mb-0">
+                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                <strong>Manzil:</strong> {{ customer.address|truncatechars:50 }}
+                            </p>
+                        </div>
+                        
+                        <!-- Telefon raqamlar -->
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-phone"></i> Telefon raqamlar
+                            </h6>
+                            
+                            {% for phone in phone_numbers %}
+                            <div class="phone-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <strong>{{ phone.phone }}</strong>
+                                        {% if phone.is_primary %}
+                                            <span class="badge bg-success ms-1">Asosiy</span>
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">{{ phone.get_phone_type_display }}</small>
+                                </div>
+                                {% if phone.notes %}
+                                <small class="text-muted">{{ phone.notes }}</small>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">Telefon raqam kiritilmagan</p>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Statistika -->
+                        <div class="quick-stats text-white">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h4 class="mb-0">{{ orders.count }}</h4>
+                                    <small>Buyurtmalar</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="mb-0">{{ orders|length|default:0 }}</h4>
+                                    <small>Jaami</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Buyurtmalar va yangi buyurtma -->
+            <div class="col-lg-8">
+                <!-- Yangi buyurtma berish -->
+                <div class="card customer-card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus-circle"></i> Yangi buyurtma berish
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.full_name.id_for_label }}" class="form-label">
+                                            {{ order_form.full_name.label }}
+                                        </label>
+                                        {{ order_form.full_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.phone.id_for_label }}" class="form-label">
+                                            {{ order_form.phone.label }}
+                                        </label>
+                                        {{ order_form.phone }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ order_form.address.id_for_label }}" class="form-label">
+                                    {{ order_form.address.label }}
+                                </label>
+                                {{ order_form.address }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.blind_type.id_for_label }}" class="form-label">
+                                            {{ order_form.blind_type.label }}
+                                        </label>
+                                        {{ order_form.blind_type }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.room_name.id_for_label }}" class="form-label">
+                                            {{ order_form.room_name.label }}
+                                        </label>
+                                        {{ order_form.room_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.approximate_size.id_for_label }}" class="form-label">
+                                            {{ order_form.approximate_size.label }}
+                                        </label>
+                                        {{ order_form.approximate_size }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ order_form.preferred_time.id_for_label }}" class="form-label">
+                                            {{ order_form.preferred_time.label }}
+                                        </label>
+                                        {{ order_form.preferred_time }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ order_form.notes.id_for_label }}" class="form-label">
+                                    {{ order_form.notes.label }}
+                                </label>
+                                {{ order_form.notes }}
+                            </div>
+                            
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success btn-custom">
+                                    <i class="fas fa-paper-plane"></i> Buyurtma berish
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Buyurtmalar tarixi -->
+                <div class="card customer-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history"></i> Buyurtmalar tarixi
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if orders %}
+                            <div class="row">
+                                {% for order in orders %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card order-card h-100">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <strong>{{ order.order_number }}</strong>
+                                            <span class="status-badge 
+                                                {% if order.status == 'new' %}bg-primary
+                                                {% elif order.status == 'measuring' %}bg-warning
+                                                {% elif order.status == 'processing' %}bg-info
+                                                {% elif order.status == 'installed' %}bg-success
+                                                {% elif order.status == 'cancelled' %}bg-danger
+                                                {% endif %}">
+                                                {{ order.get_status_display }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="card-body">
+                                            <p class="text-muted mb-2">
+                                                <i class="fas fa-calendar"></i> 
+                                                {{ order.created_at|date:"d.m.Y H:i" }}
+                                            </p>
+                                            
+                                            <p class="mb-2">
+                                                <i class="fas fa-layer-group"></i>
+                                                <strong>Jalyuzlar:</strong> {{ order.total_items }} dona
+                                            </p>
+                                            
+                                            {% if order.total_area %}
+                                            <p class="mb-2">
+                                                <i class="fas fa-expand-arrows-alt"></i>
+                                                <strong>Maydon:</strong> {{ order.total_area }} m²
+                                            </p>
+                                            {% endif %}
+                                            
+                                            {% if order.total_price %}
+                                            <p class="mb-2">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <strong>Narx:</strong> {{ order.total_price|floatformat:0 }} so'm
+                                            </p>
+                                            {% endif %}
+                                            
+                                            {% if order.address %}
+                                            <p class="text-muted small mb-0">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                {{ order.address|truncatechars:40 }}
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Hali buyurtmalar yo'q</h5>
+                                <p class="text-muted">Yuqorida yangi buyurtma berishingiz mumkin</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aloqa ma'lumotlari -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card customer-card">
+                    <div class="card-body text-center">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-headset"></i> Biz bilan bog'laning
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-phone fa-2x text-success me-3"></i>
+                                    <div>
+                                        <strong>Telefon</strong><br>
+                                        <a href="tel:+998901234567" class="text-decoration-none">
+                                            +998 90 123 45 67
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="fab fa-telegram fa-2x text-primary me-3"></i>
+                                    <div>
+                                        <strong>Telegram</strong><br>
+                                        <a href="https://t.me/aydinawlad" class="text-decoration-none">
+                                            @aydinawlad
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-clock fa-2x text-warning me-3"></i>
+                                    <div>
+                                        <strong>Ish vaqti</strong><br>
+                                        9:00 - 18:00 (Du-Sh)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Form maydonlarini customer ma'lumotlari bilan to'ldirish
+        document.addEventListener('DOMContentLoaded', function() {
+            // Telefon raqam validatsiyasi
+            const phoneInput = document.querySelector('input[name="phone"]');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    let value = this.value;
+                    if (!value.startsWith('+998')) {
+                        this.value = '+998';
+                    }
+                });
+            }
+            
+            // Full name ni customer nomi bilan to'ldirish
+            const fullNameInput = document.querySelector('input[name="full_name"]');
+            if (fullNameInput && !fullNameInput.value) {
+                fullNameInput.value = '{{ customer.get_full_name }}';
+            }
+            
+            // Primary phone bilan telefon inputni to'ldirish
+            const primaryPhone = '{{ customer.phone }}';
+            if (phoneInput && !phoneInput.value && primaryPhone) {
+                phoneInput.value = primaryPhone;
+            }
+            
+            // Address ni customer manzili bilan to'ldirish
+            const addressInput = document.querySelector('textarea[name="address"]');
+            if (addressInput && !addressInput.value) {
+                addressInput.value = '{{ customer.address }}';
+            }
+        });
+    </script>
+    
+    {% if messages %}
+    <!-- Toast notification -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        {% for message in messages %}
+        <div class="toast show" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-info-circle text-{{ message.tags }}"></i>
+                <strong class="me-auto ms-2">AYDIN AWLAD</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>
