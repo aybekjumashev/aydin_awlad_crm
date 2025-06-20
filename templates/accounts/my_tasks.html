@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Mening vazifalarim - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-list-task me-2"></i>
+        Mening vazifalarim
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'technical:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtrlash -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Vazifa holati</label>
+                <select name="status" class="form-select">
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Faol vazifalar</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Yakunlangan</option>
+                    <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>Kechikkan</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Barchasi</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Vazifa turi</label>
+                <select name="task_type" class="form-select">
+                    <option value="all" {% if task_type == 'all' %}selected{% endif %}>Barcha vazifalar</option>
+                    {% if user.can_measure %}
+                    <option value="measure" {% if task_type == 'measure' %}selected{% endif %}>O'lchov olish</option>
+                    {% endif %}
+                    {% if user.can_manufacture %}
+                    <option value="manufacture" {% if task_type == 'manufacture' %}selected{% endif %}>Ishlab chiqarish</option>
+                    {% endif %}
+                    {% if user.can_install %}
+                    <option value="install" {% if task_type == 'install' %}selected{% endif %}>O'rnatish</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-1"></i>
+                        Filtrlash
+                    </button>
+                    <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Tozalash
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Vazifalar ro'yxati -->
+<div class="row">
+    {% for order in orders %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 {% if order.measurement_date and order.measurement_date < current_time or order.installation_date and order.installation_date < current_time %}border-danger{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
+                        #{{ order.order_number }}
+                    </a>
+                </h6>
+                <span class="badge bg-{% if order.status == 'measuring' %}info{% elif order.status == 'processing' %}warning{% elif order.status == 'installing' %}primary{% elif order.status == 'installed' %}success{% else %}secondary{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-person me-2"></i>
+                    {{ order.customer.get_full_name }}
+                </h6>
+                <p class="card-text text-muted small mb-2">
+                    <i class="bi bi-geo-alt me-1"></i>
+                    {{ order.address|truncatechars:50 }}
+                </p>
+                <p class="card-text text-muted small mb-3">
+                    <i class="bi bi-calendar me-1"></i>
+                    Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
+                </p>
+                
+                <!-- Mening vazifalarim -->
+                <div class="mb-3">
+                    {% if order.assigned_measurer == user and order.status == 'measuring' %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-rulers text-info me-2"></i>
+                        <span class="small">O'lchov olish</span>
+                        {% if order.measurement_date %}
+                        <span class="ms-auto badge bg-light text-dark">
+                            {{ order.measurement_date|date:"d.m H:i" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.assigned_manufacturer == user and order.status == 'processing' %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-gear-fill text-warning me-2"></i>
+                        <span class="small">Ishlab chiqarish</span>
+                        {% if order.manufacturing_start_date %}
+                        <span class="ms-auto badge bg-light text-dark">
+                            Boshlangan
+                        </span>
+                        {% else %}
+                        <span class="ms-auto badge bg-warning text-dark">
+                            Kutmoqda
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.assigned_installer == user and order.status == 'installing' %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-tools text-success me-2"></i>
+                        <span class="small">O'rnatish</span>
+                        {% if order.installation_date %}
+                        <span class="ms-auto badge bg-light text-dark">
+                            {{ order.installation_date|date:"d.m H:i" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Kechikkan vazifalar uchun ogohlantirish -->
+                {% if order.measurement_date and order.measurement_date < current_time and order.status == 'measuring' %}
+                <div class="alert alert-danger alert-sm py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <small>O'lchov muddati o'tgan!</small>
+                </div>
+                {% elif order.installation_date and order.installation_date < current_time and order.status == 'installing' %}
+                <div class="alert alert-danger alert-sm py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <small>O'rnatish muddati o'tgan!</small>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer">
+                <div class="d-flex gap-2">
+                    <!-- O'lchov tugmasi -->
+                    {% if order.assigned_measurer == user and order.status == 'measuring' %}
+                    <a href="{% url 'technical:measurement' order.pk %}" 
+                       class="btn btn-info btn-sm flex-fill">
+                        <i class="bi bi-rulers me-1"></i>
+                        O'lchov olish
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Ishlab chiqarish tugmasi -->
+                    {% if order.assigned_manufacturer == user and order.status == 'processing' %}
+                    <a href="{% url 'technical:manufacturing' order.pk %}" 
+                       class="btn btn-warning btn-sm flex-fill">
+                        <i class="bi bi-gear-fill me-1"></i>
+                        {% if order.manufacturing_start_date %}Tugatish{% else %}Boshlash{% endif %}
+                    </a>
+                    {% endif %}
+                    
+                    <!-- O'rnatish tugmasi -->
+                    {% if order.assigned_installer == user and order.status == 'installing' %}
+                    <a href="{% url 'technical:installation' order.pk %}" 
+                       class="btn btn-success btn-sm flex-fill">
+                        <i class="bi bi-tools me-1"></i>
+                        {% if order.installation_start_date %}Yakunlash{% else %}Boshlash{% endif %}
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Buyurtma tafsilotlari -->
+                    <a href="{% url 'orders:detail' order.pk %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-list-task" style="font-size: 4rem; opacity: 0.3;"></i>
+            <h4 class="mt-3 text-muted">Vazifalar topilmadi</h4>
+            {% if status_filter == 'active' %}
+            <p class="text-muted">Sizga hozirda faol vazifa tayinlanmagan.</p>
+            {% elif status_filter == 'completed' %}
+            <p class="text-muted">Yakunlangan vazifalar yo'q.</p>
+            {% elif status_filter == 'overdue' %}
+            <p class="text-muted">Kechikkan vazifalar yo'q - bu yaxshi!</p>
+            {% else %}
+            <p class="text-muted">Filtr shartlariga mos vazifalar topilmadi.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Sahifalash (agar kerak bo'lsa) -->
+{% if orders.has_other_pages %}
+<nav aria-label="Vazifalar sahifalash">
+    <ul class="pagination justify-content-center">
+        {% if orders.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Birinchi</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Oldingi</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ orders.number }} / {{ orders.paginator.num_pages }}</span>
+        </li>
+        
+        {% if orders.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Keyingi</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Oxirgi</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Tezkor ma'lumot -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5 class="text-primary">Mening huquqlarim</h5>
+                <div class="mt-3">
+                    {% if user.can_measure %}
+                    <span class="badge bg-info me-2 mb-2">O'lchov olish</span>
+                    {% endif %}
+                    {% if user.can_manufacture %}
+                    <span class="badge bg-warning me-2 mb-2">Ishlab chiqarish</span>
+                    {% endif %}
+                    {% if user.can_install %}
+                    <span class="badge bg-success me-2 mb-2">O'rnatish</span>
+                    {% endif %}
+                    {% if user.can_create_order %}
+                    <span class="badge bg-primary me-2 mb-2">Buyurtma yaratish</span>
+                    {% endif %}
+                    {% if user.can_manage_payments %}
+                    <span class="badge bg-secondary me-2 mb-2">To'lovlar</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5 class="text-success">Bu oy natijam</h5>
+                <div class="mt-3">
+                    <h3 class="text-success">{{ user.get_completed_tasks_this_month.count }}</h3>
+                    <p class="mb-0 text-muted">Yakunlangan vazifalar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5 class="text-info">Tezkor havolalar</h5>
+                <div class="mt-3">
+                    {% if user.can_create_order %}
+                    <a href="{% url 'orders:create' %}" class="btn btn-outline-primary btn-sm mb-2 d-block">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Yangi buyurtma
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'orders:list' %}" class="btn btn-outline-secondary btn-sm mb-2 d-block">
+                        <i class="bi bi-list-ul me-1"></i>
+                        Barcha buyurtmalar
+                    </a>
+                    {% if user.can_manage_payments %}
+                    <a href="{% url 'payments:list' %}" class="btn btn-outline-success btn-sm mb-2 d-block">
+                        <i class="bi bi-cash-stack me-1"></i>
+                        To'lovlar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
