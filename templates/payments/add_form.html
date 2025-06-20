@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-cash-stack me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Orqaga
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    To'lov ma'lumotlari
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
+                    
+                    <!-- Buyurtma tanlash -->
+                    <div class="mb-3">
+                        <label for="order_id" class="form-label">
+                            <i class="bi bi-cart me-1"></i>
+                            Buyurtma <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="order_id" name="order_id" required>
+                            <option value="">Buyurtmani tanlang</option>
+                            {% for order in orders %}
+                                <option value="{{ order.pk }}" 
+                                        data-customer="{{ order.customer.get_full_name }}"
+                                        data-total="{{ order.total_amount }}"
+                                        data-paid="{{ order.paid_amount }}"
+                                        data-remaining="{{ order.remaining_amount }}">
+                                    #{{ order.order_number }} - {{ order.customer.get_full_name }} 
+                                    (Qarzdorlik: {{ order.remaining_amount|floatformat:0 }} so'm)
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">To'lov qo'shiladigan buyurtmani tanlang</div>
+                    </div>
+
+                    <!-- Buyurtma ma'lumotlari (dinamik) -->
+                    <div id="orderInfo" class="alert alert-info d-none">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Buyurtma ma'lumotlari
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Mijoz:</strong> <span id="customerName">-</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Umumiy summa:</strong> <span id="totalAmount">-</span> so'm
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Qarzdorlik:</strong> <span id="remainingAmount" class="text-danger fw-bold">-</span> so'm
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- To'lov turi -->
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_type" class="form-label">
+                                <i class="bi bi-tag me-1"></i>
+                                To'lov turi <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="payment_type" name="payment_type" required>
+                                {% for choice in payment_type_choices %}
+                                    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- To'lov usuli -->
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_method" class="form-label">
+                                <i class="bi bi-credit-card me-1"></i>
+                                To'lov usuli <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                {% for choice in payment_method_choices %}
+                                    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Summa -->
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">
+                            <i class="bi bi-currency-exchange me-1"></i>
+                            To'lov summasi (so'm) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" 
+                                   class="form-control form-control-lg" 
+                                   id="amount" 
+                                   name="amount" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   placeholder="0.00"
+                                   required>
+                            <span class="input-group-text">so'm</span>
+                        </div>
+                        <div class="form-text" id="amountHelp">To'lanayotgan summa</div>
+                    </div>
+
+                    <!-- Quick amount buttons -->
+                    <div class="mb-3">
+                        <label class="form-label">Tez to'lov:</label>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="setQuickAmount('remaining')">
+                                Qarzdorlikni to'lash
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="setQuickAmount('50000')">
+                                50,000
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="setQuickAmount('100000')">
+                                100,000
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="setQuickAmount('500000')">
+                                500,000
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ma'lumotnoma raqami -->
+                    <div class="mb-3">
+                        <label for="reference_number" class="form-label">
+                            <i class="bi bi-receipt me-1"></i>
+                            Ma'lumotnoma raqami
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="reference_number" 
+                               name="reference_number" 
+                               placeholder="Bank o'tkazmasi, karta raqami oxiri...">
+                        <div class="form-text">Bank to'lovi yoki karta raqami uchun</div>
+                    </div>
+
+                    <!-- Izohlar -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Izohlar
+                        </label>
+                        <textarea class="form-control" 
+                                  id="notes" 
+                                  name="notes" 
+                                  rows="2" 
+                                  placeholder="Qo'shimcha izohlar..."></textarea>
+                    </div>
+
+                    <!-- Submit buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'payments:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
+                            To'lovni qo'shish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yordamchi ma'lumotlar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Ma'lumot
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        Eslatma
+                    </h6>
+                    <ul class="mb-0">
+                        <li>To'lov darhol tasdiqlangan bo'ladi</li>
+                        <li>Buyurtma qarzdorligi avtomatik kamayadi</li>
+                        <li>Ma'lumotnoma raqamini yozib qo'ying</li>
+                        <li>Naqd to'lovlar uchun kvitansiya chop eting</li>
+                    </ul>
+                </div>
+
+                <div class="card bg-warning bg-opacity-10">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Diqqat!
+                        </h6>
+                        <p class="card-text small mb-0">
+                            To'lov qo'shilgandan keyin uni faqat admin o'chira oladi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- To'lov usullari -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">To'lov usullari</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <div class="mb-2">
+                        <strong>Naqd:</strong> Ofisda to'lash
+                    </div>
+                    <div class="mb-2">
+                        <strong>Karta:</strong> Terminal orqali
+                    </div>
+                    <div class="mb-2">
+                        <strong>O'tkazma:</strong> Bank hisobiga
+                    </div>
+                    <div class="mb-0">
+                        <strong>Mobil:</strong> Click, Payme va h.k.
+                    </div>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Buyurtma tanlanganda ma'lumotlarni ko'rsatish
+document.getElementById('order_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const orderInfo = document.getElementById('orderInfo');
+    
+    if (this.value) {
+        // Ma'lumotlarni olish
+        const customer = selectedOption.dataset.customer;
+        const total = parseFloat(selectedOption.dataset.total);
+        const paid = parseFloat(selectedOption.dataset.paid);
+        const remaining = parseFloat(selectedOption.dataset.remaining);
+        
+        // Ma'lumotlarni ko'rsatish
+        document.getElementById('customerName').textContent = customer;
+        document.getElementById('totalAmount').textContent = total.toLocaleString();
+        document.getElementById('remainingAmount').textContent = remaining.toLocaleString();
+        
+        // Amount field'ga qarzdorlikni qo'yish
+        if (remaining > 0) {
+            document.getElementById('amount').value = remaining.toFixed(2);
+        }
+        
+        orderInfo.classList.remove('d-none');
+    } else {
+        orderInfo.classList.add('d-none');
+        document.getElementById('amount').value = '';
+    }
+});
+
+// Tez to'lov tugmalari
+function setQuickAmount(amount) {
+    const amountField = document.getElementById('amount');
+    const orderSelect = document.getElementById('order_id');
+    
+    if (amount === 'remaining') {
+        const selectedOption = orderSelect.options[orderSelect.selectedIndex];
+        if (orderSelect.value && selectedOption.dataset.remaining) {
+            amountField.value = parseFloat(selectedOption.dataset.remaining).toFixed(2);
+        }
+    } else {
+        amountField.value = parseFloat(amount).toFixed(2);
+    }
+}
+
+// Form validation
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const orderId = document.getElementById('order_id').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    
+    if (!orderId) {
+        e.preventDefault();
+        alert('Buyurtmani tanlash majburiy!');
+        return false;
+    }
+    
+    if (!amount || amount <= 0) {
+        e.preventDefault();
+        alert('To\'lov summasi 0 dan katta bo\'lishi kerak!');
+        return false;
+    }
+    
+    // Qarzdorlikdan ko'p to'lash haqida ogohlantirish
+    const orderSelect = document.getElementById('order_id');
+    const selectedOption = orderSelect.options[orderSelect.selectedIndex];
+    const remaining = parseFloat(selectedOption.dataset.remaining);
+    
+    if (amount > remaining) {
+        const confirm = window.confirm(
+            `Diqqat! Siz qarzdorlikdan ko'p summa kiritdingiz.\n` +
+            `Qarzdorlik: ${remaining.toLocaleString()} so'm\n` +
+            `Kiritilgan: ${amount.toLocaleString()} so'm\n\n` +
+            `Davom etishni xohlaysizmi?`
+        );
+        if (!confirm) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+
+// To'lov usuli o'zgarganda ma'lumotnoma maydonini ko'rsatish/yashirish
+document.getElementById('payment_method').addEventListener('change', function() {
+    const referenceField = document.getElementById('reference_number');
+    const referenceLabel = document.querySelector('label[for="reference_number"]');
+    
+    if (this.value === 'transfer' || this.value === 'card') {
+        referenceField.required = true;
+        referenceLabel.innerHTML = '<i class="bi bi-receipt me-1"></i>Ma\'lumotnoma raqami <span class="text-danger">*</span>';
+    } else {
+        referenceField.required = false;
+        referenceLabel.innerHTML = '<i class="bi bi-receipt me-1"></i>Ma\'lumotnoma raqami';
+    }
+});
+</script>
+{% endblock %}

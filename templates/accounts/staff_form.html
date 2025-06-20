@@ -1,31 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - Texnik xodimlar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ title }} - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
-        <i class="bi bi-person{% if staff_member %}-gear{% else %}-plus{% endif %} me-2"></i>
+        <i class="bi bi-person-plus me-2"></i>
         {{ title }}
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            {% if staff_member %}
-            <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
-            </a>
-            {% else %}
-            <a href="{% url 'staff:list' %}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>
-                Xodimlar ro'yxati
-            </a>
-            {% endif %}
-        </div>
+        <a href="{% url 'staff:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Orqaga
+        </a>
     </div>
 </div>
 
-<div class="row justify-content-center">
+<div class="row">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
@@ -35,249 +26,248 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="post" novalidate>
+                <form method="post">
                     {% csrf_token %}
                     
                     <!-- Asosiy ma'lumotlar -->
                     <div class="row">
-                        {% if not staff_member %}
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">
-                                {{ form.username.label }} <span class="text-danger">*</span>
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person me-1"></i>
+                                Username <span class="text-danger">*</span>
                             </label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.username.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="form-text">
-                                Tizimga kirish uchun login nomi
-                            </div>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">Tizimga kirish uchun foydalanuvchi nomi</div>
                         </div>
-                        {% endif %}
-                        
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
-                                {{ form.first_name.label }} <span class="text-danger">*</span>
+                            <label for="password" class="form-label">
+                                <i class="bi bi-lock me-1"></i>
+                                Parol <span class="text-danger">*</span>
                             </label>
-                            {{ form.first_name }}
-                            {% if form.first_name.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.first_name.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
-                                {{ form.last_name.label }} <span class="text-danger">*</span>
-                            </label>
-                            {{ form.last_name }}
-                            {% if form.last_name.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.last_name.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="form-text">Kamida 8 belgi bo'lishi kerak</div>
                         </div>
                     </div>
-                    
-                    <!-- Aloqa ma'lumotlari -->
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.phone.id_for_label }}" class="form-label">
-                                {{ form.phone.label }}
+                            <label for="first_name" class="form-label">
+                                <i class="bi bi-person-badge me-1"></i>
+                                Ism
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-telephone"></i>
-                                </span>
-                                {{ form.phone }}
-                            </div>
-                            {% if form.phone.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.phone.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <input type="text" class="form-control" id="first_name" name="first_name">
                         </div>
-                        
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">
-                                {{ form.email.label }}
+                            <label for="last_name" class="form-label">
+                                <i class="bi bi-person-badge me-1"></i>
+                                Familiya
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-envelope"></i>
-                                </span>
-                                {{ form.email }}
-                            </div>
-                            {% if form.email.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.email.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <input type="text" class="form-control" id="last_name" name="last_name">
                         </div>
                     </div>
-                    
-                    {% if not staff_member %}
-                    <!-- Parol (faqat yangi xodim uchun) -->
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.password1.id_for_label }}" class="form-label">
-                                {{ form.password1.label }} <span class="text-danger">*</span>
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>
+                                Email
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-key"></i>
-                                </span>
-                                {{ form.password1 }}
-                            </div>
-                            {% if form.password1.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.password1.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <input type="email" class="form-control" id="email" name="email">
                         </div>
-                        
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.password2.id_for_label }}" class="form-label">
-                                {{ form.password2.label }} <span class="text-danger">*</span>
+                            <label for="phone" class="form-label">
+                                <i class="bi bi-phone me-1"></i>
+                                Telefon raqam
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-key-fill"></i>
-                                </span>
-                                {{ form.password2 }}
-                            </div>
-                            {% if form.password2.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.password2.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="+998901234567">
                         </div>
                     </div>
-                    {% endif %}
-                    
-                    {% if staff_member %}
-                    <!-- Status (faqat tahrirlashda) -->
-                    <div class="mb-4">
-                        <div class="form-check">
-                            {{ form.is_active }}
-                            <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
-                                {{ form.is_active.label }}
-                            </label>
-                        </div>
-                        <div class="form-text">
-                            Nofaol xodimlar tizimga kira olmaydi
-                        </div>
+
+                    <!-- Mutaxassis turi -->
+                    <div class="mb-3">
+                        <label for="specialist_type" class="form-label">
+                            <i class="bi bi-tools me-1"></i>
+                            Mutaxassis turi
+                        </label>
+                        <select class="form-select" id="specialist_type" name="specialist_type">
+                            <option value="">Tanlang</option>
+                            {% for choice in specialist_choices %}
+                                <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    {% endif %}
-                    
+
                     <!-- Huquqlar -->
-                    <hr>
-                    <h6 class="mb-3">
-                        <i class="bi bi-shield-check me-2"></i>
-                        Ishchi huquqlari
-                    </h6>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                {{ form.can_create_order }}
-                                <label for="{{ form.can_create_order.id_for_label }}" class="form-check-label">
-                                    <i class="bi bi-cart-plus me-2"></i>
-                                    {{ form.can_create_order.label }}
-                                </label>
-                            </div>
-                            <small class="text-muted">Yangi buyurtmalar yarata oladi</small>
+                    <div class="card bg-light">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-shield-check me-2"></i>
+                                Xodim huquqlari
+                            </h6>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                {{ form.can_measure }}
-                                <label for="{{ form.can_measure.id_for_label }}" class="form-check-label">
-                                    <i class="bi bi-ruler me-2"></i>
-                                    {{ form.can_measure.label }}
-                                </label>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="can_measure" name="can_measure">
+                                        <label class="form-check-label" for="can_measure">
+                                            <i class="bi bi-rulers me-1"></i>
+                                            O'lchov olish
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="can_manufacture" name="can_manufacture">
+                                        <label class="form-check-label" for="can_manufacture">
+                                            <i class="bi bi-tools me-1"></i>
+                                            Ishlab chiqarish
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="can_install" name="can_install">
+                                        <label class="form-check-label" for="can_install">
+                                            <i class="bi bi-house-gear me-1"></i>
+                                            O'rnatish
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="can_create_order" name="can_create_order">
+                                        <label class="form-check-label" for="can_create_order">
+                                            <i class="bi bi-plus-circle me-1"></i>
+                                            Buyurtma yaratish
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
-                            <small class="text-muted">Mijoz uyiga borib o'lchov oladi</small>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                {{ form.can_manufacture }}
-                                <label for="{{ form.can_manufacture.id_for_label }}" class="form-check-label">
-                                    <i class="bi bi-tools me-2"></i>
-                                    {{ form.can_manufacture.label }}
-                                </label>
-                            </div>
-                            <small class="text-muted">Jalyuzilarni ishlab chiqaradi</small>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                {{ form.can_install }}
-                                <label for="{{ form.can_install.id_for_label }}" class="form-check-label">
-                                    <i class="bi bi-hammer me-2"></i>
-                                    {{ form.can_install.label }}
-                                </label>
-                            </div>
-                            <small class="text-muted">Tayyor jalyuzilarni o'rnatadi</small>
-                        </div>
-                        
-                        <div class="col-md-12 mb-3">
-                            <div class="form-check">
-                                {{ form.can_cancel_order }}
-                                <label for="{{ form.can_cancel_order.id_for_label }}" class="form-check-label">
-                                    <i class="bi bi-x-circle me-2"></i>
-                                    {{ form.can_cancel_order.label }}
-                                </label>
-                            </div>
-                            <small class="text-muted">Buyurtmalarni bekor qila oladi</small>
                         </div>
                     </div>
-                    
-                    <div class="d-flex justify-content-between">
-                        {% if staff_member %}
-                        <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
-                        </a>
-                        {% else %}
+
+                    <!-- Submit buttons -->
+                    <div class="d-flex justify-content-between mt-4">
                         <a href="{% url 'staff:list' %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-2"></i>
+                            <i class="bi bi-x-circle me-1"></i>
                             Bekor qilish
                         </a>
-                        {% endif %}
-                        
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>
-                            {% if staff_member %}Yangilash{% else %}Saqlash{% endif %}
+                            <i class="bi bi-check-circle me-1"></i>
+                            Xodim qo'shish
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-        
-        <!-- Yordam ma'lumotlari -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6 class="card-title">
+    </div>
+
+    <!-- Yordamchi ma'lumotlar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Eslatma
+                    Ma'lumot
                 </h6>
-                <ul class="list-unstyled mb-0 small text-muted">
-                    <li><i class="bi bi-check me-1"></i> Barcha majburiy maydonlarni to'ldiring</li>
-                    <li><i class="bi bi-check me-1"></i> Login nomi noyob bo'lishi kerak</li>
-                    <li><i class="bi bi-check me-1"></i> Parol kamida 8 ta belgidan iborat bo'lsin</li>
-                    <li><i class="bi bi-check me-1"></i> Xodimga kerakli huquqlarni bering</li>
-                    {% if not staff_member %}
-                    <li><i class="bi bi-check me-1"></i> Saqlangandan keyin xodim tizimga kira oladi</li>
-                    {% endif %}
-                </ul>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        Eslatma
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Username noyob bo'lishi kerak</li>
+                        <li>Parol kamida 8 belgi bo'lishi tavsiya etiladi</li>
+                        <li>Huquqlarni mutaxassis turiga qarab belgilang</li>
+                        <li>Keyinchalik huquqlarni o'zgartirish mumkin</li>
+                    </ul>
+                </div>
+
+                <div class="card bg-warning bg-opacity-10">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Diqqat!
+                        </h6>
+                        <p class="card-text small mb-0">
+                            Texnik xodim yaratilgandan keyin, unga buyurtmalar tayinlash mumkin bo'ladi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Huquqlar tushuntirishi -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Huquqlar tushuntirishi</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <div class="mb-2">
+                        <strong>O'lchov olish:</strong> Mijoz uyiga borib o'lchov olish
+                    </div>
+                    <div class="mb-2">
+                        <strong>Ishlab chiqarish:</strong> Jalyuzi ishlab chiqarish
+                    </div>
+                    <div class="mb-2">
+                        <strong>O'rnatish:</strong> Tayyor jalyuzini o'rnatish
+                    </div>
+                    <div class="mb-0">
+                        <strong>Buyurtma yaratish:</strong> Yangi buyurtma qabul qilish
+                    </div>
+                </small>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (!username.trim()) {
+        e.preventDefault();
+        alert('Username kiritish majburiy!');
+        return false;
+    }
+    
+    if (!password.trim()) {
+        e.preventDefault();
+        alert('Parol kiritish majburiy!');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        e.preventDefault();
+        alert('Parol kamida 6 belgi bo\'lishi kerak!');
+        return false;
+    }
+});
+
+// Specialist type ga qarab huquqlarni avtomatik belgilash
+document.getElementById('specialist_type').addEventListener('change', function() {
+    const type = this.value;
+    
+    // Barcha checkbox'larni tozalash
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    switch(type) {
+        case 'measurer':
+            document.getElementById('can_measure').checked = true;
+            document.getElementById('can_create_order').checked = true;
+            break;
+        case 'manufacturer':
+            document.getElementById('can_manufacture').checked = true;
+            break;
+        case 'installer':
+            document.getElementById('can_install').checked = true;
+            break;
+        case 'universal':
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+            break;
+    }
+});
+</script>
 {% endblock %}

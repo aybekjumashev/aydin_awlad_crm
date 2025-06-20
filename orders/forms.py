@@ -1,4 +1,4 @@
-# orders/forms.py - TO'LIQ VERSIYA
+# orders/forms.py - TUZATILGAN VERSIYA
 
 from django import forms
 from django.forms import modelformset_factory
@@ -36,7 +36,8 @@ class SimpleOrderForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['customer'].queryset = Customer.objects.filter(is_active=True)
+        # TUZATILDI: is_active o'rniga category ishlatamiz
+        self.fields['customer'].queryset = Customer.objects.exclude(category='inactive')
         self.fields['customer'].empty_label = "Mijozni tanlang"
 
 
@@ -71,7 +72,10 @@ class OrderUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Texnik xodimlarni filtrlash
+        # TUZATILDI: is_active o'rniga category ishlatamiz
+        self.fields['customer'].queryset = Customer.objects.exclude(category='inactive')
+        
+        # Texnik xodimlar ro'yxati
         technical_users = User.objects.filter(role='technical', is_active=True)
         
         # O'lchov oluvchilar
@@ -87,114 +91,151 @@ class OrderUpdateForm(forms.ModelForm):
         self.fields['assigned_installer'].empty_label = "O'rnatuvchini tanlang"
 
 
+# Choices'larni model bilan mos ravishda yangilaymiz
+BLIND_TYPE_CHOICES = [
+    ('horizontal', 'Gorizontal jalyuzi'),
+    ('vertical', 'Vertikal jalyuzi'),
+    ('roller', 'Rulon parda'),
+    ('roman', 'Rim parda'),
+    ('plisse', 'Plisse parda'),
+    ('zebra', 'Zebra parda'),
+    ('day_night', 'Kun-tun parda'),
+]
+
+MATERIAL_CHOICES = [
+    ('aluminum', 'Alyuminiy'),
+    ('pvc', 'PVC'),
+    ('wood', 'Yog\'och'),
+    ('fabric', 'Mato'),
+    ('bamboo', 'Bambuk'),
+    ('polyester', 'Polyester'),
+    ('blackout', 'Blackout'),
+]
+
+INSTALLATION_TYPE_CHOICES = [
+    ('ceiling', 'Shiftga'),
+    ('wall', 'Devorga'),
+    ('window_frame', 'Deraza romiga'),
+    ('niche', 'Tokchaga'),
+]
+
+MECHANISM_CHOICES = [
+    ('cord', 'Arqon'),
+    ('chain', 'Zanjir'),
+    ('motor', 'Elektr motor'),
+    ('spring', 'Prujina'),
+    ('manual', 'Qo\'lda'),
+]
+
+CORNICE_TYPE_CHOICES = [
+    ('standard', 'Standart'),
+    ('decorative', 'Dekorativ'),
+    ('hidden', 'Yashirin'),
+    ('none', 'Karniz yo\'q'),
+]
+
+
+class OrderItemForm(forms.ModelForm):
+    """
+    Buyurtma jalyuzilari formasi
+    """
+    
+    class Meta:
+        model = OrderItem
+        fields = [
+            'blind_type', 'width', 'height', 'material', 
+            'installation_type', 'mechanism', 'cornice_type',
+            'color', 'quantity', 'unit_price_per_sqm', 'room_name'
+        ]
+        widgets = {
+            'blind_type': forms.Select(
+                choices=BLIND_TYPE_CHOICES,
+                attrs={'class': 'form-select', 'required': True}
+            ),
+            'width': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '10',
+                'step': '0.1',
+                'placeholder': 'Eni (sm)',
+                'required': True
+            }),
+            'height': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '10',
+                'step': '0.1',
+                'placeholder': 'Bo\'yi (sm)',
+                'required': True
+            }),
+            'material': forms.Select(
+                choices=MATERIAL_CHOICES,
+                attrs={'class': 'form-select', 'required': True}
+            ),
+            'installation_type': forms.Select(
+                choices=INSTALLATION_TYPE_CHOICES,
+                attrs={'class': 'form-select', 'required': True}
+            ),
+            'mechanism': forms.Select(
+                choices=MECHANISM_CHOICES,
+                attrs={'class': 'form-select', 'required': True}
+            ),
+            'cornice_type': forms.Select(
+                choices=CORNICE_TYPE_CHOICES,
+                attrs={'class': 'form-select'}
+            ),
+            'color': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Rang yoki kodni kiriting'
+            }),
+            'quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'value': '1',
+                'required': True
+            }),
+            'unit_price_per_sqm': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'step': '0.01',
+                'placeholder': 'Kvadrat metr narxi (so\'m)'
+            }),
+            'room_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Xona nomi (masalan: yotoq xona, mehmonxona)'
+            }),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+        
+        if width and width < 10:
+            raise forms.ValidationError('Jalyuzi eni kamida 10 sm bo\'lishi kerak')
+        
+        if height and height < 10:
+            raise forms.ValidationError('Jalyuzi bo\'yi kamida 10 sm bo\'lishi kerak')
+        
+        return cleaned_data
+
+
 class MeasurementForm(forms.ModelForm):
     """
     O'lchov olish formasi
     """
     class Meta:
         model = Order
-        fields = ['measurement_date', 'notes']
+        fields = ['measurement_notes', 'address']
         widgets = {
-            'measurement_date': forms.DateTimeInput(attrs={
+            'measurement_notes': forms.Textarea(attrs={
                 'class': 'form-control',
-                'type': 'datetime-local'
+                'rows': 4,
+                'placeholder': 'O\'lchov jarayonida olingan ma\'lumotlar, qiyinchiliklar va eslatmalar...'
             }),
-            'notes': forms.Textarea(attrs={
+            'address': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'O\'lchov jarayonidagi izohlar...'
+                'placeholder': 'Aniq manzil'
             }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['measurement_date'].required = False
-        self.fields['notes'].required = False
-
-
-class OrderItemForm(forms.ModelForm):
-    """
-    Jalyuzi (buyurtma elementi) formasi
-    """
-    class Meta:
-        model = OrderItem
-        fields = [
-            'blind_type', 'width', 'height', 'material', 'color',
-            'installation_type', 'mechanism', 'cornice_type', 
-            'room_name', 'quantity', 'unit_price_per_sqm', 'unit_price_total'
-        ]
-        widgets = {
-            'blind_type': forms.Select(attrs={'class': 'form-select'}),
-            'width': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.1',
-                'min': '0.1',
-                'placeholder': 'sm'
-            }),
-            'height': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.1',
-                'min': '0.1',
-                'placeholder': 'sm'
-            }),
-            'material': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Material nomi'
-            }),
-            'color': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Rang'
-            }),
-            'installation_type': forms.Select(attrs={'class': 'form-select'}),
-            'mechanism': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Mexanizm turi'
-            }),
-            'cornice_type': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Karniz turi'
-            }),
-            'room_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Xona nomi'
-            }),
-            'quantity': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '1',
-                'value': '1'
-            }),
-            'unit_price_per_sqm': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0',
-                'placeholder': '1 m² narxi'
-            }),
-            'unit_price_total': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0',
-                'placeholder': 'Umumiy birlik narxi'
-            }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Majburiy maydonlar
-        self.fields['blind_type'].required = True
-        self.fields['width'].required = True
-        self.fields['height'].required = True
-        self.fields['quantity'].required = True
-
-
-class OrderStatusForm(forms.ModelForm):
-    """
-    Buyurtma statusini o'zgartirish formasi
-    """
-    class Meta:
-        model = Order
-        fields = ['status']
-        widgets = {
-            'status': forms.Select(attrs={'class': 'form-select'})
         }
 
 
@@ -222,7 +263,7 @@ class OrderFilterForm(forms.Form):
     
     customer = forms.ModelChoiceField(
         label='Mijoz',
-        queryset=Customer.objects.all(),
+        queryset=Customer.objects.exclude(category='inactive'),  # TUZATILDI
         required=False,
         empty_label='Barcha mijozlar',
         widget=forms.Select(attrs={'class': 'form-select'})
@@ -286,64 +327,77 @@ class AssignStaffForm(forms.ModelForm):
         self.fields['assigned_installer'].empty_label = "O'rnatuvchini tanlang"
 
 
-# Formset yaratish
+class OrderStatusUpdateForm(forms.ModelForm):
+    """
+    Buyurtma statusini yangilash formasi
+    """
+    class Meta:
+        model = Order
+        fields = ['status', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Status o\'zgartirish sababi...'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Foydalanuvchi huquqlariga qarab status tanlovlarini cheklash
+        if user and user.role == 'technical':
+            # Texnik xodim faqat ma'lum statuslarni o'zgartira oladi
+            allowed_statuses = ['measuring', 'processing', 'installing', 'installed']
+            choices = [(k, v) for k, v in Order.STATUS_CHOICES if k in allowed_statuses]
+            self.fields['status'].choices = choices
+
+
+# MeasurementFormSet qo'shamiz
 MeasurementFormSet = modelformset_factory(
     OrderItem,
     form=OrderItemForm,
     extra=1,
     can_delete=True,
-    fields=[
-        'blind_type', 'width', 'height', 'material', 'color',
-        'installation_type', 'mechanism', 'cornice_type', 
-        'room_name', 'quantity', 'unit_price_per_sqm', 'unit_price_total'
-    ]
+    max_num=10
 )
 
-
-class QuickPaymentForm(forms.Form):
+# OrderStatusUpdateForm qo'shamiz
+class OrderStatusUpdateForm(forms.ModelForm):
     """
-    Tezkor to'lov formasi (buyurtma sahifasida)
+    Buyurtma statusini yangilash formasi
     """
-    amount = forms.DecimalField(
-        label='To\'lov miqdori',
-        max_digits=12,
-        decimal_places=2,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'step': '0.01',
-            'min': '0',
-            'placeholder': 'To\'lov miqdori'
-        })
-    )
-    
-    payment_method = forms.ChoiceField(
-        label='To\'lov usuli',
-        choices=[
-            ('cash', 'Naqd'),
-            ('card', 'Plastik karta'),
-            ('transfer', 'Bank o\'tkazmasi'),
-            ('other', 'Boshqa')
-        ],
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
-    notes = forms.CharField(
-        label='Izoh',
-        required=False,
-        widget=forms.Textarea(attrs={
-            'class': 'form-control',
-            'rows': 2,
-            'placeholder': 'To\'lov haqida izoh...'
-        })
-    )
+    class Meta:
+        model = Order
+        fields = ['status', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Status o\'zgartirish sababi...'
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
-        self.order = kwargs.pop('order', None)
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        if self.order:
-            # Qolgan to'lov miqdorini ko'rsatish
-            remaining = self.order.total_amount - self.order.paid_amount
-            if remaining > 0:
-                self.fields['amount'].widget.attrs['max'] = str(remaining)
-                self.fields['amount'].help_text = f"Qolgan to'lov: {remaining:,.0f} so'm"
+        # Foydalanuvchi huquqlariga qarab status tanlovlarini cheklash
+        if user and user.role == 'technical':
+            # Texnik xodim faqat ma'lum statuslarni o'zgartira oladi
+            allowed_statuses = ['measuring', 'processing', 'installing', 'installed']
+            choices = [(k, v) for k, v in Order.STATUS_CHOICES if k in allowed_statuses]
+            self.fields['status'].choices = choices
+
+
+# ModelFormSet yaratish
+OrderItemFormSet = modelformset_factory(
+    OrderItem,
+    form=OrderItemForm,
+    extra=1,
+    can_delete=True,
+    max_num=10
+)

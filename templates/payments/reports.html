@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-graph-up me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payments:daily_report' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-calendar-day me-1"></i>
+                Kunlik hisobot
+            </a>
+            <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-list me-1"></i>
+                To'lovlar ro'yxati
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtr formasi -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="date_from" class="form-label">Sana (dan)</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="date_to" class="form-label">Sana (gacha)</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-1"></i>
+                    Filtr qo'llash
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Umumiy statistika -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_stats.total_amount|floatformat:0|default:0 }}</h4>
+                        <p class="mb-0">Umumiy summa (so'm)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-cash-stack" style="font-size: 2rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_stats.total_count|default:0 }}</h4>
+                        <p class="mb-0">To'lovlar soni</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-receipt" style="font-size: 2rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_stats.avg_payment|floatformat:0|default:0 }}</h4>
+                        <p class="mb-0">O'rtacha to'lov (so'm)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calculator" style="font-size: 2rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ date_from|date:'d.m' }} - {{ date_to|date:'d.m' }}</h4>
+                        <p class="mb-0">Hisobot davri</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calendar-range" style="font-size: 2rem; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- To'lov usullari statistikasi -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>
+                    To'lov usullari bo'yicha
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for method in method_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ method.display_name }}</span>
+                    <div>
+                        <span class="badge bg-primary me-2">{{ method.count }} ta</span>
+                        <strong>{{ method.total|floatformat:0 }} so'm</strong>
+                    </div>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar" 
+                         style="width: {% if total_stats.total_amount %}{% widthratio method.total total_stats.total_amount 100 %}%{% else %}0%{% endif %}"></div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Ma'lumot mavjud emas</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- To'lov turlari statistikasi -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tags me-2"></i>
+                    To'lov turlari bo'yicha
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for type in type_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ type.display_name }}</span>
+                    <div>
+                        <span class="badge bg-success me-2">{{ type.count }} ta</span>
+                        <strong>{{ type.total|floatformat:0 }} so'm</strong>
+                    </div>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-success" 
+                         style="width: {% if total_stats.total_amount %}{% widthratio type.total total_stats.total_amount 100 %}%{% else %}0%{% endif %}"></div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Ma'lumot mavjud emas</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Xodimlar statistikasi -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Xodimlar bo'yicha
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for staff in staff_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ staff.received_by__first_name }} {{ staff.received_by__last_name|default:staff.received_by__username }}</span>
+                    <div>
+                        <span class="badge bg-info me-2">{{ staff.count }} ta</span>
+                        <strong>{{ staff.total|floatformat:0 }} so'm</strong>
+                    </div>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-info" 
+                         style="width: {% widthratio staff.total total_stats.total_amount 100 %}%"></div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Ma'lumot mavjud emas</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Kunlik dinamika -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-down me-2"></i>
+                    Oxirgi 7 kunlik dinamika
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for day in daily_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ day.date|date:'d.m.Y (l)' }}</span>
+                    <div>
+                        <span class="badge bg-secondary me-2">{{ day.count }} ta</span>
+                        <strong>{{ day.total|floatformat:0 }} so'm</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Eng katta to'lovlar -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-trophy me-2"></i>
+            Eng katta to'lovlar (TOP 10)
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Summa</th>
+                        <th>Buyurtma</th>
+                        <th>Mijoz</th>
+                        <th>Usul</th>
+                        <th>Sana</th>
+                        <th>Qabul qilgan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in top_payments %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <strong class="text-success">{{ payment.amount|floatformat:0 }} so'm</strong>
+                        </td>
+                        <td>
+                            <a href="{% url 'orders:detail' pk=payment.order.pk %}" class="text-decoration-none">
+                                #{{ payment.order.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ payment.order.customer.get_full_name }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ payment.get_payment_method_display }}</span>
+                        </td>
+                        <td>{{ payment.payment_date|date:'d.m.Y H:i' }}</td>
+                        <td>{{ payment.received_by.get_full_name|default:payment.received_by.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Ma'lumot mavjud emas</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
