@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-cart-plus me-2"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Buyurtmalar ro'yxati
+            </a>
+            {% if order %}
+            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-eye me-1"></i>
+                Ko'rish
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<form method="post" novalidate class="needs-validation">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Buyurtma asosiy ma'lumotlari -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Buyurtma ma'lumotlari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if order %}
+                    <div class="mb-3">
+                        <label class="form-label">Buyurtma raqami</label>
+                        <input type="text" class="form-control" value="{{ order.order_number }}" readonly>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.customer.id_for_label }}" class="form-label">
+                            {{ form.customer.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.customer }}
+                        {% if form.customer.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.customer.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            {{ form.status.label }}
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">
+                            {{ form.address.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.address.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            O'lchov olinishi kerak bo'lgan aniq manzil
+                        </div>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GPS va o'lchov ma'lumotlari -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-geo-alt me-2"></i>
+                        GPS va O'lchov
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.latitude.id_for_label }}" class="form-label">
+                            {{ form.latitude.label }}
+                        </label>
+                        {{ form.latitude }}
+                        {% if form.latitude.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.latitude.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.longitude.id_for_label }}" class="form-label">
+                            {{ form.longitude.label }}
+                        </label>
+                        {{ form.longitude }}
+                        {% if form.longitude.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.longitude.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.location_accuracy.id_for_label }}" class="form-label">
+                            {{ form.location_accuracy.label }}
+                        </label>
+                        {{ form.location_accuracy }}
+                        {% if form.location_accuracy.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.location_accuracy.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" id="getLocationBtn">
+                            <i class="bi bi-geo-alt-fill me-1"></i>
+                            Hozirgi joylashuvni olish
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.measurement_date.id_for_label }}" class="form-label">
+                            {{ form.measurement_date.label }}
+                        </label>
+                        {{ form.measurement_date }}
+                        {% if form.measurement_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.measurement_date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label for="{{ form.measurement_notes.id_for_label }}" class="form-label">
+                            {{ form.measurement_notes.label }}
+                        </label>
+                        {{ form.measurement_notes }}
+                        {% if form.measurement_notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.measurement_notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ishlab chiqarish va o'rnatish -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tools me-2"></i>
+                        Ishlab chiqarish va O'rnatish
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.production_date.id_for_label }}" class="form-label">
+                            {{ form.production_date.label }}
+                        </label>
+                        {{ form.production_date }}
+                        {% if form.production_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.production_date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.production_notes.id_for_label }}" class="form-label">
+                            {{ form.production_notes.label }}
+                        </label>
+                        {{ form.production_notes }}
+                        {% if form.production_notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.production_notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.installation_date.id_for_label }}" class="form-label">
+                            {{ form.installation_date.label }}
+                        </label>
+                        {{ form.installation_date }}
+                        {% if form.installation_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.installation_date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label for="{{ form.installation_notes.id_for_label }}" class="form-label">
+                            {{ form.installation_notes.label }}
+                        </label>
+                        {{ form.installation_notes }}
+                        {% if form.installation_notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.installation_notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jalyuzilar formset (faqat tahrirlashda) -->
+    {% if order and formset %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-grid me-2"></i>
+                Jalyuzilar ro'yxati
+            </h5>
+        </div>
+        <div class="card-body">
+            {{ formset.management_form }}
+            
+            <div id="formset-container">
+                {% for form in formset %}
+                <div class="formset-form border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-card-list me-1"></i>
+                            Jalyuzi #{{ forloop.counter }}
+                        </h6>
+                        {% if formset.can_delete and form.instance.pk %}
+                        <div class="form-check">
+                            {{ form.DELETE }}
+                            <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
+                                O'chirish
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.blind_type.label }}</label>
+                            {{ form.blind_type }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.width.label }}</label>
+                            {{ form.width }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.height.label }}</label>
+                            {{ form.height }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.material.label }}</label>
+                            {{ form.material }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.quantity.label }}</label>
+                            {{ form.quantity }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.unit_price_total.label }}</label>
+                            {{ form.unit_price_total }}
+                        </div>
+                    </div>
+                    
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <button type="button" class="btn btn-outline-success" id="add-formset">
+                <i class="bi bi-plus-circle me-1"></i>
+                Yangi jalyuzi qo'shish
+            </button>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Submit tugmalari -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'orders:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {% if order %}
+                                Yangilash
+                            {% else %}
+                                Saqlash
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Ma'lumot kartasi -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Eslatma
+                </h6>
+                <ul class="mb-0">
+                    <li>Mijoz va manzil majburiy maydonlar</li>
+                    <li>GPS koordinatalarni avtomatik olish uchun "Hozirgi joylashuvni olish" tugmasini bosing</li>
+                    <li>Jalyuzilar ro'yxatini keyinroq qo'shishingiz mumkin</li>
+                    <li>Barcha sanalar ixtiyoriy, keyin to'ldiriladi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // GPS joylashuvni olish
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const latInput = document.getElementById('{{ form.latitude.id_for_label }}');
+    const lngInput = document.getElementById('{{ form.longitude.id_for_label }}');
+    const accuracyInput = document.getElementById('{{ form.location_accuracy.id_for_label }}');
+    
+    if (getLocationBtn && latInput && lngInput) {
+        getLocationBtn.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                this.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Olinyapti...';
+                this.disabled = true;
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        latInput.value = position.coords.latitude.toFixed(6);
+                        lngInput.value = position.coords.longitude.toFixed(6);
+                        if (accuracyInput) {
+                            accuracyInput.value = Math.round(position.coords.accuracy);
+                        }
+                        
+                        getLocationBtn.innerHTML = '<i class="bi bi-check me-1"></i> Olindi!';
+                        getLocationBtn.classList.remove('btn-outline-primary');
+                        getLocationBtn.classList.add('btn-success');
+                        
+                        setTimeout(function() {
+                            getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Hozirgi joylashuvni olish';
+                            getLocationBtn.classList.remove('btn-success');
+                            getLocationBtn.classList.add('btn-outline-primary');
+                            getLocationBtn.disabled = false;
+                        }, 2000);
+                    },
+                    function(error) {
+                        alert('Joylashuvni olishda xatolik: ' + error.message);
+                        getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Hozirgi joylashuvni olish';
+                        getLocationBtn.disabled = false;
+                    }
+                );
+            } else {
+                alert('Brauzeringiz joylashuvni qo\'llab-quvvatlamaydi!');
+            }
+        });
+    }
+    
+    // Mijoz o'zgarganda manzilni avtomatik to'ldirish
+    const customerSelect = document.getElementById('{{ form.customer.id_for_label }}');
+    const addressTextarea = document.getElementById('{{ form.address.id_for_label }}');
+    
+    if (customerSelect && addressTextarea) {
+        customerSelect.addEventListener('change', function() {
+            if (this.value && !addressTextarea.value.trim()) {
+                // Bu yerda AJAX orqali mijoz manzilini olish mumkin
+                // Hozircha oddiy placeholder
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const customer = customerSelect ? customerSelect.value : '';
+            const address = addressTextarea ? addressTextarea.value.trim() : '';
+            
+            if (!customer) {
+                e.preventDefault();
+                alert('Mijozni tanlang!');
+                if (customerSelect) customerSelect.focus();
+                return;
+            }
+            
+            if (!address) {
+                e.preventDefault();
+                alert('Manzilni kiriting!');
+                if (addressTextarea) addressTextarea.focus();
+                return;
+            }
+        });
+    }
+    
+    // Formset management (agar mavjud bo'lsa)
+    const addFormsetBtn = document.getElementById('add-formset');
+    if (addFormsetBtn) {
+        addFormsetBtn.addEventListener('click', function() {
+            // Formset qo'shish logikasi
+            // Bu yerda JavaScript formset management kod bo'lishi kerak
+        });
+    }
+});
+</script>
+{% endblock %}
