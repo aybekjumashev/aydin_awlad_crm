@@ -1,35 +1,35 @@
-# payments/models.py - TO'G'IRLANGAN VERSIYA
+# payments/models.py - YANGILANGAN VERSIYA
 
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
 from decimal import Decimal
+from django.utils import timezone
 
 
 class Payment(models.Model):
     """
-    To'lovlar modeli - Yangilangan versiya
+    To'lovlar modeli - To'liq yangilangan versiya
     """
     
     PAYMENT_TYPE_CHOICES = [
-        ('full', 'To\'liq to\'lov'),
-        ('partial', 'Qisman to\'lov'),
         ('prepayment', 'Oldindan to\'lov'),
+        ('partial', 'Qisman to\'lov'),
         ('final', 'Yakuniy to\'lov'),
+        ('full', 'To\'liq to\'lov'),
         ('refund', 'Qaytarilgan to\'lov'),
+        ('discount', 'Chegirma'),
     ]
     
-    # YANGI: To'lov usullari
     PAYMENT_METHOD_CHOICES = [
         ('cash', 'Naqd pul'),
         ('card', 'Plastik karta'),
         ('transfer', 'Bank o\'tkazmasi'),
-        ('online', 'Online to\'lov'),
         ('mobile', 'Mobil to\'lov'),
+        ('online', 'Online to\'lov'),
         ('installment', 'Muddatli to\'lov'),
     ]
     
-    # YANGI: To'lov statuslari
     STATUS_CHOICES = [
         ('pending', 'Kutilmoqda'),
         ('confirmed', 'Tasdiqlangan'),
@@ -37,7 +37,7 @@ class Payment(models.Model):
         ('refunded', 'Qaytarilgan'),
     ]
     
-    # Asosiy ma'lumotlar
+    # Asosiy bog'lanishlar
     order = models.ForeignKey(
         'orders.Order',
         on_delete=models.CASCADE,
@@ -45,13 +45,13 @@ class Payment(models.Model):
         verbose_name='Buyurtma'
     )
     
+    # To'lov ma'lumotlari
     payment_type = models.CharField(
         max_length=20,
         choices=PAYMENT_TYPE_CHOICES,
         verbose_name='To\'lov turi'
     )
     
-    # YANGI: To'lov usuli
     payment_method = models.CharField(
         max_length=20,
         choices=PAYMENT_METHOD_CHOICES,
@@ -60,13 +60,12 @@ class Payment(models.Model):
     )
     
     amount = models.DecimalField(
-        max_digits=10,
+        max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
         verbose_name='Summa'
     )
     
-    # YANGI: To'lov statusi
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -74,205 +73,201 @@ class Payment(models.Model):
         verbose_name='Status'
     )
     
-    # To'lov sanalari
+    # Sanalar
     payment_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='To\'lov sanasi'
+        verbose_name='To\'lov sanasi',
+        help_text='To\'lov amalga oshirilgan sana'
     )
     
-    # YANGI: Rejalashtirilgan to'lov sanasi (muddatli to'lov uchun)
-    scheduled_date = models.DateField(
+    scheduled_date = models.DateTimeField(
         blank=True,
         null=True,
         verbose_name='Rejalashtirilgan sana',
-        help_text='Muddatli to\'lovlar uchun'
+        help_text='Muddatli to\'lov uchun'
     )
     
-    # YANGI: Chek raqami
-    receipt_number = models.CharField(
-        max_length=50,
+    confirmed_date = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name='Chek/Hujjat raqami',
-        help_text='Bank cheki yoki boshqa hujjat raqami'
+        verbose_name='Tasdiqlangan sana'
     )
     
-    notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Izoh'
-    )
-    
-    # Kim qabul qildi
+    # Kim tomonidan qabul qilingan
     received_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         related_name='received_payments',
-        verbose_name='Qabul qilgan'
-    )
-    
-    # Tasdiqlash ma'lumotlari
-    is_confirmed = models.BooleanField(
-        default=False,
-        verbose_name='Tasdiqlangan'
+        verbose_name='Qabul qilgan xodim'
     )
     
     confirmed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        null=True,
         blank=True,
+        null=True,
         related_name='confirmed_payments',
-        verbose_name='Tasdiqlagan'
+        verbose_name='Tasdiqlagan xodim'
     )
     
-    confirmed_at = models.DateTimeField(
-        null=True,
+    # Qo'shimcha ma'lumotlar
+    reference_number = models.CharField(
+        max_length=100,
         blank=True,
-        verbose_name='Tasdiqlangan sana'
+        null=True,
+        verbose_name='Ma\'lumotnoma raqami',
+        help_text='Bank o\'tkazmasi yoki karta to\'lovi uchun'
     )
     
-    # YANGI: Qaytarilgan to'lov ma'lumotlari
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Izohlar'
+    )
+    
+    # Qaytarilgan to'lov uchun
     refund_reason = models.TextField(
         blank=True,
         null=True,
         verbose_name='Qaytarish sababi'
     )
     
-    refunded_at = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name='Qaytarilgan sana'
-    )
-    
-    refunded_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+    refunded_to_payment = models.ForeignKey(
+        'self',
         on_delete=models.SET_NULL,
-        null=True,
         blank=True,
-        related_name='refunded_payments',
-        verbose_name='Qaytargan'
+        null=True,
+        verbose_name='Qaysi to\'lovga qaytarilgan'
     )
     
+    # Avtomatik sanalar
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Yaratilgan sana'
     )
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name='O\'zgartirilgan sana'
+        verbose_name='Yangilangan sana'
     )
     
     class Meta:
         verbose_name = 'To\'lov'
         verbose_name_plural = 'To\'lovlar'
         ordering = ['-payment_date']
-        indexes = [
-            models.Index(fields=['payment_date']),
-            models.Index(fields=['status']),
-            models.Index(fields=['payment_method']),
-        ]
-    
-    def __str__(self):
-        return f"{self.order.order_number} - {self.amount} so'm ({self.get_payment_type_display()})"
     
     def save(self, *args, **kwargs):
-        """YANGI: Avtomatik tasdiqlash va sana o'rnatish"""
-        if self.is_confirmed and not self.confirmed_at:
+        # To'lov tasdiqlanganida sanani belgilash
+        if self.status == 'confirmed' and not self.confirmed_date:
             from django.utils import timezone
-            self.confirmed_at = timezone.now()
-            self.status = 'confirmed'
-        
-        if self.status == 'refunded' and not self.refunded_at:
-            from django.utils import timezone
-            self.refunded_at = timezone.now()
+            self.confirmed_date = timezone.now()
         
         super().save(*args, **kwargs)
+        
+        # Buyurtmaning to'lov holatini yangilash
+        self.order.update_payment_status()
+        self.order.save(update_fields=['paid_amount', 'payment_status'])
     
-    def is_partial_payment(self):
-        """YANGI: Qisman to'lov ekanligini tekshirish"""
-        return self.payment_type == 'partial'
+    def delete(self, *args, **kwargs):
+        order = self.order
+        super().delete(*args, **kwargs)
+        # To'lov o'chirilgandan keyin buyurtma holatini yangilash
+        order.update_payment_status()
+        order.save(update_fields=['paid_amount', 'payment_status'])
     
-    def get_payment_method_icon(self):
-        """YANGI: To'lov usuli uchun icon"""
-        icons = {
-            'cash': 'bi-cash',
-            'card': 'bi-credit-card',
-            'transfer': 'bi-bank',
-            'online': 'bi-globe',
-            'mobile': 'bi-phone',
-            'installment': 'bi-calendar3',
-        }
-        return icons.get(self.payment_method, 'bi-cash')
+    @property
+    def is_confirmed(self):
+        """To'lov tasdiqlangan mi?"""
+        return self.status == 'confirmed'
     
-    def get_status_badge_class(self):
-        """YANGI: Status uchun badge rangi"""
-        classes = {
-            'pending': 'badge bg-warning text-dark',
-            'confirmed': 'badge bg-success',
-            'cancelled': 'badge bg-danger',
-            'refunded': 'badge bg-info',
-        }
-        return classes.get(self.status, 'badge bg-secondary')
+    @property
+    def is_refund(self):
+        """Bu qaytarilgan to'lovmi?"""
+        return self.payment_type == 'refund'
+    
+    def confirm_payment(self, user):
+        """To'lovni tasdiqlash"""
+        self.status = 'confirmed'
+        self.confirmed_by = user
+        from django.utils import timezone
+        self.confirmed_date = timezone.now()
+        self.save()
+    
+    def cancel_payment(self, reason=""):
+        """To'lovni bekor qilish"""
+        self.status = 'cancelled'
+        if reason:
+            self.notes = f"{self.notes or ''}\nBekor qilish sababi: {reason}".strip()
+        self.save()
+    
+    def create_refund(self, amount, reason, user):
+        """Qaytarilgan to'lov yaratish"""
+        refund = Payment.objects.create(
+            order=self.order,
+            payment_type='refund',
+            payment_method=self.payment_method,
+            amount=amount,
+            status='confirmed',
+            payment_date=timezone.now(),
+            confirmed_date=timezone.now(),
+            received_by=user,
+            confirmed_by=user,
+            refund_reason=reason,
+            refunded_to_payment=self,
+            notes=f"#{self.id} raqamli to'lovga qaytarildi"
+        )
+        return refund
+    
+    def __str__(self):
+        return f"#{self.order.order_number} - {self.amount:,.0f} so'm ({self.get_payment_type_display()})"
 
 
-class PaymentPlan(models.Model):
+class PaymentSchedule(models.Model):
     """
-    YANGI: Muddatli to'lov rejasi
+    Muddatli to'lov rejasi
     """
     
-    order = models.OneToOneField(
+    order = models.ForeignKey(
         'orders.Order',
         on_delete=models.CASCADE,
-        related_name='payment_plan',
+        related_name='payment_schedules',
         verbose_name='Buyurtma'
     )
     
-    total_amount = models.DecimalField(
-        max_digits=10,
+    installment_number = models.PositiveIntegerField(
+        verbose_name='To\'lov tartib raqami',
+        help_text='1-chi to\'lov, 2-chi to\'lov va h.k.'
+    )
+    
+    scheduled_amount = models.DecimalField(
+        max_digits=12,
         decimal_places=2,
-        verbose_name='Umumiy summa'
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Rejalashtirilgan summa'
     )
     
-    down_payment = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=Decimal('0'),
-        verbose_name='Oldindan to\'lov'
+    due_date = models.DateField(
+        verbose_name='Muddati'
     )
     
-    monthly_payment = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name='Oylik to\'lov'
+    is_paid = models.BooleanField(
+        default=False,
+        verbose_name='To\'langan'
     )
     
-    duration_months = models.PositiveIntegerField(
-        verbose_name='Muddati (oy)'
-    )
-    
-    interest_rate = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0'),
-        verbose_name='Foiz stavkasi (%)',
-        help_text='Yillik foiz stavkasi'
-    )
-    
-    start_date = models.DateField(
-        verbose_name='Boshlanish sanasi'
-    )
-    
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name='Faol'
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='schedule',
+        verbose_name='To\'lov'
     )
     
     notes = models.TextField(
         blank=True,
         null=True,
-        verbose_name='Izoh'
+        verbose_name='Izohlar'
     )
     
     created_at = models.DateTimeField(
@@ -283,35 +278,27 @@ class PaymentPlan(models.Model):
     class Meta:
         verbose_name = 'To\'lov rejasi'
         verbose_name_plural = 'To\'lov rejalari'
-        ordering = ['-created_at']
+        ordering = ['due_date', 'installment_number']
+        unique_together = ['order', 'installment_number']
+    
+    @property
+    def is_overdue(self):
+        """Muddati o'tganmi?"""
+        from django.utils import timezone
+        return not self.is_paid and self.due_date < timezone.now().date()
+    
+    @property
+    def days_until_due(self):
+        """Muddatgacha qancha kun qolgan"""
+        from django.utils import timezone
+        delta = self.due_date - timezone.now().date()
+        return delta.days
+    
+    def mark_as_paid(self, payment):
+        """To'langani belgilash"""
+        self.is_paid = True
+        self.payment = payment
+        self.save()
     
     def __str__(self):
-        return f"{self.order.order_number} - {self.duration_months} oy"
-    
-    def remaining_amount(self):
-        """Qolgan to'lov summasi"""
-        paid_amount = self.order.payments.filter(
-            status='confirmed'
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0')
-        
-        return max(Decimal('0'), self.total_amount - paid_amount)
-    
-    def next_payment_date(self):
-        """Keyingi to'lov sanasi"""
-        from dateutil.relativedelta import relativedelta
-        
-        paid_count = self.order.payments.filter(
-            status='confirmed',
-            payment_type__in=['partial', 'final']
-        ).count()
-        
-        if paid_count >= self.duration_months:
-            return None
-        
-        return self.start_date + relativedelta(months=paid_count + 1)
-    
-    def is_completed(self):
-        """To'lov rejasi tugatilgan ekanligini tekshirish"""
-        return self.remaining_amount() <= Decimal('0')
+        return f"#{self.order.order_number} - {self.installment_number}-to'lov ({self.scheduled_amount:,.0f} so'm)"

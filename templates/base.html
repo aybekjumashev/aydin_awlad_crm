@@ -228,14 +228,7 @@
                         </li>
                         {% endif %}
                         
-                        {% if user.can_view_reports %}
-                        <li class="nav-item">
-                            <a href="{% url 'reports:dashboard' %}" class="nav-link {% if 'reports' in request.resolver_match.namespace %}active{% endif %}">
-                                <i class="bi bi-graph-up me-2"></i>
-                                Hisobotlar
-                            </a>
-                        </li>
-                        {% endif %}
+
                         
                         <hr class="text-white-50 my-3">
                         

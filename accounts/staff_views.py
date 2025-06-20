@@ -11,68 +11,9 @@ from .models import User
 from .forms import TechnicianForm, TechnicianEditForm, StaffPasswordResetForm  # ✅ BU IMPORT QO'SHILDI
 from orders.models import Order
 from payments.models import Payment
+from django.db import models
 
 
-@login_required
-def staff_list(request):
-    """
-    Texnik xodimlar ro'yxati
-    """
-    # Faqat menejer va admin ko'ra oladi
-    if not (request.user.is_manager() or request.user.is_admin()):
-        messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
-        return redirect('dashboard')
-    
-    # Faqat texnik xodimlarni olish - prefetch bilan statistika
-    staff = User.objects.filter(role='technician').select_related().prefetch_related(
-        'created_orders',
-        'received_payments'
-    ).order_by('-created_at')
-    
-    # Qidiruv
-    search = request.GET.get('search')
-    if search:
-        staff = staff.filter(
-            Q(first_name__icontains=search) |
-            Q(last_name__icontains=search) |
-            Q(username__icontains=search) |
-            Q(phone__icontains=search)
-        )
-    
-    # Faollik filtri
-    status = request.GET.get('status')
-    if status == 'active':
-        staff = staff.filter(is_active=True)
-    elif status == 'inactive':
-        staff = staff.filter(is_active=False)
-    
-    # Annotation bilan statistika qo'shish
-    staff = staff.annotate(
-        total_orders_count=Count('created_orders', distinct=True),
-        received_payments_count=Count('received_payments', distinct=True),
-        total_payments_sum=Sum('received_payments__amount')
-    )
-    
-    # Pagination
-    paginator = Paginator(staff, 20)
-    page_number = request.GET.get('page')
-    staff_page = paginator.get_page(page_number)
-    
-    # Umumiy statistika
-    stats = {
-        'total_staff': User.objects.filter(role='technician').count(),
-        'active_staff': User.objects.filter(role='technician', is_active=True).count(),
-        'inactive_staff': User.objects.filter(role='technician', is_active=False).count(),
-    }
-    
-    context = {
-        'staff': staff_page,
-        'search': search,
-        'status': status,
-        'stats': stats,
-    }
-    
-    return render(request, 'accounts/staff_list.html', context)
 
 
 @login_required
@@ -269,3 +210,40 @@ def staff_delete(request, pk):
     }
     
     return render(request, 'accounts/staff_delete.html', context)
+
+
+
+
+@login_required
+def staff_list(request):
+    """
+    Texnik xodimlar ro'yxati - oddiy versiya
+    """
+    # Faqat menejer va admin ko'ra oladi - property lar, method emas
+    if not (request.user.is_manager or request.user.is_admin):
+        messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
+        return redirect('dashboard')
+    
+    staff = User.objects.filter(role='technical').order_by('-created_at')
+    
+    # Qidiruv
+    search = request.GET.get('search', '')
+    if search:
+        staff = staff.filter(
+            models.Q(first_name__icontains=search) |
+            models.Q(last_name__icontains=search) |
+            models.Q(username__icontains=search) |
+            models.Q(phone__icontains=search)
+        )
+    
+    context = {
+        'staff': staff,
+        'search': search,
+        'title': 'Texnik xodimlar',
+        'stats': {
+            'total_staff': User.objects.filter(role='technical').count(),
+            'active_staff': User.objects.filter(role='technical', is_active=True).count(),
+        }
+    }
+    
+    return render(request, 'accounts/staff_list.html', context)

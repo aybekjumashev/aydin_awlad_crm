@@ -17,76 +17,18 @@ from .forms import PaymentForm
 @login_required
 def payment_list(request):
     """
-    To'lovlar ro'yxati
+    To'lovlar ro'yxati - oddiy versiya
     """
     # Faqat menejer va admin ko'ra oladi
     if not (request.user.is_manager() or request.user.is_admin()):
         messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
-    payments = Payment.objects.select_related('order__customer', 'received_by').order_by('-payment_date')
-    
-    # Qidiruv
-    search = request.GET.get('search')
-    if search:
-        payments = payments.filter(
-            Q(order__order_number__icontains=search) |
-            Q(order__customer__first_name__icontains=search) |
-            Q(order__customer__last_name__icontains=search) |
-            Q(order__customer__phone__icontains=search) |
-            Q(receipt_number__icontains=search)
-        )
-    
-    # To'lov turi filtri
-    payment_type = request.GET.get('payment_type')
-    if payment_type:
-        payments = payments.filter(payment_type=payment_type)
-    
-    # To'lov usuli filtri
-    payment_method = request.GET.get('payment_method')
-    if payment_method:
-        payments = payments.filter(payment_method=payment_method)
-    
-    # Sana filtri
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-    if date_from:
-        payments = payments.filter(payment_date__date__gte=date_from)
-    if date_to:
-        payments = payments.filter(payment_date__date__lte=date_to)
-    
-    # Tasdiqlash holati
-    confirmed = request.GET.get('confirmed')
-    if confirmed == 'yes':
-        payments = payments.filter(is_confirmed=True)
-    elif confirmed == 'no':
-        payments = payments.filter(is_confirmed=False)
-    
-    # Statistika
-    today = timezone.now().date()
-    stats = {
-        'total_payments': payments.count(),
-        'total_amount': payments.aggregate(total=Sum('amount'))['total'] or 0,
-        'today_payments': Payment.objects.filter(payment_date__date=today).count(),
-        'today_amount': Payment.objects.filter(
-            payment_date__date=today
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-    }
-    
-    # Pagination
-    paginator = Paginator(payments, 20)
-    page_number = request.GET.get('page')
-    payments = paginator.get_page(page_number)
+    payments = Payment.objects.select_related('order', 'order__customer').order_by('-payment_date')[:50]
     
     context = {
         'payments': payments,
-        'search': search,
-        'payment_type': payment_type,
-        'payment_method': payment_method,
-        'date_from': date_from,
-        'date_to': date_to,
-        'confirmed': confirmed,
-        'stats': stats,
+        'title': 'To\'lovlar ro\'yxati'
     }
     
     return render(request, 'payments/list.html', context)
@@ -365,3 +307,4 @@ def daily_payment_report(request):
     }
     
     return render(request, 'payments/daily_report.html', context)
+

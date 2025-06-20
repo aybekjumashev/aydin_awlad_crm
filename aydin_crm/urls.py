@@ -1,4 +1,7 @@
-# aydin_crm/urls.py
+# aydin_crm/settings.py ga qo'shish uchun
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 from django.contrib import admin
 from django.urls import path, include
@@ -12,7 +15,8 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('staff/', include('accounts.staff_urls')),
     path('payments/', include('payments.urls')),
-    path('reports/', include('reports.urls')),  # ✅ BU QATOR QO'SHILDI!
+    # reports ni hozircha olib tashlaymiz
+    # path('reports/', include('reports.urls')),
 ]
 
 # Media fayllar uchun (development muhitida)

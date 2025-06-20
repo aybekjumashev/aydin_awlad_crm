@@ -1,4 +1,4 @@
-# orders/models.py
+# orders/models.py - YANGILANGAN VERSIYA
 
 from django.db import models
 from django.core.validators import MinValueValidator
@@ -17,8 +17,17 @@ class Order(models.Model):
         ('new', 'Yangi'),
         ('measuring', 'O\'lchovda'),
         ('processing', 'Ishlanmoqda'),
+        ('installing', 'O\'rnatilmoqda'),  # YANGI STATUS
         ('installed', 'O\'rnatildi'),
         ('cancelled', 'Bekor qilindi'),
+    ]
+    
+    # To'lov holatlari
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'To\'lanmagan'),
+        ('partial', 'Qisman to\'langan'),
+        ('paid', 'To\'liq to\'langan'),
+        ('overpaid', 'Ortiqcha to\'langan'),
     ]
     
     # Asosiy ma'lumotlar
@@ -36,7 +45,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='measuring',
+        default='measuring',  # Yangi buyurtma darhol o'lchovga yuboriladi
         verbose_name='Holat'
     )
     
@@ -46,55 +55,104 @@ class Order(models.Model):
         help_text='Jalyuzi o\'rnatilishi kerak bo\'lgan aniq manzil'
     )
     
-    # Geoposition ma'lumotlari (yangi)
-    latitude = models.FloatField(
-        blank=True,
-        null=True,
-        verbose_name='Kenglik (Latitude)',
-        help_text='GPS koordinata - kenglik'
+    # To'lov ma'lumotlari - YANGI
+    total_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name='Umumiy narx'
     )
-    longitude = models.FloatField(
-        blank=True,
-        null=True,
-        verbose_name='Uzunlik (Longitude)',
-        help_text='GPS koordinata - uzunlik'
+    paid_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name='To\'langan summa'
     )
-    location_accuracy = models.FloatField(
-        blank=True,
-        null=True,
-        verbose_name='Joylashuv aniqligi (m)',
-        help_text='GPS aniqligi metrda'
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='pending',
+        verbose_name='To\'lov holati'
     )
     
-    # O'lchov ma'lumotlari
+    # Texnik xodimlar tayinlanishi - YANGI
+    assigned_measurer = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='assigned_measurements',
+        limit_choices_to={'role': 'technical', 'can_measure': True},
+        verbose_name='O\'lchov oluvchi'
+    )
+    assigned_manufacturer = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='assigned_manufacturing',
+        limit_choices_to={'role': 'technical', 'can_manufacture': True},
+        verbose_name='Ishlab chiquvchi'
+    )
+    assigned_installer = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='assigned_installations',
+        limit_choices_to={'role': 'technical', 'can_install': True},
+        verbose_name='O\'rnatuvchi'
+    )
+    
+    # Sanalar
     measurement_date = models.DateTimeField(
         blank=True,
         null=True,
         verbose_name='O\'lchov sanasi'
+    )
+    measurement_completed_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='O\'lchov yakunlangan sana'
+    )
+    production_start_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Ishlab chiqarish boshlangan sana'
+    )
+    production_completed_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Ishlab chiqarish yakunlangan sana'
+    )
+    installation_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='O\'rnatish sanasi'
+    )
+    installation_completed_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='O\'rnatish yakunlangan sana'
+    )
+    
+    # Izohlar
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Umumiy izohlar'
     )
     measurement_notes = models.TextField(
         blank=True,
         null=True,
         verbose_name='O\'lchov izohlari'
     )
-    
-    # Ishlab chiqarish ma'lumotlari
-    production_date = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name='Ishlab chiqarish sanasi'
-    )
     production_notes = models.TextField(
         blank=True,
         null=True,
         verbose_name='Ishlab chiqarish izohlari'
-    )
-    
-    # O'rnatish ma'lumotlari
-    installation_date = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name='O\'rnatish sanasi'
     )
     installation_notes = models.TextField(
         blank=True,
@@ -102,63 +160,14 @@ class Order(models.Model):
         verbose_name='O\'rnatish izohlari'
     )
     
-    # Umumiy izohlar
-    notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Qo\'shimcha izoh'
-    )
-    
-    # Kim yaratdi va o'zgartirdi
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='created_orders',
-        verbose_name='Yaratuvchi'
-    )
-    updated_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='updated_orders',
-        verbose_name='O\'zgartiruvchi'
-    )
-    
-    # Jarayon mas'ullari
-    measured_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='measured_orders',
-        verbose_name='O\'lchov olgan'
-    )
-    processed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='processed_orders',
-        verbose_name='Ishlab chiqargan'
-    )
-    installed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='installed_orders',
-        verbose_name='O\'rnatgan'
-    )
-    
-    # Vaqt belgilari
+    # Avtomatik sanalar
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Yaratilgan sana'
     )
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name='O\'zgartirilgan sana'
+        verbose_name='Yangilangan sana'
     )
     
     class Meta:
@@ -166,99 +175,82 @@ class Order(models.Model):
         verbose_name_plural = 'Buyurtmalar'
         ordering = ['-created_at']
     
-    def __str__(self):
-        return f"{self.order_number} - {self.customer.get_full_name()}"
+    def save(self, *args, **kwargs):
+        # Buyurtma raqamini avtomatik yaratish
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        
+        # To'lov holatini yangilash
+        self.update_payment_status()
+        
+        super().save(*args, **kwargs)
     
-    def get_absolute_url(self):
-        """Buyurtma sahifasiga havola"""
-        return reverse('orders:detail', kwargs={'pk': self.pk})
+    def generate_order_number(self):
+        """Buyurtma raqamini yaratish"""
+        import datetime
+        today = datetime.date.today()
+        prefix = f"AA{today.strftime('%Y%m%d')}"
+        
+        # Bugungi oxirgi buyurtma raqamini topish
+        last_order = Order.objects.filter(
+            order_number__startswith=prefix
+        ).order_by('-order_number').first()
+        
+        if last_order:
+            # Oxirgi raqamdan keyingisini yaratish
+            last_number = int(last_order.order_number[-3:])
+            new_number = f"{prefix}{last_number + 1:03d}"
+        else:
+            # Birinchi buyurtma
+            new_number = f"{prefix}001"
+        
+        return new_number
     
-    def total_items(self):
-        """Umumiy jalyuzi donasi"""
-        return self.items.aggregate(
-            total=models.Sum('quantity')
-        )['total'] or 0
+    def update_payment_status(self):
+        """To'lov holatini yangilash"""
+        if self.paid_amount <= 0:
+            self.payment_status = 'pending'
+        elif self.paid_amount >= self.total_amount:
+            if self.paid_amount > self.total_amount:
+                self.payment_status = 'overpaid'
+            else:
+                self.payment_status = 'paid'
+        else:
+            self.payment_status = 'partial'
     
+    @property
+    def remaining_amount(self):
+        """Qolgan qarzdorlik"""
+        return max(self.total_amount - self.paid_amount, Decimal('0'))
+    
+    @property
     def total_area(self):
         """Umumiy maydon (m²)"""
         total = Decimal('0')
         for item in self.items.all():
-            total += item.total_area()
+            total += item.area
         return total
     
-    def total_price(self):
-        """Umumiy narx"""
-        total = Decimal('0')
-        for item in self.items.all():
-            total += item.total_price()
-        return total
+    def get_absolute_url(self):
+        return reverse('orders:detail', kwargs={'pk': self.pk})
     
-    def total_paid(self):
-        """To'langan summa"""
-        return self.payments.filter(
-            is_confirmed=True
-        ).aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0')
-    
-    def remaining_debt(self):
-        """Qolgan qarzdorlik"""
-        return max(Decimal('0'), self.total_price() - self.total_paid())
-    
-    def is_fully_paid(self):
-        """To'liq to'langanmi"""
-        return self.remaining_debt() == 0
-    
-    def payment_percentage(self):
-        """To'lov foizi"""
-        total = self.total_price()
-        if total > 0:
-            return (self.total_paid() / total) * 100
-        return 0
-    
-    def get_google_maps_url(self):
-        """Google Maps havolasi"""
-        if self.latitude and self.longitude:
-            return f"https://maps.google.com/maps?q={self.latitude},{self.longitude}"
-        return None
-    
-    def save(self, *args, **kwargs):
-        # Buyurtma raqamini avtomatik yaratish
-        if not self.order_number:
-            from django.utils import timezone
-            now = timezone.now()
-            last_order = Order.objects.filter(
-                created_at__year=now.year,
-                created_at__month=now.month
-            ).order_by('-created_at').first()
-            
-            if last_order and last_order.order_number:
-                try:
-                    last_number = int(last_order.order_number.split('-')[-1])
-                    next_number = last_number + 1
-                except (ValueError, IndexError):
-                    next_number = 1
-            else:
-                next_number = 1
-            
-            self.order_number = f"AA-{now.year}-{now.month:02d}-{next_number:04d}"
-        
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"#{self.order_number} - {self.customer.full_name}"
 
 
 class OrderItem(models.Model):
     """
-    Buyurtma elementlari - Yangilangan versiya
+    Buyurtma elementlari (Jalyuzilar) - YANGILANGAN
     """
     
     BLIND_TYPE_CHOICES = [
-        ('horizontal', 'Gorizontal'),
-        ('vertical', 'Vertikal'),
-        ('roller', 'Rulon'),
-        ('roman', 'Rim'),
-        ('pleated', 'Plisse'),
-        ('wooden', 'Yog\'och'),
-        ('aluminum', 'Alyuminiy'),
+        ('horizontal', 'Gorizontal jalyuzi'),
+        ('vertical', 'Vertikal jalyuzi'),
+        ('roller', 'Rulon parda'),
+        ('roman', 'Rim parda'),
+        ('plisse', 'Plisse parda'),
+        ('zebra', 'Zebra parda'),  # YANGI
+        ('day_night', 'Kun-tun parda'),  # YANGI
     ]
     
     MATERIAL_CHOICES = [
@@ -267,7 +259,8 @@ class OrderItem(models.Model):
         ('wood', 'Yog\'och'),
         ('fabric', 'Mato'),
         ('bamboo', 'Bambuk'),
-        ('metal', 'Metall'),
+        ('polyester', 'Polyester'),  # YANGI
+        ('blackout', 'Blackout'),  # YANGI
     ]
     
     INSTALLATION_TYPE_CHOICES = [
@@ -367,135 +360,53 @@ class OrderItem(models.Model):
         verbose_name='Qo\'shimcha izoh'
     )
     
-    # Miqdor va narx
+    # Narx va miqdor
     quantity = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
         verbose_name='Donasi'
     )
-    
-    # Yangi narx maydonlari
     unit_price_per_sqm = models.DecimalField(
         max_digits=12,
         decimal_places=2,
+        default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))],
         verbose_name='Birlik narxi (m² uchun)',
-        help_text='1 kvadrat metr uchun narx so\'mda',
-        default=Decimal('0')
+        help_text='1 kvadrat metr uchun narx so\'mda'
     )
-    
     unit_price_total = models.DecimalField(
         max_digits=12,
         decimal_places=2,
+        default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))],
         verbose_name='Birlik narxi (so\'m)',
-        help_text='Bir dona uchun umumiy narx',
-        default=Decimal('0')
-    )
-    
-    # Vaqt belgilari
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Yaratilgan sana'
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name='O\'zgartirilgan sana'
+        help_text='Bir dona jalyuzi uchun umumiy narx'
     )
     
     class Meta:
         verbose_name = 'Buyurtma elementi'
         verbose_name_plural = 'Buyurtma elementlari'
-        ordering = ['-created_at']
+        ordering = ['id']
     
-    def __str__(self):
-        return f"{self.get_blind_type_display()} - {self.width}x{self.height}sm"
+    @property
+    def area(self):
+        """Maydon m² da"""
+        return (self.width * self.height / 10000) * self.quantity  # sm -> m²
     
-    def area_sqm(self):
-        """Maydon kvadrat metrda"""
-        width_m = self.width / 100  # sm dan m ga
-        height_m = self.height / 100  # sm dan m ga
-        return round(width_m * height_m, 4)
-    
-    def total_area(self):
-        """Umumiy maydon (barcha donalar uchun)"""
-        return Decimal(str(self.area_sqm())) * self.quantity
-    
-    def calculate_price_from_sqm(self):
-        """m² narxidan umumiy narxni hisoblash"""
-        area = Decimal(str(self.area_sqm()))
-        return area * self.unit_price_per_sqm
-    
+    @property
     def total_price(self):
-        """Umumiy narx (barcha donalar uchun)"""
+        """Umumiy narx"""
         if self.unit_price_total > 0:
-            # Agar birlik narxi mavjud bo'lsa
             return self.unit_price_total * self.quantity
         else:
-            # m² narxidan hisoblash
-            return self.calculate_price_from_sqm() * self.quantity
+            return self.unit_price_per_sqm * self.area
     
     def save(self, *args, **kwargs):
-        # Agar unit_price_per_sqm berilgan bo'lsa, unit_price_total ni avtomatik hisoblash
-        if self.unit_price_per_sqm > 0 and self.unit_price_total == 0:
-            self.unit_price_total = self.calculate_price_from_sqm()
-        
-        # Agar unit_price_total berilgan bo'lsa, unit_price_per_sqm ni hisoblash
-        elif self.unit_price_total > 0 and self.unit_price_per_sqm == 0:
-            area = Decimal(str(self.area_sqm()))
-            if area > 0:
-                self.unit_price_per_sqm = self.unit_price_total / area
-        
         super().save(*args, **kwargs)
-
-
-class OrderStatusHistory(models.Model):
-    """
-    Buyurtma holati tarixi
-    """
-    order = models.ForeignKey(
-        Order,
-        on_delete=models.CASCADE,
-        related_name='status_history',
-        verbose_name='Buyurtma'
-    )
-    
-    old_status = models.CharField(
-        max_length=20,
-        choices=Order.STATUS_CHOICES,
-        blank=True,
-        null=True,
-        verbose_name='Oldingi holat'
-    )
-    
-    new_status = models.CharField(
-        max_length=20,
-        choices=Order.STATUS_CHOICES,
-        verbose_name='Yangi holat'
-    )
-    
-    changed_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        verbose_name='O\'zgartiruvchi'
-    )
-    
-    notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Izoh'
-    )
-    
-    changed_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='O\'zgartirilgan vaqt'
-    )
-    
-    class Meta:
-        verbose_name = 'Holat tarixi'
-        verbose_name_plural = 'Holat tarixlari'
-        ordering = ['-changed_at']
+        # Buyurtmaning umumiy narxini yangilash
+        self.order.total_amount = sum(item.total_price for item in self.order.items.all())
+        self.order.update_payment_status()
+        self.order.save(update_fields=['total_amount', 'payment_status'])
     
     def __str__(self):
-        return f"{self.order.order_number}: {self.old_status} -> {self.new_status}"
+        return f"{self.get_blind_type_display()} - {self.room_name or 'Xona'}"

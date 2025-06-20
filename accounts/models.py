@@ -1,170 +1,289 @@
-# accounts/models.py
+# accounts/models.py - YANGILANGAN VERSIYA
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
     """
-    Foydalanuvchi modeli - Admin, Menejer, Texnik xodim rollari
+    Foydalanuvchi modeli - Yangilangan versiya
     """
+    
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('manager', 'Menejer'),
-        ('technician', 'Texnik xodim'),
+        ('technical', 'Texnik xodim'),
     ]
     
+    # YANGI: Texnik xodim turlari
+    SPECIALIST_TYPE_CHOICES = [
+        ('measurer', 'O\'lchov oluvchi'),
+        ('manufacturer', 'Ishlab chiquvchi'),
+        ('installer', 'O\'rnatuvchi'),
+        ('universal', 'Universal (barchasi)'),
+    ]
+    
+    # Asosiy ma'lumotlar
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
-        default='technician',
+        default='technical',
         verbose_name='Rol'
     )
+    
+    # YANGI: Texnik xodim turi
+    specialist_type = models.CharField(
+        max_length=20,
+        choices=SPECIALIST_TYPE_CHOICES,
+        blank=True,
+        null=True,
+        verbose_name='Mutaxassis turi',
+        help_text='Faqat texnik xodimlar uchun'
+    )
+    
+    # Kontakt ma'lumotlari
+    phone_regex = RegexValidator(
+        regex=r'^\+?998\d{9}$',
+        message="Telefon raqam formati: +998901234567"
+    )
     phone = models.CharField(
-        max_length=15,
+        validators=[phone_regex],
+        max_length=13,
         blank=True,
         null=True,
         verbose_name='Telefon raqam'
     )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Qo\'shilgan sana'
+    
+    # Tug'ilgan kun (yangi)
+    birth_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Tug\'ilgan kun'
     )
     
-    # Texnik xodim huquqlari
+    # YANGILANGAN: Texnik xodim huquqlari
     can_create_order = models.BooleanField(
         default=False,
-        verbose_name='Buyurtma yarata oladi'
+        verbose_name='Buyurtma yaratish',
+        help_text='Yangi buyurtma qabul qilish huquqi'
     )
     can_measure = models.BooleanField(
         default=False,
-        verbose_name='O\'lchash ishlari'
+        verbose_name='O\'lchov olish',
+        help_text='Mijoz uyiga borib o\'lchov olish huquqi'
     )
     can_manufacture = models.BooleanField(
         default=False,
-        verbose_name='Ishlab chiqarish'
+        verbose_name='Ishlab chiqarish',
+        help_text='Jalyuzilarni ishlab chiqarish huquqi'
     )
     can_install = models.BooleanField(
         default=False,
-        verbose_name='O\'rnatish ishlari'
+        verbose_name='O\'rnatish',
+        help_text='Jalyuzilarni o\'rnatish huquqi'
     )
     can_cancel_order = models.BooleanField(
         default=False,
-        verbose_name='Buyurtmani bekor qila oladi'
+        verbose_name='Buyurtmani bekor qilish',
+        help_text='Buyurtmani bekor qilish huquqi'
+    )
+    
+    # YANGI: To'lov bilan ishlash huquqi
+    can_manage_payments = models.BooleanField(
+        default=False,
+        verbose_name='To\'lovlarni boshqarish',
+        help_text='To\'lov qabul qilish va boshqarish huquqi'
+    )
+    
+    # Ish ma'lumotlari (yangi)
+    hire_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Ishga qabul qilingan sana'
+    )
+    salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name='Maosh',
+        help_text='Oylik maosh so\'mda'
+    )
+    
+    # Qo'shimcha ma'lumotlar
+    address = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Manzil'
+    )
+    emergency_contact = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Favqulodda holat uchun aloqa'
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Izohlar'
+    )
+    
+    # Avtomatik sanalar
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Yaratilgan sana'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Yangilangan sana'
     )
     
     class Meta:
         verbose_name = 'Foydalanuvchi'
         verbose_name_plural = 'Foydalanuvchilar'
-    
-    def __str__(self):
-        return f"{self.get_full_name()} ({self.get_role_display()})"
-    
-    def get_full_name(self):
-        """To'liq ism-familiya"""
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        return self.username
-    
-    def is_admin(self):
-        """Admin ekanligini tekshirish"""
-        return self.role == 'admin' or self.is_superuser
-    
-    def is_manager(self):
-        """Menejer ekanligini tekshirish"""
-        return self.role == 'manager' or self.is_admin()
-    
-    def is_technician(self):
-        """Texnik xodim ekanligini tekshirish"""
-        return self.role == 'technician'
-    
-    def can_view_dashboard(self):
-        """Dashboard ko'rish huquqi"""
-        return True  # Barcha foydalanuvchilar ko'ra oladi
-    
-    def can_manage_customers(self):
-        """Mijozlarni boshqarish huquqi"""
-        return self.is_manager() or self.is_technician()
-    
-    def can_manage_orders(self):
-        """Buyurtmalarni boshqarish huquqi"""
-        return self.is_manager() or self.can_create_order
-    
-    def can_manage_payments(self):
-        """To'lovlarni boshqarish huquqi"""
-        return self.is_manager()
-    
-    def can_view_reports(self):
-        """Hisobotlarni ko'rish huquqi"""
-        return self.is_manager()
-    
-    def can_manage_staff(self):
-        """Xodimlarni boshqarish huquqi"""
-        return self.is_manager()
-    
-    def has_permission_for_order_action(self, action):
-        """Buyurtma amaliyotlari uchun huquq tekshirish"""
-        if self.is_manager():
-            return True
-            
-        permission_map = {
-            'measure': self.can_measure,
-            'manufacture': self.can_manufacture,
-            'install': self.can_install,
-            'cancel': self.can_cancel_order,
-            'create': self.can_create_order,
-        }
-        
-        return permission_map.get(action, False)
-    
-    def get_dashboard_stats(self):
-        """Foydalanuvchi uchun dashboard statistikasi"""
-        from orders.models import Order
-        from payments.models import Payment
-        
-        stats = {}
-        
-        if self.is_technician():
-            # Texnik xodim statistikasi
-            stats.update({
-                'my_orders': Order.objects.filter(
-                    models.Q(measured_by=self) |
-                    models.Q(processed_by=self) |
-                    models.Q(installed_by=self) |
-                    models.Q(created_by=self)
-                ).distinct().count(),
-                'pending_measures': Order.objects.filter(
-                    status='measuring', 
-                    measured_by__isnull=True
-                ).count() if self.can_measure else 0,
-                'pending_installs': Order.objects.filter(
-                    status='processing', 
-                    installed_by__isnull=True
-                ).count() if self.can_install else 0,
-            })
-        
-        elif self.is_manager():
-            # Menejer statistikasi
-            from django.db.models import Sum
-            stats.update({
-                'created_orders': Order.objects.filter(created_by=self).count(),
-                'received_payments': Payment.objects.filter(received_by=self).count(),
-                'total_received': Payment.objects.filter(
-                    received_by=self, 
-                    is_confirmed=True
-                ).aggregate(total=Sum('amount'))['total'] or 0,
-            })
-        
-        return stats
+        ordering = ['-created_at']
     
     def save(self, *args, **kwargs):
-        """Saqlashda avtomatik huquqlar berish"""
-        # Admin va menejerlar uchun barcha huquqlar
-        if self.role in ['admin', 'manager']:
+        # Vaqtincha avtomatik permission logic ni o'chirish
+        super().save(*args, **kwargs)
+    
+    def set_role_permissions(self):
+        """Rolga qarab huquqlarni avtomatik belgilash"""
+        if self.role == 'admin':
+            # Admin barcha huquqlarga ega
+            self.is_staff = True
+            self.is_superuser = True
             self.can_create_order = True
             self.can_measure = True
             self.can_manufacture = True
             self.can_install = True
             self.can_cancel_order = True
+            self.can_manage_payments = True
+            
+        elif self.role == 'manager':
+            # Menejer ko'p huquqlarga ega, lekin superuser emas
+            self.is_staff = True
+            self.is_superuser = False
+            self.can_create_order = True
+            self.can_measure = True
+            self.can_manufacture = True
+            self.can_install = True
+            self.can_cancel_order = True
+            self.can_manage_payments = True
+            
+        elif self.role == 'technical':
+            # Texnik xodim - faqat belgilangan huquqlar
+            self.is_staff = False
+            self.is_superuser = False
+            
+            # Mutaxassis turiga qarab huquqlar berish
+            if self.specialist_type == 'universal':
+                # Universal xodim barcha texnik ishlarni qila oladi
+                self.can_create_order = True
+                self.can_measure = True
+                self.can_manufacture = True
+                self.can_install = True
+                self.can_cancel_order = False  # Faqat menejer yoki admin
+                self.can_manage_payments = False  # Faqat menejer yoki admin
+                
+            elif self.specialist_type == 'measurer':
+                # Faqat o'lchov olish
+                self.can_create_order = True
+                self.can_measure = True
+                self.can_manufacture = False
+                self.can_install = False
+                self.can_cancel_order = False
+                self.can_manage_payments = False
+                
+            elif self.specialist_type == 'manufacturer':
+                # Faqat ishlab chiqarish
+                self.can_create_order = False
+                self.can_measure = False
+                self.can_manufacture = True
+                self.can_install = False
+                self.can_cancel_order = False
+                self.can_manage_payments = False
+                
+            elif self.specialist_type == 'installer':
+                # Faqat o'rnatish
+                self.can_create_order = False
+                self.can_measure = False
+                self.can_manufacture = False
+                self.can_install = True
+                self.can_cancel_order = False
+                self.can_manage_payments = False
+    
+    # Properties for templates
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+    
+    @property
+    def is_manager(self):
+        return self.role == 'manager'
+    
+    @property
+    def is_technical(self):
+        return self.role == 'technical'
+    
+    @property
+    def can_manage_staff(self):
+        """Xodimlarni boshqarish huquqi"""
+        return self.role in ['admin', 'manager']
+    
+    @property
+    def can_view_all_orders(self):
+        """Barcha buyurtmalarni ko'rish huquqi"""
+        return self.role in ['admin', 'manager']
+    
+    @property
+    def can_edit_order_details(self):
+        """Buyurtma tafsilotlarini tahrirlash huquqi"""
+        return self.role in ['admin', 'manager']
+    
+    @property
+    def can_manage_customers(self):
+        """Mijozlarni boshqarish huquqi"""
+        return self.role in ['admin', 'manager']
+    
+    @property
+    def can_view_reports(self):
+        """Hisobotlarni ko'rish huquqi"""
+        return self.role in ['admin', 'manager']
+    
+    def get_full_name(self):
+        """To'liq ism qaytarish"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.username
+    
+    def get_assigned_orders_count(self):
+        """Tayinlangan buyurtmalar soni"""
+        if not self.is_technical:
+            return 0
+            
+        count = 0
+        if self.can_measure:
+            count += self.assigned_measurements.exclude(status__in=['installed', 'cancelled']).count()
+        if self.can_manufacture:
+            count += self.assigned_manufacturing.exclude(status__in=['installed', 'cancelled']).count()
+        if self.can_install:
+            count += self.assigned_installations.exclude(status__in=['installed', 'cancelled']).count()
         
-        super().save(*args, **kwargs)
+        return count
+    
+    def has_perm(self, perm, obj=None):
+        """Django admin uchun huquqlarni tekshirish"""
+        if self.is_active and self.is_superuser:
+            return True
+        return False
+    
+    def has_module_perms(self, app_label):
+        """Django admin uchun app huquqlarini tekshirish"""
+        if self.is_active and self.is_staff:
+            return True
+        return False
+    
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.get_role_display()})"

@@ -1,115 +1,123 @@
 {% extends 'base.html' %}
 
-{% block title %}Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ title }} - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
-        <i class="bi bi-cart me-2"></i>
-        Buyurtmalar
+        <i class="bi bi-cart-fill me-2"></i>
+        {{ title }}
+        <span class="badge bg-primary ms-2">{{ stats.total }}</span>
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
-            {% if user.is_manager or user.is_admin or user.can_create_order %}
-            <a href="{% url 'orders:add' %}" class="btn btn-sm btn-primary">
-                <i class="bi bi-cart-plus me-1"></i>
+            <a href="{% url 'orders:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>
                 Yangi buyurtma
+            </a>
+            {% if user.is_technical %}
+            <a href="{% url 'orders:my_tasks' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list-task me-1"></i>
+                Mening vazifalarim
             </a>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Filterlar -->
+<!-- Statistika kartalari -->
 <div class="row mb-4">
-    <div class="col-md-8">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control" 
-                       placeholder="Buyurtma raqami, mijoz ismi..." 
-                       value="{{ search|default:'' }}">
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-plus-circle text-primary" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.new }}</h4>
+                <small class="text-muted">Yangi</small>
             </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="">Barcha holatlar</option>
-                    <option value="new" {% if status == 'new' %}selected{% endif %}>Yangi</option>
-                    <option value="measuring" {% if status == 'measuring' %}selected{% endif %}>O'lchovda</option>
-                    <option value="processing" {% if status == 'processing' %}selected{% endif %}>Ishlanmoqda</option>
-                    <option value="installed" {% if status == 'installed' %}selected{% endif %}>O'rnatildi</option>
-                    <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Bekor qilindi</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select name="payment_status" class="form-select">
-                    <option value="">To'lov holati</option>
-                    <option value="not_paid" {% if payment_status == 'not_paid' %}selected{% endif %}>To'lanmagan</option>
-                    <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Qisman to'langan</option>
-                    <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>To'liq to'langan</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-secondary w-100">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
-    <div class="col-md-4 text-end">
-        {% if search or status or payment_status %}
-        <a href="{% url 'orders:list' %}" class="btn btn-outline-danger">
-            <i class="bi bi-x me-1"></i>
-            Tozalash
-        </a>
-        {% endif %}
-        <small class="text-muted d-block mt-1">
-            Jami {{ orders.paginator.count }} ta buyurtma
-        </small>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-ruler text-info" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.measuring }}</h4>
+                <small class="text-muted">O'lchovda</small>
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- Status statistikasi -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body py-2">
-                <div class="row text-center">
-                    <div class="col">
-                        <a href="?status=new" class="text-decoration-none">
-                            <span class="badge bg-primary fs-6">{{ stats.new_orders }}</span>
-                            <small class="d-block text-muted">Yangi</small>
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="?status=measuring" class="text-decoration-none">
-                            <span class="badge bg-info fs-6">{{ stats.measuring_orders }}</span>
-                            <small class="d-block text-muted">O'lchovda</small>
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="?status=processing" class="text-decoration-none">
-                            <span class="badge bg-warning fs-6">{{ stats.processing_orders }}</span>
-                            <small class="d-block text-muted">Ishlanmoqda</small>
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="?status=installed" class="text-decoration-none">
-                            <span class="badge bg-success fs-6">{{ stats.completed_orders }}</span>
-                            <small class="d-block text-muted">Tugallangan</small>
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="?status=cancelled" class="text-decoration-none">
-                            <span class="badge bg-danger fs-6">{{ stats.cancelled_orders }}</span>
-                            <small class="d-block text-muted">Bekor qilingan</small>
-                        </a>
-                    </div>
-                </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-gear text-warning" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.processing }}</h4>
+                <small class="text-muted">Ishlanmoqda</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-tools text-secondary" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.installing }}</h4>
+                <small class="text-muted">O'rnatilmoqda</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.installed }}</h4>
+                <small class="text-muted">O'rnatildi</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <i class="bi bi-x-circle text-danger" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 mb-1">{{ stats.cancelled }}</h4>
+                <small class="text-muted">Bekor qilindi</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Buyurtmalar jadvali -->
+<!-- Filtrlash formasi -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-funnel me-2"></i>
+            Filtrlash va qidiruv
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                {{ filter_form.search }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.status }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.customer }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.date_from }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.date_to }}
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Buyurtmalar ro'yxati -->
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -119,31 +127,29 @@
                         <th>Buyurtma</th>
                         <th>Mijoz</th>
                         <th>Holat</th>
-                        <th>Items</th>
+                        <th>To'lov</th>
+                        <th>Jalyuzilar</th>
                         <th>Umumiy narx</th>
-                        <th>To'langan</th>
-                        <th>Qolgan</th>
                         <th>Yaratilgan</th>
-                        <th>Mas'ul</th>
-                        <th width="120">Harakatlar</th>
+                        <th>Amallar</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for order in orders %}
-                    <tr class="{% if order.status == 'cancelled' %}table-danger{% elif order.is_fully_paid %}table-success{% endif %}">
+                    {% for order in page_obj %}
+                    <tr>
                         <td>
-                            <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">
-                                #{{ order.order_number }}
-                            </a>
-                            <br>
-                            <small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small>
+                            <strong>
+                                <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
+                                    #{{ order.order_number }}
+                                </a>
+                            </strong>
                         </td>
                         <td>
-                            <a href="{% url 'customers:detail' order.customer.pk %}" class="text-decoration-none">
-                                {{ order.customer.get_full_name }}
-                            </a>
-                            <br>
-                            <small class="text-muted">{{ order.customer.phone }}</small>
+                            <div>
+                                <strong>{{ order.customer.full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ order.customer.phone }}</small>
+                            </div>
                         </td>
                         <td>
                             {% if order.status == 'new' %}
@@ -152,6 +158,8 @@
                                 <span class="badge bg-info">{{ order.get_status_display }}</span>
                             {% elif order.status == 'processing' %}
                                 <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'installing' %}
+                                <span class="badge bg-secondary">{{ order.get_status_display }}</span>
                             {% elif order.status == 'installed' %}
                                 <span class="badge bg-success">{{ order.get_status_display }}</span>
                             {% else %}
@@ -159,44 +167,62 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-secondary">{{ order.total_items }}</span>
+                            {% if order.payment_status == 'pending' %}
+                                <span class="badge bg-danger">To'lanmagan</span>
+                            {% elif order.payment_status == 'partial' %}
+                                <span class="badge bg-warning text-dark">Qisman</span>
+                            {% elif order.payment_status == 'paid' %}
+                                <span class="badge bg-success">To'langan</span>
+                            {% elif order.payment_status == 'overpaid' %}
+                                <span class="badge bg-info">Ortiqcha</span>
+                            {% endif %}
+                            
+                            {% if order.total_amount > 0 %}
+                                <br>
+                                <small class="text-muted">
+                                    {{ order.paid_amount|floatformat:0 }} / {{ order.total_amount|floatformat:0 }} so'm
+                                </small>
+                            {% endif %}
                         </td>
                         <td>
-                            <strong class="text-primary">{{ order.total_price|floatformat:0 }}</strong>
-                            <small class="text-muted d-block">so'm</small>
+                            <span class="badge bg-light text-dark">{{ order.items.count }} ta</span>
+                            {% if order.total_area %}
+                                <br>
+                                <small class="text-muted">{{ order.total_area|floatformat:2 }} m²</small>
+                            {% endif %}
                         </td>
                         <td>
-                            <span class="text-success">{{ order.total_paid|floatformat:0 }}</span>
-                            <small class="text-muted d-block">so'm</small>
-                        </td>
-                        <td>
-                            {% if order.remaining_balance > 0 %}
-                                <span class="text-danger fw-bold">{{ order.remaining_balance|floatformat:0 }}</span>
-                                <small class="text-muted d-block">so'm</small>
+                            {% if order.total_amount > 0 %}
+                                <strong>{{ order.total_amount|floatformat:0 }} so'm</strong>
                             {% else %}
-                                <span class="text-success">
-                                    <i class="bi bi-check-circle"></i> To'langan
-                                </span>
+                                <span class="text-muted">Belgilanmagan</span>
                             {% endif %}
                         </td>
                         <td>
-                            <small class="text-muted">{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                            <small>
+                                {{ order.created_at|date:"d.m.Y" }}
+                                <br>
+                                {{ order.created_at|time:"H:i" }}
+                            </small>
                         </td>
                         <td>
-                            {% if order.created_by %}
-                                <small class="text-muted">{{ order.created_by.get_full_name|default:order.created_by.username }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div class="btn-group btn-group-sm">
                                 <a href="{% url 'orders:detail' order.pk %}" 
-                                   class="btn btn-outline-info" title="Ko'rish">
+                                   class="btn btn-outline-primary" title="Ko'rish">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                
+                                {% if user.is_manager or user.is_admin %}
+                                <a href="{% url 'orders:edit' order.pk %}" 
+                                   class="btn btn-outline-warning" title="Tahrirlash">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                
                                 {% if order.status == 'measuring' and user.can_measure or user.is_manager or user.is_admin %}
                                 <a href="{% url 'orders:measurement' order.pk %}" 
                                    class="btn btn-outline-success" title="O'lchov olish">
-                                    <i class="bi bi-rulers"></i>
+                                    <i class="bi bi-ruler"></i>
                                 </a>
                                 {% endif %}
                             </div>
@@ -204,25 +230,13 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="text-center py-5">
-                            <div class="text-muted">
-                                <i class="bi bi-cart" style="font-size: 3rem; opacity: 0.3;"></i>
-                                <p class="mt-3">
-                                    {% if search or status or payment_status %}
-                                        Filter bo'yicha buyurtmalar topilmadi
-                                    {% else %}
-                                        Hozircha buyurtmalar yo'q
-                                    {% endif %}
-                                </p>
-                                {% if not search and not status and not payment_status %}
-                                {% if user.is_manager or user.is_admin or user.can_create_order %}
-                                <a href="{% url 'orders:add' %}" class="btn btn-primary">
-                                    <i class="bi bi-cart-plus me-2"></i>
-                                    Birinchi buyurtmani yaratish
-                                </a>
-                                {% endif %}
-                                {% endif %}
-                            </div>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2 text-muted">Buyurtmalar topilmadi</p>
+                            <a href="{% url 'orders:create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Birinchi buyurtmani yarating
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -232,49 +246,52 @@
     </div>
 </div>
 
-<!-- Pagination -->
-{% if orders.has_other_pages %}
-<nav aria-label="Buyurtmalar pagination" class="mt-4">
-    <ul class="pagination justify-content-center">
-        {% if orders.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">
-                    <i class="bi bi-chevron-double-left"></i>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
-        {% endif %}
-        
-        {% for num in orders.paginator.page_range %}
-            {% if orders.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
-            {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+<!-- Sahifalash -->
+{% if page_obj.has_other_pages %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Sahifalash">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">{{ num }}</a>
+                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">&laquo; Birinchi</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Oldingi</a>
                 </li>
             {% endif %}
-        {% endfor %}
-        
-        {% if orders.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ orders.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
             </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">
-                    <i class="bi bi-chevron-double-right"></i>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Keyingi</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Oxirgi &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 {% endif %}
 
+<!-- Real-time yangilanish uchun JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Har 30 sekundda statistikani yangilash
+    setInterval(function() {
+        fetch('{% url "orders:api_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Statistika kartalari yangilanadi
+                console.log('Stats updated:', data);
+            })
+            .catch(error => console.error('Error:', error));
+    }, 30000);
+});
+</script>
 {% endblock %}
