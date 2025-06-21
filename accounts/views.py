@@ -1,69 +1,19 @@
-# accounts/views.py - YANGILANGAN VERSIYA ("new" status olib tashlandi)
+# accounts/views.py - TUZATILGAN VERSIYA
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Sum, Q
+from django.db.models import Q, Count, Sum
 from django.utils import timezone
-from datetime import datetime, timedelta, date
+from django.http import JsonResponse
+from datetime import date, timedelta
 
-from customers.models import Customer
-from orders.models import Order, OrderItem
-from payments.models import Payment
+# Import models
 from .models import User
-from .technical_views import technical_dashboard
-
-
-def login_view(request):
-    """
-    Login sahifasi
-    """
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me')
-        
-        if username and password:
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    
-                    # "Meni eslab qol" funksiyasi
-                    if not remember_me:
-                        request.session.set_expiry(0)
-                    
-                    messages.success(request, f'Xush kelibsiz, {user.get_full_name()}!')
-                    
-                    # next parametri bo'yicha yo'naltirish
-                    next_url = request.GET.get('next')
-                    if next_url:
-                        return redirect(next_url)
-                    else:
-                        return redirect('dashboard')
-                else:
-                    messages.error(request, 'Sizning hisobingiz bloklangan!')
-            else:
-                messages.error(request, 'Foydalanuvchi nomi yoki parol noto\'g\'ri!')
-        else:
-            messages.error(request, 'Foydalanuvchi nomi va parolni kiriting!')
-    
-    return render(request, 'accounts/login.html')
-
-
-@login_required
-def logout_view(request):
-    """
-    Logout
-    """
-    user_name = request.user.get_full_name()
-    logout(request)
-    messages.info(request, f'{user_name}, tizimdan muvaffaqiyatli chiqdingiz!')
-    return redirect('login')
+from orders.models import Order
+from customers.models import Customer
+from payments.models import Payment
 
 
 @login_required
@@ -78,8 +28,92 @@ def dashboard(request):
     return manager_dashboard(request)
 
 
+def technical_dashboard(request):
+    """Texnik xodim uchun dashboard - TUZATILGAN VERSIYA"""
+    
+    user = request.user
+    today = date.today()
+    
+    # ✅ TUZATILDI: To'g'ri field nomlarini ishlatish
+    my_orders = Order.objects.filter(
+        Q(assigned_measurer=user) |
+        Q(assigned_manufacturer=user) |
+        Q(assigned_installer=user)
+    ).exclude(status__in=['installed', 'cancelled']).select_related('customer')
+    
+    # Bugungi vazifalar
+    today_tasks = []
+    
+    # O'lchov vazifalari
+    if user.can_measure:
+        measuring_today = my_orders.filter(
+            assigned_measurer=user,
+            status='measuring'
+        )
+        for order in measuring_today:
+            today_tasks.append({
+                'order': order,
+                'task_type': 'measure',
+                'task_name': 'O\'lchov olish',
+                'icon': 'bi-rulers',
+                'color': 'info',
+                'url': f'/orders/{order.pk}/measurement/'
+            })
+    
+    # Ishlab chiqarish vazifalari
+    if user.can_manufacture:
+        manufacturing_today = my_orders.filter(
+            assigned_manufacturer=user,
+            status='processing'
+        )
+        for order in manufacturing_today:
+            today_tasks.append({
+                'order': order,
+                'task_type': 'manufacture',
+                'task_name': 'Ishlab chiqarish',
+                'icon': 'bi-tools',
+                'color': 'warning',
+                'url': f'/orders/{order.pk}/manufacturing/'
+            })
+    
+    # O'rnatish vazifalari
+    if user.can_install:
+        installation_today = my_orders.filter(
+            assigned_installer=user,
+            status='installing'
+        )
+        for order in installation_today:
+            today_tasks.append({
+                'order': order,
+                'task_type': 'install',
+                'task_name': 'O\'rnatish',
+                'icon': 'bi-house-gear',
+                'color': 'success',
+                'url': f'/orders/{order.pk}/installation/'
+            })
+    
+    # Statistika
+    stats = {
+        'total_assigned': my_orders.count(),
+        'measuring': my_orders.filter(status='measuring').count(),
+        'processing': my_orders.filter(status='processing').count(),
+        'installing': my_orders.filter(status='installing').count(),
+        'today_tasks': len(today_tasks),
+    }
+    
+    context = {
+        'today_tasks': today_tasks,
+        'my_orders': my_orders[:10],  # Oxirgi 10 ta
+        'stats': stats,
+        'user': user,
+        'title': 'Texnik xodim paneli'
+    }
+    
+    return render(request, 'accounts/technical_dashboard.html', context)
+
+
 def manager_dashboard(request):
-    """Admin va menejer uchun dashboard (new status olib tashlandi)"""
+    """Admin va menejer uchun dashboard"""
     
     current_time = timezone.now()
     today = date.today()
@@ -100,7 +134,7 @@ def manager_dashboard(request):
             created_at__date__gte=this_month_start
         ).count(),
         
-        # Buyurtmalar ("new" status olib tashlandi)
+        # Buyurtmalar
         'total_orders': Order.objects.count(),
         'measuring_orders': Order.objects.filter(status='measuring').count(),
         'processing_orders': Order.objects.filter(status='processing').count(),
@@ -175,6 +209,46 @@ def manager_dashboard(request):
     return render(request, 'accounts/dashboard.html', context)
 
 
+def login_view(request):
+    """Login sahifasi"""
+    
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    messages.success(
+                        request, 
+                        f'Xush kelibsiz, {user.get_full_name() or user.username}!'
+                    )
+                    return redirect('dashboard')
+                else:
+                    messages.error(request, 'Sizning hisobingiz faol emas!')
+            else:
+                messages.error(request, 'Foydalanuvchi nomi yoki parol noto\'g\'ri!')
+        else:
+            messages.error(request, 'Foydalanuvchi nomi va parolni kiriting!')
+    
+    return render(request, 'accounts/login.html')
+
+
+@login_required
+def logout_view(request):
+    """Logout"""
+    
+    user_name = request.user.get_full_name()
+    logout(request)
+    messages.info(request, f'{user_name}, tizimdan muvaffaqiyatli chiqdingiz!')
+    return redirect('login')
+
+
 @login_required
 def profile(request):
     """Foydalanuvchi profili"""
@@ -185,7 +259,7 @@ def profile(request):
     user_stats = {}
     
     if user.is_technical:
-        # Texnik xodim statistikalari
+        # ✅ TUZATILDI: To'g'ri field nomlarini ishlatish
         user_stats = {
             'assigned_orders': Order.objects.filter(
                 Q(assigned_measurer=user) |
@@ -204,7 +278,7 @@ def profile(request):
                 Q(assigned_installer=user)
             ).exclude(status__in=['installed', 'cancelled']).count(),
         }
-    elif user.is_manager() or user.is_admin():
+    elif user.is_manager or user.is_admin:
         # Menejer/Admin statistikalari
         user_stats = {
             'total_orders_managed': Order.objects.count(),
@@ -257,8 +331,6 @@ def change_password(request):
 @login_required
 def get_dashboard_stats(request):
     """AJAX orqali dashboard statistikalarini olish"""
-    
-    from django.http import JsonResponse
     
     stats = {
         'total_orders': Order.objects.count(),

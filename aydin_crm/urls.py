@@ -1,4 +1,4 @@
-# aydin_crm/urls.py - YANGILANGAN VERSIYA
+# aydin_crm/urls.py - TUZATILGAN VERSIYA
 
 from django.contrib import admin
 from django.urls import path, include
@@ -21,8 +21,8 @@ urlpatterns = [
     # To'lovlar
     path('payments/', include('payments.urls')),
     
-    # Texnik xodimlar (vaqtincha o'chiramiz, keyinroq qo'shamiz)
-    # path('technical/', include('accounts.technical_urls')),
+    # Texnik xodimlar - ✅ BU QATORNI UNCOMMENT QILDIK
+    path('technical/', include('accounts.technical_urls')),
     
     # Xodimlar boshqaruvi
     path('staff/', include('accounts.staff_urls')),
