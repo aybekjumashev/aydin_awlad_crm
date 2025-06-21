@@ -1,13 +1,14 @@
-# accounts/models.py - PROPERTY'LAR BILAN TUZATILGAN
+# accounts/models.py - TO'LIQ TUZATILGAN VERSIYA
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
+from decimal import Decimal
 
 
 class User(AbstractUser):
     """
-    Foydalanuvchi modeli - Tuzatilgan versiya
+    Foydalanuvchi modeli - Property'lar bilan to'liq versiya
     """
     
     ROLE_CHOICES = [
@@ -146,7 +147,6 @@ class User(AbstractUser):
         """Saqlashdan oldin huquqlarni avtomatik belgilash"""
         
         # MUHIM: createsuperuser uchun maxsus logic
-        # Agar is_superuser=True bo'lsa va rol yo'q bo'lsa, admin roli berish
         if self.is_superuser and (not self.role or self.role == 'technical'):
             self.role = 'admin'
         
@@ -164,7 +164,6 @@ class User(AbstractUser):
             
         elif self.role == 'manager':
             self.is_staff = True
-            # Manager'ni superuser qilmaslik (faqat admin superuser)
             if not self.is_superuser:  
                 self.is_superuser = False
             self.can_create_order = True
@@ -176,8 +175,6 @@ class User(AbstractUser):
             self.can_view_all_orders = True
             
         elif self.role == 'technical':
-            # Texnik xodim uchun is_staff va is_superuser ni FALSE qilish
-            # (Agar createsuperuser orqali yaratilmagan bo'lsa)
             if not self.is_superuser:
                 self.is_staff = False
             self.can_view_all_orders = False
@@ -213,7 +210,7 @@ class User(AbstractUser):
         """Qisqa ismni qaytarish"""
         return self.first_name or self.username
     
-    # Rol tekshirish property'lari - MUHIM!
+    # MUHIM: Rol tekshirish property'lari
     @property
     def is_admin(self):
         """Admin ekanligini tekshirish"""

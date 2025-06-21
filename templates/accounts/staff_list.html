@@ -10,13 +10,10 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
-            {% comment %}
-            <a href="{% url 'staff:add' %}" class="btn btn-sm btn-primary">
+            <a href="{% url 'staff:add' %}" class="btn btn-primary">
                 <i class="bi bi-person-plus me-1"></i>
                 Yangi xodim qo'shish
             </a>
-            {% endcomment %}
-            <!-- Vaqtincha link o'chirildi -->
         </div>
     </div>
 </div>
@@ -26,8 +23,8 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
-                <h3 class="mt-2">{{ stats.total_staff|default:0 }}</h3>
+                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ staff_members.count }}</h3>
                 <p class="mb-0">Jami xodimlar</p>
             </div>
         </div>
@@ -35,8 +32,8 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <i class="bi bi-person-check" style="font-size: 2rem; opacity: 0.3;"></i>
-                <h3 class="mt-2">{{ stats.active_staff|default:0 }}</h3>
+                <i class="bi bi-person-check text-success" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ staff_members|length }}</h3>
                 <p class="mb-0">Faol xodimlar</p>
             </div>
         </div>
@@ -44,9 +41,9 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <i class="bi bi-person-x" style="font-size: 2rem; opacity: 0.3;"></i>
-                <h3 class="mt-2">{{ stats.inactive_staff|default:0 }}</h3>
-                <p class="mb-0">Nofaol xodimlar</p>
+                <i class="bi bi-tools text-info" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ staff_members.count }}</h3>
+                <p class="mb-0">Texnik xodimlar</p>
             </div>
         </div>
     </div>
@@ -60,27 +57,32 @@
                 <h5 class="mb-0">
                     <i class="bi bi-list me-2"></i>
                     Texnik xodimlar ro'yxati
+                    <span class="badge bg-primary ms-2">{{ staff_members.count }}</span>
                 </h5>
             </div>
             <div class="card-body">
-                {% if staff %}
+                {% if staff_members %}
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Ism Familiya</th>
+                                    <th>Xodim</th>
                                     <th>Login</th>
                                     <th>Telefon</th>
+                                    <th>Mutaxassis turi</th>
+                                    <th>Huquqlar</th>
                                     <th>Holat</th>
                                     <th>Amallar</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for staff_member in staff %}
+                                {% for staff_member in staff_members %}
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <i class="bi bi-person-circle me-2 text-muted"></i>
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                                {{ staff_member.first_name|first|default:'X' }}{{ staff_member.last_name|first|default:'' }}
+                                            </div>
                                             <div>
                                                 <strong>{{ staff_member.get_full_name|default:staff_member.username }}</strong>
                                                 {% if staff_member.email %}
@@ -90,30 +92,78 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <code>{{ staff_member.username }}</code>
+                                        <code class="text-primary">{{ staff_member.username }}</code>
                                     </td>
                                     <td>
                                         {% if staff_member.phone %}
-                                            <a href="tel:{{ staff_member.phone }}">{{ staff_member.phone }}</a>
+                                            <a href="tel:{{ staff_member.phone }}" class="text-decoration-none">
+                                                <i class="bi bi-telephone me-1"></i>
+                                                {{ staff_member.phone }}
+                                            </a>
                                         {% else %}
                                             <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if staff_member.is_active %}
-                                            <span class="badge bg-success">Faol</span>
+                                        {% if staff_member.specialist_type %}
+                                            <span class="badge bg-info">{{ staff_member.get_specialist_type_display }}</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Nofaol</span>
+                                            <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% comment %}
-                                        <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        {% endcomment %}
-                                        <!-- Vaqtincha linklar o'chirildi -->
-                                        <span class="text-muted">Ko'rish</span>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% if staff_member.can_measure %}
+                                                <span class="badge bg-primary" title="O'lchov olish">
+                                                    <i class="bi bi-rulers"></i>
+                                                </span>
+                                            {% endif %}
+                                            {% if staff_member.can_manufacture %}
+                                                <span class="badge bg-warning" title="Ishlab chiqarish">
+                                                    <i class="bi bi-gear"></i>
+                                                </span>
+                                            {% endif %}
+                                            {% if staff_member.can_install %}
+                                                <span class="badge bg-success" title="O'rnatish">
+                                                    <i class="bi bi-tools"></i>
+                                                </span>
+                                            {% endif %}
+                                            {% if staff_member.can_create_order %}
+                                                <span class="badge bg-secondary" title="Buyurtma yaratish">
+                                                    <i class="bi bi-plus"></i>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if staff_member.is_active %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Faol
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                Nofaol
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'staff:detail' staff_member.pk %}" 
+                                               class="btn btn-outline-primary" title="Ko'rish">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'staff:edit' staff_member.pk %}" 
+                                               class="btn btn-outline-secondary" title="Tahrirlash">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'staff:toggle_status' staff_member.pk %}" 
+                                               class="btn btn-outline-warning" 
+                                               title="{% if staff_member.is_active %}Nofaol qilish{% else %}Faollashtirish{% endif %}">
+                                                <i class="bi bi-{% if staff_member.is_active %}pause{% else %}play{% endif %}"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -122,22 +172,17 @@
                     </div>
                 {% else %}
                     <div class="text-center py-5">
-                        <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <i class="bi bi-people display-4 text-muted"></i>
                         <p class="mt-3 text-muted">Hozircha texnik xodimlar yo'q</p>
+                        <a href="{% url 'staff:add' %}" class="btn btn-primary">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Birinchi xodimni qo'shing
+                        </a>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
-</div>
-
-<!-- Debug info -->
-<div class="mt-4">
-    <small class="text-muted">
-        Debug: staff count = {{ staff|length }}, 
-        total_staff = {{ stats.total_staff }},
-        URL namespace = {{ request.resolver_match.namespace }}
-    </small>
 </div>
 
 {% endblock %}

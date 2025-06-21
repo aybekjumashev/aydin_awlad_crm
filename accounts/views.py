@@ -1,4 +1,4 @@
-# accounts/views.py - YANGILANGAN VERSIYA
+# accounts/views.py - YANGILANGAN VERSIYA ("new" status olib tashlandi)
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -13,9 +13,6 @@ from orders.models import Order, OrderItem
 from payments.models import Payment
 from .models import User
 from .technical_views import technical_dashboard
-
-# Vaqtincha funksiyani olib tashlaymiz
-# def technical_dashboard_temp(request):...
 
 
 def login_view(request):
@@ -82,7 +79,7 @@ def dashboard(request):
 
 
 def manager_dashboard(request):
-    """Admin va menejer uchun dashboard"""
+    """Admin va menejer uchun dashboard (new status olib tashlandi)"""
     
     current_time = timezone.now()
     today = date.today()
@@ -103,9 +100,8 @@ def manager_dashboard(request):
             created_at__date__gte=this_month_start
         ).count(),
         
-        # Buyurtmalar
+        # Buyurtmalar ("new" status olib tashlandi)
         'total_orders': Order.objects.count(),
-        'new_orders': Order.objects.filter(status='new').count(),
         'measuring_orders': Order.objects.filter(status='measuring').count(),
         'processing_orders': Order.objects.filter(status='processing').count(),
         'installing_orders': Order.objects.filter(status='installing').count(),
@@ -123,126 +119,60 @@ def manager_dashboard(request):
             payment_date__date=today,
             status='confirmed'
         ).aggregate(total=Sum('amount'))['total'] or 0,
-        'month_revenue': Payment.objects.filter(
-            payment_date__date__gte=this_month_start,
-            status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-        
-        # Texnik xodimlar
-        'total_staff': User.objects.filter(role='technical').count(),
-        'active_staff': User.objects.filter(
-            role='technical', 
-            is_active=True
-        ).count(),
     }
     
     # So'nggi buyurtmalar
-    recent_orders = Order.objects.select_related('customer').order_by(
-        '-created_at'
-    )[:10]
-    
-    # Bugungi vazifalar
-    today_tasks = []
-    
-    # Bugungi o'lchov vazifalari
-    measuring_today = Order.objects.filter(
-        status='measuring',
-        measurement_date__date=today
-    ).select_related('customer', 'assigned_measurer')
-    
-    for order in measuring_today:
-        today_tasks.append({
-            'type': 'measurement',
-            'order': order,
-            'assigned_to': order.assigned_measurer,
-            'time': order.measurement_date,
-            'icon': 'bi-rulers',
-            'color': 'info'
-        })
-    
-    # Bugungi o'rnatish vazifalari
-    installing_today = Order.objects.filter(
-        status='installing',
-        installation_date__date=today
-    ).select_related('customer', 'assigned_installer')
-    
-    for order in installing_today:
-        today_tasks.append({
-            'type': 'installation',
-            'order': order,
-            'assigned_to': order.assigned_installer,
-            'time': order.installation_date,
-            'icon': 'bi-tools',
-            'color': 'success'
-        })
-    
-    # Kechikkan vazifalar
-    overdue_tasks = []
-    
-    # Kechikkan o'lchovlar
-    overdue_measuring = Order.objects.filter(
-        status='measuring',
-        measurement_date__lt=current_time
-    ).select_related('customer', 'assigned_measurer')
-    overdue_tasks.extend(overdue_measuring)
-    
-    # Kechikkan o'rnatishlar
-    overdue_installing = Order.objects.filter(
-        status='installing',
-        installation_date__lt=current_time
-    ).select_related('customer', 'assigned_installer')
-    overdue_tasks.extend(overdue_installing)
+    recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:10]
     
     # So'nggi to'lovlar
     recent_payments = Payment.objects.select_related(
-        'order__customer'
-    ).order_by('-payment_date')[:10]
+        'order', 'order__customer'
+    ).filter(status='confirmed').order_by('-payment_date')[:10]
     
-    # Kutilayotgan to'lovlar (PaymentSchedule dan)
-    pending_payments = []
-    try:
-        from payments.models import PaymentSchedule
-        pending_payments = PaymentSchedule.objects.filter(
-            is_paid=False
-        ).select_related('order__customer').order_by('due_date')[:10]
-    except Exception:
-        # Agar PaymentSchedule modeli mavjud bo'lmasa
-        pending_payments = []
-    
-    # Top mijozlar (buyurtmalar soni bo'yicha)
-    top_customers = Customer.objects.annotate(
-        order_count=Count('orders')
-    ).filter(order_count__gt=0).order_by('-order_count')[:5]
-    
-    # Grafik uchun ma'lumotlar (so'nggi 7 kun)
-    chart_data = []
-    for i in range(7):
-        chart_date = today - timedelta(days=6-i)
-        daily_revenue = Payment.objects.filter(
-            payment_date__date=chart_date,
+    # Bu hafta statistikasi
+    week_stats = {
+        'orders': Order.objects.filter(created_at__date__gte=this_week_start).count(),
+        'revenue': Payment.objects.filter(
+            payment_date__date__gte=this_week_start,
             status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        
-        chart_data.append({
-            'date': chart_date.strftime('%d.%m'),
-            'revenue': float(daily_revenue)
-        })
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+        'customers': Customer.objects.filter(
+            created_at__date__gte=this_week_start
+        ).count(),
+    }
+    
+    # Bu oy statistikasi
+    month_stats = {
+        'orders': Order.objects.filter(created_at__date__gte=this_month_start).count(),
+        'revenue': Payment.objects.filter(
+            payment_date__date__gte=this_month_start,
+            status='confirmed'
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+        'customers': Customer.objects.filter(
+            created_at__date__gte=this_month_start
+        ).count(),
+    }
+    
+    # Texnik xodimlar statistikasi
+    technical_stats = User.objects.filter(role='technical').aggregate(
+        total=Count('id'),
+        active=Count('id', filter=Q(is_active=True)),
+        measurers=Count('id', filter=Q(can_measure=True, is_active=True)),
+        manufacturers=Count('id', filter=Q(can_manufacture=True, is_active=True)),
+        installers=Count('id', filter=Q(can_install=True, is_active=True)),
+    )
     
     context = {
         'stats': stats,
         'recent_orders': recent_orders,
-        'today_tasks': today_tasks,
-        'overdue_tasks': overdue_tasks,
         'recent_payments': recent_payments,
-        'pending_payments': pending_payments,
-        'top_customers': top_customers,
-        'chart_data': chart_data,
-        'current_time': current_time,
-        'user': request.user,
-        'title': 'Dashboard'
+        'week_stats': week_stats,
+        'month_stats': month_stats,
+        'technical_stats': technical_stats,
+        'title': 'Bosh sahifa'
     }
     
-    return render(request, 'accounts/manager_dashboard.html', context)
+    return render(request, 'accounts/dashboard.html', context)
 
 
 @login_required
@@ -251,23 +181,37 @@ def profile(request):
     
     user = request.user
     
-    # Foydalanuvchi statistikasi
+    # Foydalanuvchi statistikalari
     user_stats = {}
     
     if user.is_technical:
-        # Texnik xodim statistikasi
+        # Texnik xodim statistikalari
         user_stats = {
-            'total_tasks': 0,  # Keyinroq hisoblash qo'shamiz
-            'completed_tasks': 0,
-            'active_tasks': 0,
-            'this_month_completed': 0,
+            'assigned_orders': Order.objects.filter(
+                Q(assigned_measurer=user) |
+                Q(assigned_manufacturer=user) |
+                Q(assigned_installer=user)
+            ).count(),
+            'completed_tasks': Order.objects.filter(
+                Q(assigned_measurer=user) |
+                Q(assigned_manufacturer=user) |
+                Q(assigned_installer=user),
+                status='installed'
+            ).count(),
+            'active_tasks': Order.objects.filter(
+                Q(assigned_measurer=user) |
+                Q(assigned_manufacturer=user) |
+                Q(assigned_installer=user)
+            ).exclude(status__in=['installed', 'cancelled']).count(),
         }
-    
-    elif user.is_manager or user.is_admin:
-        # Menejer/Admin statistikasi  
+    elif user.is_manager() or user.is_admin():
+        # Menejer/Admin statistikalari
         user_stats = {
-            'created_orders': 0,  # Keyinroq hisoblash qo'shamiz
-            'managed_payments': 0,
+            'total_orders_managed': Order.objects.count(),
+            'total_customers': Customer.objects.count(),
+            'total_revenue': Payment.objects.filter(
+                status='confirmed'
+            ).aggregate(total=Sum('amount'))['total'] or 0,
         }
     
     context = {
@@ -281,62 +225,52 @@ def profile(request):
 
 @login_required
 def change_password(request):
-    """Parolni o'zgartirish"""
+    """Parol o'zgartirish"""
     
     if request.method == 'POST':
         current_password = request.POST.get('current_password')
-        new_password1 = request.POST.get('new_password1')
-        new_password2 = request.POST.get('new_password2')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
         
+        # Validatsiya
         if not request.user.check_password(current_password):
             messages.error(request, 'Joriy parol noto\'g\'ri!')
-        elif new_password1 != new_password2:
+        elif new_password != confirm_password:
             messages.error(request, 'Yangi parollar mos kelmaydi!')
-        elif len(new_password1) < 8:
-            messages.error(request, 'Parol kamida 8 ta belgidan iborat bo\'lishi kerak!')
+        elif len(new_password) < 6:
+            messages.error(request, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak!')
         else:
-            request.user.set_password(new_password1)
+            # Parolni o'zgartirish
+            request.user.set_password(new_password)
             request.user.save()
+            
             messages.success(request, 'Parol muvaffaqiyatli o\'zgartirildi!')
             return redirect('profile')
     
     context = {
-        'title': 'Parolni o\'zgartirish'
+        'title': 'Parol o\'zgartirish'
     }
     
     return render(request, 'accounts/change_password.html', context)
 
 
-# AJAX view'lar
-
 @login_required
 def get_dashboard_stats(request):
-    """Dashboard statistikasi (AJAX uchun)"""
+    """AJAX orqali dashboard statistikalarini olish"""
+    
     from django.http import JsonResponse
     
-    if not (request.user.is_manager or request.user.is_admin):
-        return JsonResponse({'error': 'Permission denied'})
-    
-    today = date.today()
     stats = {
-        'orders': {
-            'new': Order.objects.filter(status='new').count(),
-            'measuring': Order.objects.filter(status='measuring').count(),
-            'processing': Order.objects.filter(status='processing').count(),
-            'installing': Order.objects.filter(status='installing').count(),
-            'completed': Order.objects.filter(status='installed').count(),
-        },
-        'revenue': {
-            'today': float(Payment.objects.filter(
-                payment_date__date=today,
-                status='confirmed'
-            ).aggregate(total=Sum('amount'))['total'] or 0),
-            'total': float(Payment.objects.filter(
-                status='confirmed'
-            ).aggregate(total=Sum('amount'))['total'] or 0),
-        },
-        'customers': Customer.objects.count(),
-        'staff': User.objects.filter(role='technical', is_active=True).count(),
+        'total_orders': Order.objects.count(),
+        'measuring_orders': Order.objects.filter(status='measuring').count(),
+        'processing_orders': Order.objects.filter(status='processing').count(),
+        'installing_orders': Order.objects.filter(status='installing').count(),
+        'completed_orders': Order.objects.filter(status='installed').count(),
+        'cancelled_orders': Order.objects.filter(status='cancelled').count(),
+        'total_customers': Customer.objects.count(),
+        'total_revenue': float(Payment.objects.filter(
+            status='confirmed'
+        ).aggregate(total=Sum('amount'))['total'] or 0),
     }
     
     return JsonResponse(stats)

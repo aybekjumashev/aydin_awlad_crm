@@ -1,4 +1,4 @@
-# orders/admin.py - TUZATILGAN VERSIYA
+# orders/admin.py - TUZATILGAN VERSIYA (mavjud bo'lmagan field'lar olib tashlandi)
 
 from django.contrib import admin
 from django.urls import reverse
@@ -15,24 +15,8 @@ class OrderItemInline(admin.TabularInline):
     
     fields = (
         'blind_type', 'width', 'height', 'material', 'installation_type',
-        'room_name', 'quantity', 'unit_price_per_sqm', 'unit_price_total',
-        'area_display', 'total_price_display'
+        'room_name', 'quantity', 'unit_price'
     )
-    readonly_fields = ('area_display', 'total_price_display')
-    
-    def area_display(self, obj):
-        """Maydon ko'rsatish"""
-        if obj.pk:
-            return f"{obj.area:.4f} m²"
-        return "-"
-    area_display.short_description = 'Maydon'
-    
-    def total_price_display(self, obj):
-        """Umumiy narx ko'rsatish"""
-        if obj.pk:
-            return f"{obj.total_price:,.0f} so'm"
-        return "-"
-    total_price_display.short_description = 'Umumiy narx'
 
 
 @admin.register(Order)
@@ -40,11 +24,12 @@ class OrderAdmin(admin.ModelAdmin):
     """Buyurtmalar admin"""
     
     list_display = (
-        'order_number', 'customer_link', 'status_badge', 'total_items_display',
+        'order_number', 'customer_link', 'status_badge', 
         'total_amount', 'payment_status_display', 'created_at'
     )
+    # TUZATILDI: faqat mavjud field'lar
     list_filter = (
-        'status', 'payment_status', 'created_at', 'measurement_date', 'installation_date'
+        'status', 'payment_status', 'created_at', 'measurement_date'
     )
     search_fields = (
         'order_number', 'customer__first_name', 'customer__last_name',
@@ -68,12 +53,12 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': (
                 'measurement_date', 'measurement_completed_date',
                 'production_start_date', 'production_completed_date',
-                'installation_date', 'installation_completed_date'
+                'installation_completed_date'
             ),
             'classes': ('collapse',)
         }),
         ('Izohlar', {
-            'fields': ('notes', 'measurement_notes', 'production_notes', 'installation_notes'),
+            'fields': ('notes', 'measurement_notes'),
             'classes': ('collapse',)
         }),
         ('Tizim ma\'lumotlari', {
@@ -89,16 +74,15 @@ class OrderAdmin(admin.ModelAdmin):
     def customer_link(self, obj):
         """Mijoz havolasi"""
         url = reverse('admin:customers_customer_change', args=[obj.customer.pk])
-        return format_html('<a href="{}">{}</a>', url, obj.customer.full_name)
+        return format_html('<a href="{}">{}</a>', url, obj.customer.get_full_name())
     customer_link.short_description = 'Mijoz'
     
     def status_badge(self, obj):
         """Status badge"""
         colors = {
-            'new': 'primary',
-            'measuring': 'info', 
-            'processing': 'warning',
-            'installing': 'secondary',
+            'measuring': 'info',
+            'processing': 'warning', 
+            'installing': 'primary',
             'installed': 'success',
             'cancelled': 'danger'
         }
@@ -107,28 +91,22 @@ class OrderAdmin(admin.ModelAdmin):
             '<span class="badge bg-{}">{}</span>',
             color, obj.get_status_display()
         )
-    status_badge.short_description = 'Holat'
-    
-    def total_items_display(self, obj):
-        """Jalyuzilar soni"""
-        count = obj.items.count()
-        return f"{count} ta"
-    total_items_display.short_description = 'Jalyuzilar'
+    status_badge.short_description = 'Status'
     
     def payment_status_display(self, obj):
         """To'lov holati"""
         colors = {
-            'pending': 'danger',
-            'partial': 'warning', 
+            'pending': 'warning',
+            'partial': 'info',
             'paid': 'success',
-            'overpaid': 'info'
+            'overpaid': 'primary'
         }
         color = colors.get(obj.payment_status, 'secondary')
         return format_html(
             '<span class="badge bg-{}">{}</span>',
             color, obj.get_payment_status_display()
         )
-    payment_status_display.short_description = 'To\'lov'
+    payment_status_display.short_description = 'To\'lov holati'
     
     actions = ['mark_as_measuring', 'mark_as_processing', 'mark_as_installed']
     
@@ -160,7 +138,7 @@ class OrderItemAdmin(admin.ModelAdmin):
         'room_name', 'quantity', 'total_price_display'
     )
     list_filter = ('blind_type', 'material', 'installation_type', 'mechanism')
-    search_fields = ('order__order_number', 'room_name', 'color')
+    search_fields = ('order__order_number', 'room_name')
     ordering = ('order__created_at',)
     
     def order_number(self, obj):

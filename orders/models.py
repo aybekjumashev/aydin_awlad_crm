@@ -1,4 +1,4 @@
-# orders/models.py - YANGILANGAN VERSIYA
+# orders/models.py - YANGILANGAN VERSIYA ("new" status olib tashlandi)
 
 from django.db import models
 from django.core.validators import MinValueValidator
@@ -11,13 +11,12 @@ import uuid
 
 class Order(models.Model):
     """
-    Buyurtmalar modeli - Yangilangan versiya
+    Buyurtmalar modeli - "new" status olib tashlandi
     """
     STATUS_CHOICES = [
-        ('new', 'Yangi'),
         ('measuring', 'O\'lchovda'),
         ('processing', 'Ishlanmoqda'),
-        ('installing', 'O\'rnatilmoqda'),  # YANGI STATUS
+        ('installing', 'O\'rnatilmoqda'),
         ('installed', 'O\'rnatildi'),
         ('cancelled', 'Bekor qilindi'),
     ]
@@ -55,7 +54,7 @@ class Order(models.Model):
         help_text='Jalyuzi o\'rnatilishi kerak bo\'lgan aniq manzil'
     )
     
-    # To'lov ma'lumotlari - YANGI
+    # To'lov ma'lumotlari
     total_amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -77,36 +76,38 @@ class Order(models.Model):
         verbose_name='To\'lov holati'
     )
     
-    # Texnik xodimlar tayinlanishi - YANGI
+    # Texnik xodimlar tayinlanishi
     assigned_measurer = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='assigned_measurements',
+        related_name='assigned_measuring_orders',
         limit_choices_to={'role': 'technical', 'can_measure': True},
-        verbose_name='O\'lchov oluvchi'
+        verbose_name='Tayinlangan o\'lchov oluvchi'
     )
+    
     assigned_manufacturer = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='assigned_manufacturing',
+        related_name='assigned_manufacturing_orders',
         limit_choices_to={'role': 'technical', 'can_manufacture': True},
-        verbose_name='Ishlab chiquvchi'
+        verbose_name='Tayinlangan ishlab chiqaruvchi'
     )
+    
     assigned_installer = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='assigned_installations',
+        related_name='assigned_installation_orders',
         limit_choices_to={'role': 'technical', 'can_install': True},
-        verbose_name='O\'rnatuvchi'
+        verbose_name='Tayinlangan o\'rnatuvchi'
     )
     
-    # Sanalar
+    # Jarayon sanalari
     measurement_date = models.DateTimeField(
         blank=True,
         null=True,
@@ -120,47 +121,30 @@ class Order(models.Model):
     production_start_date = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name='Ishlab chiqarish boshlangan sana'
+        verbose_name='Ishlab chiqarish boshlanish sanasi'
     )
     production_completed_date = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name='Ishlab chiqarish yakunlangan sana'
-    )
-    installation_date = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name='O\'rnatish sanasi'
+        verbose_name='Ishlab chiqarish yakunlanish sanasi'
     )
     installation_completed_date = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name='O\'rnatish yakunlangan sana'
+        verbose_name='O\'rnatish yakunlanish sanasi'
     )
     
-    # Izohlar
+    # Qo'shimcha ma'lumotlar
     notes = models.TextField(
         blank=True,
-        null=True,
-        verbose_name='Umumiy izohlar'
+        verbose_name='Izohlar'
     )
     measurement_notes = models.TextField(
         blank=True,
-        null=True,
-        verbose_name='O\'lchov izohlari'
-    )
-    production_notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Ishlab chiqarish izohlari'
-    )
-    installation_notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='O\'rnatish izohlari'
+        verbose_name='O\'lchov ishi izohlari'
     )
     
-    # Avtomatik sanalar
+    # Tizim sanalari
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Yaratilgan sana'
@@ -235,57 +219,58 @@ class Order(models.Model):
         return reverse('orders:detail', kwargs={'pk': self.pk})
     
     def __str__(self):
-        return f"#{self.order_number} - {self.customer.full_name}"
+        return f"#{self.order_number} - {self.customer.get_full_name()}"
 
 
 class OrderItem(models.Model):
     """
-    Buyurtma elementlari (Jalyuzilar) - YANGILANGAN
+    Buyurtma elementlari (Jalyuzilar)
     """
     
     BLIND_TYPE_CHOICES = [
         ('horizontal', 'Gorizontal jalyuzi'),
         ('vertical', 'Vertikal jalyuzi'),
-        ('roller', 'Rulon parda'),
-        ('roman', 'Rim parda'),
-        ('plisse', 'Plisse parda'),
-        ('zebra', 'Zebra parda'),  # YANGI
-        ('day_night', 'Kun-tun parda'),  # YANGI
+        ('roller', 'Rollo parda'),
+        ('pleated', 'Plisse parda'),
+        ('bamboo', 'Bambuk jalyuzi'),
+        ('wooden', 'Yog\'och jalyuzi'),
+        ('fabric', 'Mato jalyuzi'),
     ]
     
     MATERIAL_CHOICES = [
         ('aluminum', 'Alyuminiy'),
-        ('pvc', 'PVC'),
+        ('plastic', 'Plastik'),
         ('wood', 'Yog\'och'),
         ('fabric', 'Mato'),
         ('bamboo', 'Bambuk'),
-        ('polyester', 'Polyester'),  # YANGI
-        ('blackout', 'Blackout'),  # YANGI
+        ('composite', 'Kompozit'),
     ]
     
     INSTALLATION_TYPE_CHOICES = [
-        ('ceiling', 'Shiftga'),
-        ('wall', 'Devorga'),
-        ('window_frame', 'Deraza romiga'),
-        ('niche', 'Tokchaga'),
+        ('wall', 'Devorga o\'rnatish'),
+        ('ceiling', 'Shiftga o\'rnatish'),
+        ('window_frame', 'Deraza romiga o\'rnatish'),
+        ('niche', 'Ichki o\'rnatish'),
     ]
     
     MECHANISM_CHOICES = [
-        ('cord', 'Ip bilan'),
-        ('chain', 'Zanjir bilan'),
-        ('motor', 'Elektr motor'),
+        ('cord', 'Ip bilan boshqarish'),
+        ('chain', 'Zanjir bilan boshqarish'),
+        ('wand', 'Tayoqcha bilan boshqarish'),
+        ('motorized', 'Elektr motor'),
         ('remote', 'Masofadan boshqarish'),
-        ('manual', 'Qo\'lda'),
+        ('smart', 'Aqlli boshqarish'),
     ]
     
     CORNICE_TYPE_CHOICES = [
-        ('standard', 'Standart'),
-        ('decorative', 'Dekorativ'),
-        ('hidden', 'Yashirin'),
-        ('ceiling_mount', 'Shiftga o\'rnatilgan'),
+        ('standard', 'Standart karniz'),
+        ('decorative', 'Dekorativ karniz'),
+        ('hidden', 'Yashirin karniz'),
+        ('box', 'Quti karniz'),
+        ('double', 'Ikki qatorli karniz'),
     ]
     
-    # Bog'lanish
+    # Bog'lanishlar
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -293,120 +278,99 @@ class OrderItem(models.Model):
         verbose_name='Buyurtma'
     )
     
-    # Jalyuzi turlari va xususiyatlari
+    # Jalyuzi ma'lumotlari
     blind_type = models.CharField(
         max_length=20,
         choices=BLIND_TYPE_CHOICES,
         verbose_name='Jalyuzi turi'
     )
     
-    # O'lchamlar
-    width = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Eni (sm)',
-        help_text='Santimetrda'
+    # O'lchamlar (santimetr)
+    width = models.PositiveIntegerField(
+        validators=[MinValueValidator(10)],
+        verbose_name='Eni (sm)'
     )
-    height = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name='Bo\'yi (sm)',
-        help_text='Santimetrda'
+    height = models.PositiveIntegerField(
+        validators=[MinValueValidator(10)],
+        verbose_name='Bo\'yi (sm)'
     )
     
-    # Material va o'rnatish
+    # Material va texnik ma'lumotlar
     material = models.CharField(
         max_length=20,
         choices=MATERIAL_CHOICES,
-        verbose_name='Material turi'
+        verbose_name='Material'
     )
+    
     installation_type = models.CharField(
         max_length=20,
         choices=INSTALLATION_TYPE_CHOICES,
         verbose_name='O\'rnatish turi'
     )
+    
     mechanism = models.CharField(
         max_length=20,
         choices=MECHANISM_CHOICES,
-        default='cord',
         verbose_name='Mexanizm turi'
     )
+    
     cornice_type = models.CharField(
         max_length=20,
         choices=CORNICE_TYPE_CHOICES,
-        default='standard',
         verbose_name='Karniz turi'
     )
     
-    # Qo'shimcha ma'lumotlar
-    room_name = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name='Xona nomi',
-        help_text='Masalan: Yotoq xona, Mehmonxona'
-    )
-    color = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name='Rang'
-    )
-    notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Qo\'shimcha izoh'
-    )
-    
-    # Narx va miqdor
+    # Narx ma'lumotlari
     quantity = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
         verbose_name='Donasi'
     )
-    unit_price_per_sqm = models.DecimalField(
-        max_digits=12,
+    
+    unit_price = models.DecimalField(
+        max_digits=10,
         decimal_places=2,
-        default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))],
-        verbose_name='Birlik narxi (m² uchun)',
-        help_text='1 kvadrat metr uchun narx so\'mda'
+        verbose_name='Birlik narxi'
     )
-    unit_price_total = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=Decimal('0'),
-        validators=[MinValueValidator(Decimal('0'))],
-        verbose_name='Birlik narxi (so\'m)',
-        help_text='Bir dona jalyuzi uchun umumiy narx'
+    
+    # Hisoblangan ma'lumotlar
+    @property
+    def area(self):
+        """Maydon (m²)"""
+        return Decimal(str(self.width * self.height / 10000))
+    
+    @property
+    def total_price(self):
+        """Umumiy narx"""
+        return self.unit_price * self.quantity
+    
+    # Qo'shimcha ma'lumotlar
+    room_name = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Xona nomi'
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name='Qo\'shimcha izohlar'
+    )
+    
+    # Tizim sanalari
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Yaratilgan sana'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Yangilangan sana'
     )
     
     class Meta:
         verbose_name = 'Buyurtma elementi'
         verbose_name_plural = 'Buyurtma elementlari'
-        ordering = ['id']
-    
-    @property
-    def area(self):
-        """Maydon m² da"""
-        return (self.width * self.height / 10000) * self.quantity  # sm -> m²
-    
-    @property
-    def total_price(self):
-        """Umumiy narx"""
-        if self.unit_price_total > 0:
-            return self.unit_price_total * self.quantity
-        else:
-            return self.unit_price_per_sqm * self.area
-    
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Buyurtmaning umumiy narxini yangilash
-        self.order.total_amount = sum(item.total_price for item in self.order.items.all())
-        self.order.update_payment_status()
-        self.order.save(update_fields=['total_amount', 'payment_status'])
+        ordering = ['created_at']
     
     def __str__(self):
-        return f"{self.get_blind_type_display()} - {self.room_name or 'Xona'}"
+        return f"{self.get_blind_type_display()} - {self.width}x{self.height}sm"

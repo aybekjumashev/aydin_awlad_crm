@@ -38,7 +38,7 @@
     </div>
 </div>
 
-<!-- Mijozlar ro'yxati -->
+<!-- Minimal mijozlar jadvali -->
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -47,9 +47,7 @@
                     <tr>
                         <th>Mijoz</th>
                         <th>Telefon</th>
-                        <th>Manzil</th>
                         <th>Buyurtmalar</th>
-                        <th>Qo'shilgan</th>
                         <th>Amallar</th>
                     </tr>
                 </thead>
@@ -57,54 +55,52 @@
                     {% for customer in customers %}
                     <tr>
                         <td>
-                            <strong>
-                                <a href="{% url 'customers:detail' customer.pk %}" class="text-decoration-none">
-                                    {{ customer.get_full_name }}
-                                </a>
-                            </strong>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    {{ customer.first_name|first }}{{ customer.last_name|first }}
+                                </div>
+                                <div>
+                                    <strong>
+                                        <a href="{% url 'customers:detail' customer.pk %}" class="text-decoration-none">
+                                            {{ customer.get_full_name }}
+                                        </a>
+                                    </strong>
+                                    <br>
+                                    <small class="text-muted">{{ customer.address|truncatechars:40 }}</small>
+                                </div>
+                            </div>
                         </td>
                         <td>
                             <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                                <i class="bi bi-telephone me-1"></i>
                                 {{ customer.phone }}
                             </a>
                         </td>
                         <td>
-                            <small>{{ customer.address|truncatechars:50 }}</small>
-                        </td>
-                        <td>
                             <span class="badge bg-info">{{ customer.orders.count }}</span>
-                        </td>
-                        <td>
-                            <small>{{ customer.created_at|date:"d.m.Y" }}</small>
+                            {% if customer.orders.count > 0 %}
+                                <br><small class="text-muted">So'nggi: {{ customer.orders.first.created_at|date:"d.m.Y" }}</small>
+                            {% endif %}
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'customers:detail' customer.pk %}" 
-                                   class="btn btn-outline-primary" title="Ko'rish">
+                                <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-outline-primary btn-sm" title="Ko'rish">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                {% if user.is_manager or user.is_admin %}
-                                <a href="{% url 'customers:edit' customer.pk %}" 
-                                   class="btn btn-outline-warning" title="Tahrirlash">
+                                <a href="{% url 'customers:edit' customer.pk %}" class="btn btn-outline-secondary btn-sm" title="Tahrirlash">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'orders:create' %}?customer={{ customer.pk }}" 
-                                   class="btn btn-outline-success" title="Yangi buyurtma">
-                                    <i class="bi bi-cart-plus"></i>
+                                <a href="{% url 'orders:create' %}?customer={{ customer.pk }}" class="btn btn-outline-success btn-sm" title="Buyurtma berish">
+                                    <i class="bi bi-plus"></i>
                                 </a>
-                                {% endif %}
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <td colspan="4" class="text-center py-4">
+                            <i class="bi bi-person-x display-4 text-muted"></i>
                             <p class="mt-2 text-muted">Mijozlar topilmadi</p>
-                            <a href="{% url 'customers:add' %}" class="btn btn-primary">
-                                <i class="bi bi-person-plus me-1"></i>
-                                Birinchi mijozni qo'shing
-                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -116,35 +112,33 @@
 
 <!-- Sahifalash -->
 {% if customers.has_other_pages %}
-<div class="d-flex justify-content-center mt-4">
-    <nav aria-label="Sahifalash">
-        <ul class="pagination">
-            {% if customers.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">&laquo; Birinchi</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Oldingi</a>
-                </li>
-            {% endif %}
-            
-            <li class="page-item active">
-                <span class="page-link">
-                    {{ customers.number }} / {{ customers.paginator.num_pages }}
-                </span>
+<nav aria-label="Sahifalash" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if customers.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">Birinchi</a>
             </li>
-            
-            {% if customers.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ customers.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Keyingi</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">Oxirgi &raquo;</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Avvalgi</a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">
+                {{ customers.number }} / {{ customers.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if customers.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ customers.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Keyingi</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">Oxirgi</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
 {% endif %}
 
 {% endblock %}

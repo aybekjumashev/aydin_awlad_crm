@@ -1,4 +1,4 @@
-# accounts/technical_views.py - IMPORT TUZATILGAN VERSIYA
+# accounts/technical_views.py - TUZATILGAN VERSIYA (installation_date olib tashlandi)
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -9,14 +9,11 @@ from django.forms import modelformset_factory
 from datetime import date, timedelta
 
 from orders.models import Order, OrderItem
-# Import'ni to'g'ri qilamiz - faqat mavjud form'larni import qilamiz
-from orders.forms import OrderItemForm  # MeasurementForm o'rniga
+from orders.forms import OrderItemForm
 from payments.models import Payment
-# from .decorators import technical_required  # Vaqtincha comment
 
 
 @login_required
-# @technical_required  # Vaqtincha comment
 def technical_dashboard(request):
     """Texnik xodim uchun maxsus dashboard"""
     
@@ -37,8 +34,7 @@ def technical_dashboard(request):
     if user.can_measure:
         measuring_today = my_orders.filter(
             assigned_measurer=user,
-            status='measuring',
-            measurement_date__date=today
+            status='measuring'
         )
         for order in measuring_today:
             today_tasks.append({
@@ -130,9 +126,9 @@ def my_tasks(request):
     elif status_filter == 'completed':
         orders = orders.filter(status='installed')
     elif status_filter == 'overdue':
+        # TUZATILDI: installation_date olib tashlandi
         orders = orders.filter(
-            Q(measurement_date__lt=timezone.now(), status='measuring') |
-            Q(installation_date__lt=timezone.now(), status='installing')
+            Q(measurement_date__lt=timezone.now(), status='measuring')
         )
     
     # Vazifa turi bo'yicha filtrlash
@@ -158,7 +154,7 @@ def my_tasks(request):
 
 @login_required
 def measurement_form(request, order_id):
-    """O'lchov olish formasi - SODDALASHTIRILGAN VERSIYA"""
+    """O'lchov olish formasi"""
     
     order = get_object_or_404(Order, pk=order_id)
     user = request.user

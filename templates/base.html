@@ -105,6 +105,9 @@
             background: rgba(0,0,0,0.3);
             border-top: 1px solid rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
         }
         
         .sidebar .user-info .dropdown-toggle {
@@ -277,18 +280,17 @@
             <!-- Navigation -->
             <div class="flex-grow-1">
                 <ul class="nav flex-column">
-                    <!-- Dashboard -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
-                           href="{% url 'dashboard' %}">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            Dashboard
-                        </a>
-                    </li>
                     
                     <!-- ASOSIY BO'LIMLAR -->
                     <div class="nav-section">
-                        <div class="nav-section-title">ASOSIY BO'LIMLAR</div>
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                            href="{% url 'dashboard' %}">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
                         
                         <!-- Mijozlar -->
                         <li class="nav-item">
@@ -298,15 +300,7 @@
                                 Mijozlar
                             </a>
                         </li>
-                        
-                        <!-- Yangi mijoz -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'customers:add' %}active{% endif %}" 
-                               href="{% url 'customers:add' %}">
-                                <i class="bi bi-person-plus me-2"></i>
-                                Yangi mijoz
-                            </a>
-                        </li>
+            
                         
                         <!-- Buyurtmalar -->
                         <li class="nav-item">
@@ -317,14 +311,6 @@
                             </a>
                         </li>
                         
-                        <!-- Yangi buyurtma -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'orders:create' %}active{% endif %}" 
-                               href="{% url 'orders:create' %}">
-                                <i class="bi bi-plus-circle me-2"></i>
-                                Yangi buyurtma
-                            </a>
-                        </li>
                         
                         <!-- To'lovlar -->
                         <li class="nav-item">
@@ -333,23 +319,19 @@
                                 <i class="bi bi-credit-card me-2"></i>
                                 To'lovlar
                             </a>
-                        </li>
-                        
-                        <!-- Yangi to'lov -->
+                        </li> 
+                        {% if user.is_manager or user.is_admin %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'payments:add' %}active{% endif %}" 
-                               href="{% url 'payments:add' %}">
-                                <i class="bi bi-cash-stack me-2"></i>
-                                Yangi to'lov
+                            <a class="nav-link {% if request.resolver_match.url_name == 'payments:reports' %}active{% endif %}" 
+                               href="{% url 'payments:reports' %}">
+                                <i class="bi bi-bar-chart me-2"></i>
+                                To'lov hisobotlari
                             </a>
                         </li>
-                    </div>
+                        {% endif %}
                     
                     <!-- XODIMLAR BOSHQARUVI -->
-                    {% if user.is_manager or user.is_admin %}
-                    <div class="nav-section">
-                        <div class="nav-section-title">XODIMLAR</div>
-                        
+                    {% if user.is_manager or user.is_admin %}                        
                         <!-- Texnik xodimlar -->
                         <li class="nav-item">
                             <a class="nav-link {% if 'staff' in request.resolver_match.namespace %}active{% endif %}" 
@@ -357,18 +339,10 @@
                                 <i class="bi bi-person-gear me-2"></i>
                                 Xodimlar ro'yxati
                             </a>
-                        </li>
-                        
-                        <!-- Yangi xodim qo'shish -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'staff:add' %}active{% endif %}" 
-                               href="{% url 'staff:add' %}">
-                                <i class="bi bi-person-plus me-2"></i>
-                                Yangi xodim
-                            </a>
-                        </li>
-                    </div>
+                        </li>                        
                     {% endif %}
+                        
+                    </div>
                     
                     <!-- TEXNIK XODIM UCHUN -->
                     {% if user.is_technical %}
@@ -381,31 +355,6 @@
                                href="{% url 'orders:my_tasks' %}">
                                 <i class="bi bi-clipboard-check me-2"></i>
                                 Mening vazifalari
-                            </a>
-                        </li>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- HISOBOTLAR -->
-                    {% if user.is_manager or user.is_admin %}
-                    <div class="nav-section">
-                        <div class="nav-section-title">HISOBOTLAR</div>
-                        
-                        <!-- To'lov hisobotlari -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'payments:reports' %}active{% endif %}" 
-                               href="{% url 'payments:reports' %}">
-                                <i class="bi bi-bar-chart me-2"></i>
-                                To'lov hisobotlari
-                            </a>
-                        </li>
-                        
-                        <!-- Kunlik hisobot -->
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'payments:daily_report' %}active{% endif %}" 
-                               href="{% url 'payments:daily_report' %}">
-                                <i class="bi bi-calendar-day me-2"></i>
-                                Kunlik hisobot
                             </a>
                         </li>
                     </div>

@@ -1,4 +1,4 @@
-# orders/urls.py - YANGILANGAN VERSIYA
+# orders/urls.py - ODDIY VA ISHLAYDIGNA VERSIYA
 
 from django.urls import path
 from . import views

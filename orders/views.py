@@ -1,4 +1,4 @@
-# orders/views.py - IMPORT TUZATILGAN VERSIYA
+# orders/views.py - TO'LIQ TUZATILGAN VERSIYA
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -11,19 +11,16 @@ from django.views.decorators.http import require_POST
 from django.forms import modelformset_factory
 
 from .models import Order, OrderItem
-# Import'larni tuzatamiz - faqat mavjud form'lar
 from .forms import (
     SimpleOrderForm, 
     OrderUpdateForm, 
-    OrderStatusUpdateForm,  # OrderStatusForm o'rniga
+    OrderStatusUpdateForm,
     OrderItemForm, 
     OrderFilterForm, 
     AssignStaffForm,
     MeasurementFormSet
 )
 from payments.models import Payment
-# from payments.forms import QuickPaymentForm  # Vaqtincha comment
-# from accounts.decorators import role_required, can_create_order, can_manage_payments  # Vaqtincha comment
 import json
 
 
@@ -35,7 +32,6 @@ def order_list(request):
     
     # Foydalanuvchi huquqiga qarab filtrlash
     if hasattr(request.user, 'is_technical') and request.user.is_technical and not getattr(request.user, 'can_view_all_orders', False):
-        # Texnik xodim faqat o'ziga tayinlangan buyurtmalarni ko'radi
         orders = orders.filter(
             Q(assigned_measurer=request.user) |
             Q(assigned_manufacturer=request.user) |
@@ -84,10 +80,9 @@ def order_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Statistika
+    # Statistika ("new" status olib tashlandi)
     stats = {
         'total': orders.count(),
-        'new': orders.filter(status='new').count(),
         'measuring': orders.filter(status='measuring').count(),
         'processing': orders.filter(status='processing').count(),
         'installing': orders.filter(status='installing').count(),
@@ -106,15 +101,13 @@ def order_list(request):
 
 
 @login_required
-# @can_create_order  # Vaqtincha comment
 def order_create(request):
-    """Yangi buyurtma yaratish - Oddiy forma"""
+    """Yangi buyurtma yaratish"""
     
     if request.method == 'POST':
         form = SimpleOrderForm(request.POST)
         if form.is_valid():
             order = form.save(commit=False)
-            # Status avtomatik "measuring" ga o'rnatiladi modelda
             order.save()
             
             messages.success(
@@ -243,7 +236,7 @@ def order_measurement(request, pk):
             # O'lchov yakunlangan sanani belgilash
             order.measurement_completed_date = timezone.now()
             if order.status == 'measuring':
-                order.status = 'processing'  # Keyingi bosqichga o'tkazish
+                order.status = 'processing'
             order.save()
             
             messages.success(
@@ -265,7 +258,6 @@ def order_measurement(request, pk):
 
 
 @login_required
-# @role_required(['admin', 'manager'])  # Vaqtincha comment
 def order_status_update(request, pk):
     """Buyurtma statusini o'zgartirish"""
     
@@ -334,15 +326,65 @@ def order_assign_staff(request, pk):
 
 
 @login_required
+def my_tasks(request):
+    """Texnik xodim uchun mening vazifalarim"""
+    
+    if not hasattr(request.user, 'is_technical') or not request.user.is_technical:
+        messages.error(request, 'Bu sahifa faqat texnik xodimlar uchun!')
+        return redirect('dashboard')
+    
+    user = request.user
+    
+    # Mening barcha vazifalarim
+    my_orders = Order.objects.filter(
+        Q(assigned_measurer=user) |
+        Q(assigned_manufacturer=user) |
+        Q(assigned_installer=user)
+    ).exclude(status__in=['installed', 'cancelled']).select_related('customer')
+    
+    # Filtrlash
+    status_filter = request.GET.get('status', 'active')
+    task_type = request.GET.get('task_type', 'all')
+    
+    if status_filter == 'completed':
+        my_orders = Order.objects.filter(
+            Q(assigned_measurer=user) |
+            Q(assigned_manufacturer=user) |
+            Q(assigned_installer=user),
+            status='installed'
+        ).select_related('customer')
+    elif status_filter == 'overdue':
+        # Kechikkan vazifalar - bu yerda mantiqni qo'shish mumkin
+        pass
+    
+    # Vazifa turiga qarab filtrlash
+    if task_type == 'measure' and user.can_measure:
+        my_orders = my_orders.filter(assigned_measurer=user, status='measuring')
+    elif task_type == 'manufacture' and user.can_manufacture:
+        my_orders = my_orders.filter(assigned_manufacturer=user, status='processing')
+    elif task_type == 'install' and user.can_install:
+        my_orders = my_orders.filter(assigned_installer=user, status='installing')
+    
+    context = {
+        'orders': my_orders,
+        'status_filter': status_filter,
+        'task_type': task_type,
+        'title': 'Mening vazifalarim'
+    }
+    
+    return render(request, 'accounts/my_tasks.html', context)
+
+
+@login_required
 def order_print(request, pk):
-    """Buyurtma chop etish"""
+    """Buyurtmani chop etish"""
     
     order = get_object_or_404(Order, pk=pk)
     
     context = {
         'order': order,
         'items': order.items.all(),
-        'payments': order.payments.all(),
+        'title': f'Buyurtma #{order.order_number} - Chop etish'
     }
     
     return render(request, 'orders/print.html', context)
@@ -354,18 +396,43 @@ def order_add_payment(request, pk):
     
     order = get_object_or_404(Order, pk=pk)
     
-    # Bu funksionalni vaqtincha sodda qilamiz
-    messages.info(request, 'To\'lov qo\'shish funksiyasi rivojlantirilmoqda...')
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        payment_method = request.POST.get('payment_method', 'cash')
+        notes = request.POST.get('notes', '')
+        
+        try:
+            amount = float(amount)
+            if amount > 0:
+                # To'lovni yaratish
+                payment = Payment.objects.create(
+                    order=order,
+                    amount=amount,
+                    payment_method=payment_method,
+                    payment_type='partial',
+                    notes=notes,
+                    status='confirmed'
+                )
+                
+                # Order'dagi to'lov ma'lumotlarini yangilash
+                order.paid_amount += payment.amount
+                order.save()
+                
+                messages.success(request, f'{amount:,.0f} so\'m to\'lov qo\'shildi!')
+            else:
+                messages.error(request, 'To\'lov summasi 0 dan katta bo\'lishi kerak!')
+        except ValueError:
+            messages.error(request, 'Noto\'g\'ri summa kiritildi!')
+    
     return redirect('orders:detail', pk=pk)
 
 
 @login_required
 def get_order_stats(request):
-    """API: Buyurtma statistikalari"""
+    """AJAX orqali buyurtma statistikalarini olish"""
     
     stats = {
         'total': Order.objects.count(),
-        'new': Order.objects.filter(status='new').count(),
         'measuring': Order.objects.filter(status='measuring').count(),
         'processing': Order.objects.filter(status='processing').count(),
         'installing': Order.objects.filter(status='installing').count(),
@@ -374,29 +441,3 @@ def get_order_stats(request):
     }
     
     return JsonResponse(stats)
-
-
-@login_required
-def my_tasks(request):
-    """Mening vazifalarim (texnik xodim uchun)"""
-    
-    if not getattr(request.user, 'is_technical', False):
-        messages.error(request, 'Bu sahifa faqat texnik xodimlar uchun!')
-        return redirect('dashboard')
-    
-    user = request.user
-    
-    # Mening buyurtmalarim
-    orders = Order.objects.filter(
-        Q(assigned_measurer=user) |
-        Q(assigned_manufacturer=user) |
-        Q(assigned_installer=user)
-    ).select_related('customer').order_by('-created_at')
-    
-    context = {
-        'orders': orders,
-        'user': user,
-        'title': 'Mening vazifalarim'
-    }
-    
-    return render(request, 'orders/my_tasks.html', context)

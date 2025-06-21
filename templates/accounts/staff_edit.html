@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ staff_member.get_full_name }} - Tahrirlash - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-pencil me-2"></i>
+        Xodim tahrirlash
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'staff:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Orqaga
+            </a>
+            <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye me-1"></i>
+                Ko'rish
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-gear me-2"></i>
+                    {{ staff_member.get_full_name|default:staff_member.username }} - Ma'lumotlarni tahrirlash
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Shaxsiy ma'lumotlar -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="bi bi-person me-1"></i>
+                                Shaxsiy ma'lumotlar
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ism</label>
+                            <input type="text" name="first_name" class="form-control" 
+                                   value="{{ staff_member.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Familiya</label>
+                            <input type="text" name="last_name" class="form-control" 
+                                   value="{{ staff_member.last_name }}" required>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" 
+                                   value="{{ staff_member.email }}">
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <label class="form-label">Telefon</label>
+                            <input type="tel" name="phone" class="form-control" 
+                                   value="{{ staff_member.phone }}" 
+                                   placeholder="+998901234567">
+                        </div>
+                    </div>
+
+                    <!-- Mutaxassis turi -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="bi bi-briefcase me-1"></i>
+                                Mutaxassis turi
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Mutaxassis turi</label>
+                            <select name="specialist_type" class="form-select">
+                                <option value="">Tanlang</option>
+                                <option value="measurer" {% if staff_member.specialist_type == 'measurer' %}selected{% endif %}>O'lchov oluvchi</option>
+                                <option value="manufacturer" {% if staff_member.specialist_type == 'manufacturer' %}selected{% endif %}>Ishlab chiquvchi</option>
+                                <option value="installer" {% if staff_member.specialist_type == 'installer' %}selected{% endif %}>O'rnatuvchi</option>
+                                <option value="universal" {% if staff_member.specialist_type == 'universal' %}selected{% endif %}>Universal (barchasi)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Huquqlar -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Huquqlar
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_create_order" 
+                                       {% if staff_member.can_create_order %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Buyurtma yaratish
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_measure" 
+                                       {% if staff_member.can_measure %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-rulers me-1"></i>
+                                    O'lchov olish
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_manufacture" 
+                                       {% if staff_member.can_manufacture %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-gear me-1"></i>
+                                    Ishlab chiqarish
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_install" 
+                                       {% if staff_member.can_install %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-tools me-1"></i>
+                                    O'rnatish
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_cancel_order" 
+                                       {% if staff_member.can_cancel_order %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Buyurtma bekor qilish
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="can_manage_payments" 
+                                       {% if staff_member.can_manage_payments %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-cash-stack me-1"></i>
+                                    To'lovlarni boshqarish
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Qo'shimcha huquqlar -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="can_view_all_orders" 
+                                       {% if staff_member.can_view_all_orders %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="bi bi-eye me-1"></i>
+                                    Barcha buyurtmalarni ko'rish (faqat o'ziga tayinlanganlarini emas)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tugmalar -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            O'zgarishlarni saqlash
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qo'shimcha ma'lumotlar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Xodim haqida
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Username:</small><br>
+                    <strong>{{ staff_member.username }}</strong>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Qo'shilgan sana:</small><br>
+                    <strong>{{ staff_member.date_joined|date:"d.m.Y H:i" }}</strong>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Oxirgi faollik:</small><br>
+                    <strong>
+                        {% if staff_member.last_login %}
+                            {{ staff_member.last_login|date:"d.m.Y H:i" }}
+                        {% else %}
+                            Hali kirmagan
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="mb-0">
+                    <small class="text-muted">Holat:</small><br>
+                    {% if staff_member.is_active %}
+                        <span class="badge bg-success">Faol</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Nofaol</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Xavfsizlik amallar -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-shield-exclamation me-1"></i>
+                    Xavfsizlik
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'staff:reset_password' staff_member.pk %}" 
+                       class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-key me-1"></i>
+                        Parolni tiklash
+                    </a>
+                    <a href="{% url 'staff:toggle_status' staff_member.pk %}" 
+                       class="btn btn-outline-{% if staff_member.is_active %}secondary{% else %}success{% endif %} btn-sm">
+                        <i class="bi bi-{% if staff_member.is_active %}pause{% else %}play{% endif %} me-1"></i>
+                        {% if staff_member.is_active %}Nofaol qilish{% else %}Faollashtirish{% endif %}
+                    </a>
+                    {% if user.is_admin %}
+                    <a href="{% url 'staff:delete' staff_member.pk %}" 
+                       class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>
+                        O'chirish
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

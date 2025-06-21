@@ -1,4 +1,4 @@
-# accounts/staff_views.py - TUZATILGAN VERSIYA
+# accounts/staff_views.py - TO'LIQ TUZATILGAN VERSIYA
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -8,7 +8,6 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 
 from .models import User
-# from .forms import TechnicianForm, TechnicianEditForm, StaffPasswordResetForm  # Vaqtincha comment
 from orders.models import Order
 from payments.models import Payment
 
@@ -18,8 +17,7 @@ def staff_list(request):
     """
     Texnik xodimlar ro'yxati
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda xodimlarni ko\'rish huquqi yo\'q!')
         return redirect('dashboard')
     
@@ -39,8 +37,7 @@ def staff_add(request):
     """
     Yangi texnik xodim qo'shish
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda texnik xodim qo\'shish huquqi yo\'q!')
         return redirect('staff:list')
     
@@ -113,8 +110,7 @@ def staff_detail(request, pk):
     """
     Texnik xodim tafsilotlari
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
         return redirect('staff:list')
     
@@ -160,18 +156,50 @@ def staff_detail(request, pk):
 @login_required
 def staff_edit(request, pk):
     """
-    Texnik xodim ma'lumotlarini tahrirlash
+    Texnik xodim ma'lumotlarini tahrirlash - TO'LIQ ISHLAYDIGNA VERSIYA
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda xodim ma\'lumotlarini tahrirlash huquqi yo\'q!')
         return redirect('staff:detail', pk=pk)
     
     staff_member = get_object_or_404(User, pk=pk, role='technical')
     
-    # Vaqtincha sodda qilamiz
-    messages.info(request, 'Xodim tahrirlash funksiyasi rivojlantirilmoqda...')
-    return redirect('staff:detail', pk=pk)
+    if request.method == 'POST':
+        try:
+            # Shaxsiy ma'lumotlarni yangilash
+            staff_member.first_name = request.POST.get('first_name', '').strip()
+            staff_member.last_name = request.POST.get('last_name', '').strip()
+            staff_member.email = request.POST.get('email', '').strip()
+            staff_member.phone = request.POST.get('phone', '').strip()
+            staff_member.specialist_type = request.POST.get('specialist_type', '')
+            
+            # Huquqlarni yangilash
+            staff_member.can_create_order = request.POST.get('can_create_order') == 'on'
+            staff_member.can_measure = request.POST.get('can_measure') == 'on'
+            staff_member.can_manufacture = request.POST.get('can_manufacture') == 'on'
+            staff_member.can_install = request.POST.get('can_install') == 'on'
+            staff_member.can_cancel_order = request.POST.get('can_cancel_order') == 'on'
+            staff_member.can_manage_payments = request.POST.get('can_manage_payments') == 'on'
+            staff_member.can_view_all_orders = request.POST.get('can_view_all_orders') == 'on'
+            
+            # Saqlash
+            staff_member.save()
+            
+            messages.success(
+                request, 
+                f'{staff_member.get_full_name() or staff_member.username} ma\'lumotlari yangilandi!'
+            )
+            return redirect('staff:detail', pk=pk)
+            
+        except Exception as e:
+            messages.error(request, f'Xatolik: {str(e)}')
+    
+    context = {
+        'staff_member': staff_member,
+        'title': f'{staff_member.get_full_name() or staff_member.username} - Tahrirlash'
+    }
+    
+    return render(request, 'accounts/staff_edit.html', context)
 
 
 @login_required
@@ -179,16 +207,38 @@ def staff_reset_password(request, pk):
     """
     Texnik xodim parolini tiklash
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda parol tiklash huquqi yo\'q!')
         return redirect('staff:detail', pk=pk)
     
     staff_member = get_object_or_404(User, pk=pk, role='technical')
     
-    # Vaqtincha sodda qilamiz
-    messages.info(request, 'Parol tiklash funksiyasi rivojlantirilmoqda...')
-    return redirect('staff:detail', pk=pk)
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not new_password:
+            messages.error(request, 'Yangi parol kiritilishi shart!')
+        elif len(new_password) < 6:
+            messages.error(request, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak!')
+        elif new_password != confirm_password:
+            messages.error(request, 'Parollar mos kelmaydi!')
+        else:
+            staff_member.set_password(new_password)
+            staff_member.save()
+            
+            messages.success(
+                request, 
+                f'{staff_member.get_full_name() or staff_member.username} ning paroli tiklandi!'
+            )
+            return redirect('staff:detail', pk=pk)
+    
+    context = {
+        'staff_member': staff_member,
+        'title': f'{staff_member.get_full_name() or staff_member.username} - Parol tiklash'
+    }
+    
+    return render(request, 'accounts/staff_reset_password.html', context)
 
 
 @login_required
@@ -196,8 +246,7 @@ def staff_toggle_status(request, pk):
     """
     Texnik xodim faollik holatini o'zgartirish
     """
-    # TUZATILDI: () ni olib tashladim
-    if not (getattr(request.user, 'is_manager', False) or getattr(request.user, 'is_admin', False)):
+    if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda xodim holatini o\'zgartirish huquqi yo\'q!')
         return redirect('staff:detail', pk=pk)
     
@@ -222,7 +271,7 @@ def staff_delete(request, pk):
     Texnik xodimni o'chirish
     """
     # Faqat admin o'chira oladi
-    if not getattr(request.user, 'is_admin', False):
+    if not request.user.is_admin:
         messages.error(request, 'Sizda xodimni o\'chirish huquqi yo\'q!')
         return redirect('staff:detail', pk=pk)
     

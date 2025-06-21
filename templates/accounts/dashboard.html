@@ -12,7 +12,7 @@
         <div class="btn-group me-2">
             <span class="text-muted">
                 <i class="bi bi-clock me-1"></i>
-                {{ current_time|date:"d.m.Y H:i" }}
+                {% now "d.m.Y H:i" %}
             </span>
         </div>
     </div>
@@ -32,17 +32,16 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
-<!-- Statistika kartalari -->
+<!-- Statistika kartlari -->
+{% if not user.is_technical %}
 <div class="row mb-4">
-    <!-- Umumiy statistika -->
-    {% if user.is_manager or user.is_admin %}
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Umumiy buyurtmalar
+                            Jami buyurtmalar
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ stats.total_orders|default:0 }}
@@ -62,14 +61,14 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Oylik daromad
+                            Yakunlangan
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.monthly_revenue|floatformat:0|default:0 }} so'm
+                            {{ stats.completed_orders|default:0 }}
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        <i class="bi bi-check-circle-fill fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -82,10 +81,10 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Faol buyurtmalar
+                            Jarayonda
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.active_orders|default:0 }}
+                            {{ stats.measuring_orders|default:0|add:stats.processing_orders|default:0|add:stats.installing_orders|default:0 }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -115,8 +114,8 @@
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+{% endif %}
 
 <div class="row">
     <!-- So'nggi buyurtmalar -->
@@ -165,14 +164,12 @@
                                     </strong>
                                 </td>
                                 <td>
-                                    {{ order.customer.full_name }}
+                                    {{ order.customer.get_full_name }}
                                     <br>
                                     <small class="text-muted">{{ order.customer.phone }}</small>
                                 </td>
                                 <td>
-                                    {% if order.status == 'new' %}
-                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
-                                    {% elif order.status == 'measuring' %}
+                                    {% if order.status == 'measuring' %}
                                         <span class="badge bg-info">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'processing' %}
                                         <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
@@ -186,30 +183,25 @@
                                 </td>
                                 {% if not user.is_technical %}
                                 <td>
-                                    {% if order.total_amount > 0 %}
-                                        {{ order.total_amount|floatformat:0 }} so'm
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
+                                    <strong>{{ order.total_amount|floatformat:0 }} so'm</strong>
                                 </td>
                                 {% endif %}
                                 <td>
-                                    <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                                    <small class="text-muted">
+                                        {{ order.created_at|date:"d.m.Y" }}
+                                    </small>
                                 </td>
                                 <td>
                                     <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-primary">
-                                        Ko'rish
+                                        <i class="bi bi-eye"></i>
                                     </a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="{% if user.is_technical %}5{% else %}6{% endif %}" class="text-center py-4 text-muted">
-                                    {% if user.is_technical %}
-                                        Sizga hozircha vazifa tayinlanmagan
-                                    {% else %}
-                                        Buyurtmalar yo'q
-                                    {% endif %}
+                                <td colspan="{% if user.is_technical %}5{% else %}6{% endif %}" class="text-center py-4">
+                                    <i class="bi bi-inbox display-4 text-muted"></i>
+                                    <p class="mt-2 text-muted">Buyurtmalar yo'q</p>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -220,24 +212,18 @@
         </div>
     </div>
 
-    <!-- Statistika va tezkor amallar -->
     {% if not user.is_technical %}
-    <div class="col-lg-4 mb-4">
-        <!-- Buyurtmalar holati -->
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Buyurtma holatlari -->
         <div class="card shadow mb-4">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-pie-chart me-2"></i>
-                    Buyurtmalar holati
+                    Buyurtma holatlari
                 </h6>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-primary">Yangi</span>
-                        <span class="badge bg-primary">{{ stats.new_orders|default:0 }}</span>
-                    </div>
-                </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-info">O'lchovda</span>
@@ -279,7 +265,7 @@
                         <i class="bi bi-plus-lg me-2"></i>
                         Yangi buyurtma
                     </a>
-                    <a href="{% url 'customers:create' %}" class="btn btn-outline-primary">
+                    <a href="{% url 'customers:add' %}" class="btn btn-outline-primary">
                         <i class="bi bi-person-plus me-2"></i>
                         Yangi mijoz
                     </a>
@@ -287,10 +273,6 @@
                     <a href="{% url 'payments:list' %}" class="btn btn-outline-success">
                         <i class="bi bi-cash-stack me-2"></i>
                         To'lovlar
-                    </a>
-                    <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-info">
-                        <i class="bi bi-graph-up me-2"></i>
-                        Hisobotlar
                     </a>
                     {% endif %}
                 </div>
@@ -300,70 +282,4 @@
     {% endif %}
 </div>
 
-<!-- Eslatmalar va bildirishnomalar -->
-{% if notifications %}
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-bell me-2"></i>
-                    Bildirishnomalar
-                </h6>
-            </div>
-            <div class="card-body">
-                {% for notification in notifications %}
-                <div class="alert alert-{{ notification.type }} alert-dismissible fade show" role="alert">
-                    <strong>{{ notification.title }}</strong>
-                    {{ notification.message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<style>
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-.text-gray-800 {
-    color: #5a5c69 !important;
-}
-.text-gray-300 {
-    color: #dddfeb !important;
-}
-.fa-2x {
-    font-size: 2em;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Dashboard ma'lumotlarini yangilash
-    function updateDashboard() {
-        fetch('{% url "orders:api_stats" %}')
-            .then(response => response.json())
-            .then(data => {
-                // Statistikalarni yangilash
-                console.log('Dashboard updated:', data);
-            })
-            .catch(error => console.error('Error updating dashboard:', error));
-    }
-    
-    // Har 60 sekundda yangilash
-    setInterval(updateDashboard, 60000);
-});
-</script>
 {% endblock %}
