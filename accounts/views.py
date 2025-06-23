@@ -28,6 +28,7 @@ def dashboard(request):
     return manager_dashboard(request)
 
 
+
 def technical_dashboard(request):
     """Texnik xodim uchun dashboard - TUZATILGAN VERSIYA"""
     
@@ -115,99 +116,42 @@ def technical_dashboard(request):
 def manager_dashboard(request):
     """Admin va menejer uchun dashboard"""
     
-    current_time = timezone.now()
-    today = date.today()
-    this_month_start = today.replace(day=1)
-    this_week_start = today - timedelta(days=today.weekday())
+    # So'nggi buyurtmalar
+    recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:10]
     
-    # Asosiy statistika
+    # Statistikalar
     stats = {
-        # Mijozlar
-        'total_customers': Customer.objects.count(),
-        'new_customers_today': Customer.objects.filter(
-            created_at__date=today
-        ).count(),
-        'new_customers_week': Customer.objects.filter(
-            created_at__date__gte=this_week_start
-        ).count(),
-        'new_customers_month': Customer.objects.filter(
-            created_at__date__gte=this_month_start
-        ).count(),
-        
-        # Buyurtmalar
         'total_orders': Order.objects.count(),
         'measuring_orders': Order.objects.filter(status='measuring').count(),
         'processing_orders': Order.objects.filter(status='processing').count(),
         'installing_orders': Order.objects.filter(status='installing').count(),
         'completed_orders': Order.objects.filter(status='installed').count(),
         'cancelled_orders': Order.objects.filter(status='cancelled').count(),
-        
-        # To'lovlar
+        'total_customers': Customer.objects.count(),
         'total_revenue': Payment.objects.filter(
             status='confirmed'
         ).aggregate(total=Sum('amount'))['total'] or 0,
-        'pending_payments': Payment.objects.filter(
-            status='pending'
-        ).count(),
-        'today_revenue': Payment.objects.filter(
-            payment_date__date=today,
-            status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0,
     }
     
-    # So'nggi buyurtmalar
-    recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:10]
-    
-    # So'nggi to'lovlar
-    recent_payments = Payment.objects.select_related(
-        'order', 'order__customer'
-    ).filter(status='confirmed').order_by('-payment_date')[:10]
-    
-    # Bu hafta statistikasi
-    week_stats = {
-        'orders': Order.objects.filter(created_at__date__gte=this_week_start).count(),
-        'revenue': Payment.objects.filter(
-            payment_date__date__gte=this_week_start,
-            status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-        'customers': Customer.objects.filter(
-            created_at__date__gte=this_week_start
-        ).count(),
-    }
-    
-    # Bu oy statistikasi
+    # Bu oyning statistikasi
+    current_month = timezone.now().replace(day=1)
     month_stats = {
-        'orders': Order.objects.filter(created_at__date__gte=this_month_start).count(),
+        'orders': Order.objects.filter(created_at__gte=current_month).count(),
         'revenue': Payment.objects.filter(
-            payment_date__date__gte=this_month_start,
+            created_at__gte=current_month,
             status='confirmed'
         ).aggregate(total=Sum('amount'))['total'] or 0,
-        'customers': Customer.objects.filter(
-            created_at__date__gte=this_month_start
-        ).count(),
+        'customers': Customer.objects.filter(created_at__gte=current_month).count(),
     }
-    
-    # Texnik xodimlar statistikasi
-    technical_stats = User.objects.filter(role='technical').aggregate(
-        total=Count('id'),
-        active=Count('id', filter=Q(is_active=True)),
-        measurers=Count('id', filter=Q(can_measure=True, is_active=True)),
-        manufacturers=Count('id', filter=Q(can_manufacture=True, is_active=True)),
-        installers=Count('id', filter=Q(can_install=True, is_active=True)),
-    )
     
     context = {
-        'stats': stats,
         'recent_orders': recent_orders,
-        'recent_payments': recent_payments,
-        'week_stats': week_stats,
+        'stats': stats,
         'month_stats': month_stats,
-        'technical_stats': technical_stats,
-        'title': 'Bosh sahifa'
+        'page_title': 'Dashboard'
     }
     
-    return render(request, 'accounts/dashboard.html', context)
-
+    return render(request, 'dashboard.html', context)
 
 def login_view(request):
     """Login sahifasi"""
@@ -238,6 +182,54 @@ def login_view(request):
     
     return render(request, 'accounts/login.html')
 
+
+def manager_dashboard(request):
+    """Admin va menejer uchun dashboard"""
+    
+    # So'nggi buyurtmalar
+    recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:10]
+    
+    # Statistikalar
+    stats = {
+        'total_orders': Order.objects.count(),
+        'measuring_orders': Order.objects.filter(status='measuring').count(),
+        'processing_orders': Order.objects.filter(status='processing').count(),
+        'installing_orders': Order.objects.filter(status='installing').count(),
+        'completed_orders': Order.objects.filter(status='installed').count(),
+        'cancelled_orders': Order.objects.filter(status='cancelled').count(),
+        'total_customers': Customer.objects.count(),
+        'total_revenue': Payment.objects.filter(
+            status='confirmed'
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+    }
+    
+    # Bu oyning statistikasi
+    current_month = timezone.now().replace(day=1)
+    month_stats = {
+        'orders': Order.objects.filter(created_at__gte=current_month).count(),
+        'revenue': Payment.objects.filter(
+            created_at__gte=current_month,
+            status='confirmed'
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+        'customers': Customer.objects.filter(created_at__gte=current_month).count(),
+    }
+    
+    context = {
+        'recent_orders': recent_orders,
+        'stats': stats,
+        'month_stats': month_stats,
+        'page_title': 'Dashboard'
+    }
+    
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+def user_logout(request):
+    """Foydalanuvchi chiqishi"""
+    logout(request)
+    messages.success(request, 'Tizimdan muvaffaqiyatli chiqdingiz!')
+    return redirect('login')
 
 @login_required
 def logout_view(request):

@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}Ishlab chiqarish - {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-tools me-2"></i>
+                    Ishlab chiqarish - #{{ order.order_number }}
+                </h2>
+                <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Vazifalar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Buyurtma ma'lumotlari -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Buyurtma ma'lumotlari
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Mijoz:</strong><br>
+                        {{ order.customer.get_full_name }}<br>
+                        <small class="text-muted">{{ order.customer.phone }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Yaratilgan:</strong><br>
+                        <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>O'lchov tugallangan:</strong><br>
+                        <small>{{ order.measurement_completed_date|date:"d.m.Y H:i"|default:"Ma'lumot yo'q" }}</small>
+                    </div>
+                    <div class="mb-0">
+                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- O'lchov ma'lumotlari -->
+            {% if order.measurement_notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-rulers me-2"></i>
+                        O'lchov izohlari
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <small>{{ order.measurement_notes|linebreaks }}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ishlab chiqarish ko'rsatmalari -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Ko'rsatmalar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Barcha o'lchamlarni diqqat bilan tekshiring</li>
+                        <li>Material sifatiga e'tibor bering</li>
+                        <li>Tayyor mahsulotni nazorat qiling</li>
+                        <li>Ishni yakunlagach "Tayyor" tugmasini bosing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mahsulotlar ro'yxati va ishlab chiqarish formi -->
+        <div class="col-md-8">
+            <!-- Mahsulotlar ro'yxati -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Ishlab chiqarilishi kerak bo'lgan mahsulotlar
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Jalyuzi turi</th>
+                                    <th>O'lcham</th>
+                                    <th>Material</th>
+                                    <th>Donasi</th>
+                                    <th>Narxi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.blind_type }}</strong>
+                                        {% if item.installation_type %}
+                                        <br><small class="text-muted">{{ item.installation_type }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
+                                        {% if item.mechanism_type %}
+                                        <br><small class="text-muted">{{ item.mechanism_type }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ item.material_type|default:"—" }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ item.quantity }} dona</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
+                                    </td>
+                                </tr>
+                                {% if item.notes %}
+                                <tr>
+                                    <td colspan="5">
+                                        <small class="text-muted">
+                                            <i class="bi bi-chat-text me-1"></i>
+                                            {{ item.notes }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Mahsulot ma'lumotlari mavjud emas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ishlab chiqarish formi -->
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>
+                            Ishlab chiqarish jarayoni
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Ishlab chiqarish izohlari</label>
+                            <textarea name="manufacturing_notes" class="form-control" rows="4" placeholder="Ishlab chiqarish jarayoni, qiynchiliklar, qo'shimcha ma'lumotlar..."></textarea>
+                        </div>
+
+                        {% if order.notes %}
+                        <div class="mb-3">
+                            <label class="form-label">Avvalgi izohlar</label>
+                            <div class="border rounded p-3 bg-light">
+                                <small>{{ order.notes|linebreaks }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tugmalar -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="submit" name="save_progress" class="btn btn-outline-warning btn-lg w-100">
+                                    <i class="bi bi-save me-1"></i>
+                                    Jarayonni saqlash
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" name="complete_manufacturing" class="btn btn-success btn-lg w-100" onclick="return confirm('Ishlab chiqarish yakunlandimi? Bu buyurtma o\'rnatishga yuboriladi.')">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Tayyor! O'rnatishga yuborish
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Vazifalar ro'yxatiga qaytish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.table td {
+    vertical-align: middle;
+}
+.badge {
+    font-size: 0.75em;
+}
+.card-header h6 {
+    color: #495057;
+}
+</style>
+{% endblock %}

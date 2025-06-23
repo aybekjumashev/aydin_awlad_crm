@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Mening vazifalarim{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-list-task me-2"></i>
+                    Mening vazifalarim
+                </h2>
+                <a href="{% url 'technical:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- O'lchov vazifalari -->
+    {% if user.can_measure and measuring_tasks %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-rulers me-2"></i>
+                        O'lchov olish vazifalari
+                        <span class="badge bg-light text-dark ms-2">{{ measuring_tasks|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Buyurtma</th>
+                                    <th>Mijoz</th>
+                                    <th>Manzil</th>
+                                    <th>Yaratilgan</th>
+                                    <th>Harakat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in measuring_tasks %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.order_number }}</strong>
+                                        <br>
+                                        <span class="badge bg-info">O'lchovda</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ order.customer.get_full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ order.customer.phone }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.address|truncatechars:50 }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'technical:measurement' order.id %}" class="btn btn-info btn-sm">
+                                            <i class="bi bi-rulers me-1"></i>
+                                            O'lchov olish
+                                        </a>
+                                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Ko'rish
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ishlab chiqarish vazifalari -->
+    {% if user.can_manufacture and manufacturing_tasks %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tools me-2"></i>
+                        Ishlab chiqarish vazifalari
+                        <span class="badge bg-light text-dark ms-2">{{ manufacturing_tasks|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Buyurtma</th>
+                                    <th>Mijoz</th>
+                                    <th>Mahsulotlar</th>
+                                    <th>Yaratilgan</th>
+                                    <th>Harakat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in manufacturing_tasks %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.order_number }}</strong>
+                                        <br>
+                                        <span class="badge bg-warning">Ishlanmoqda</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ order.customer.get_full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ order.customer.phone }}</small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% for item in order.items.all %}
+                                                {{ item.blind_type }} ({{ item.width }}x{{ item.height }})
+                                                {% if not forloop.last %}<br>{% endif %}
+                                            {% endfor %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'technical:manufacturing' order.id %}" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-tools me-1"></i>
+                                            Ishlab chiqarish
+                                        </a>
+                                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Ko'rish
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- O'rnatish vazifalari -->
+    {% if user.can_install and installation_tasks %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-house-gear me-2"></i>
+                        O'rnatish vazifalari
+                        <span class="badge bg-light text-dark ms-2">{{ installation_tasks|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Buyurtma</th>
+                                    <th>Mijoz</th>
+                                    <th>Manzil</th>
+                                    <th>Qolgan to'lov</th>
+                                    <th>Harakat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in installation_tasks %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.order_number }}</strong>
+                                        <br>
+                                        <span class="badge bg-success">O'rnatilmoqda</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ order.customer.get_full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ order.customer.phone }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.address|truncatechars:40 }}</small>
+                                    </td>
+                                    <td>
+                                        {% with remaining=order.total_amount|sub:order.paid_amount %}
+                                            {% if remaining > 0 %}
+                                                <span class="text-danger">{{ remaining|floatformat:0 }} so'm</span>
+                                            {% else %}
+                                                <span class="text-success">To'langan</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'technical:installation' order.id %}" class="btn btn-success btn-sm">
+                                            <i class="bi bi-house-gear me-1"></i>
+                                            O'rnatish
+                                        </a>
+                                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Ko'rish
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Agar hech qanday vazifa bo'lmasa -->
+    {% if not measuring_tasks and not manufacturing_tasks and not installation_tasks %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h4 class="mt-3 text-muted">Hozircha vazifa yo'q</h4>
+                    <p class="text-muted">
+                        Sizga hali hech qanday vazifa tayinlanmagan. 
+                        Yangi vazifalar uchun menejer bilan bog'laning.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.table td {
+    vertical-align: middle;
+}
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}

@@ -8,20 +8,17 @@ from accounts.models import User
 from decimal import Decimal
 import uuid
 
-
 class Order(models.Model):
-    """
-    Buyurtmalar modeli - "new" status olib tashlandi
-    """
+    """Buyurtma modeli"""
+    
     STATUS_CHOICES = [
-        ('measuring', 'O\'lchovda'),
-        ('processing', 'Ishlanmoqda'),
-        ('installing', 'O\'rnatilmoqda'),
-        ('installed', 'O\'rnatildi'),
-        ('cancelled', 'Bekor qilindi'),
+        ('measuring', 'O\'lchovda'),      # O'lchov olish kerak
+        ('processing', 'Ishlanmoqda'),   # Ishlab chiqarish jarayonida
+        ('installing', 'O\'rnatilmoqda'), # O'rnatish jarayonida  
+        ('installed', 'O\'rnatildi'),     # Tugallangan
+        ('cancelled', 'Bekor qilindi'),  # Bekor qilingan
     ]
     
-    # To'lov holatlari
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'To\'lanmagan'),
         ('partial', 'Qisman to\'langan'),
@@ -29,32 +26,33 @@ class Order(models.Model):
         ('overpaid', 'Ortiqcha to\'langan'),
     ]
     
-    # Asosiy ma'lumotlar
-    customer = models.ForeignKey(
-        Customer,
-        on_delete=models.CASCADE,
-        related_name='orders',
-        verbose_name='Mijoz'
-    )
+    # Asosiy maydonlar
     order_number = models.CharField(
         max_length=20,
         unique=True,
         verbose_name='Buyurtma raqami'
     )
+    
+    customer = models.ForeignKey(
+        'customers.Customer',
+        on_delete=models.PROTECT,
+        related_name='orders',
+        verbose_name='Mijoz'
+    )
+    
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='measuring',  # Yangi buyurtma darhol o'lchovga yuboriladi
+        default='measuring',  # Yangi buyurtma darhol o'lchovga boradi
         verbose_name='Holat'
     )
     
-    # Manzil ma'lumotlari
     address = models.TextField(
         verbose_name='O\'lchov manzili',
         help_text='Jalyuzi o\'rnatilishi kerak bo\'lgan aniq manzil'
     )
     
-    # To'lov ma'lumotlari
+    # Narx va to'lov
     total_amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -62,6 +60,7 @@ class Order(models.Model):
         validators=[MinValueValidator(Decimal('0'))],
         verbose_name='Umumiy narx'
     )
+    
     paid_amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -69,6 +68,7 @@ class Order(models.Model):
         validators=[MinValueValidator(Decimal('0'))],
         verbose_name='To\'langan summa'
     )
+    
     payment_status = models.CharField(
         max_length=20,
         choices=PAYMENT_STATUS_CHOICES,
@@ -159,67 +159,51 @@ class Order(models.Model):
         verbose_name_plural = 'Buyurtmalar'
         ordering = ['-created_at']
     
+    def __str__(self):
+        return f"#{self.order_number} - {self.customer.get_full_name()}"
+    
     def save(self, *args, **kwargs):
-        # Buyurtma raqamini avtomatik yaratish
+        # Order number yaratish
         if not self.order_number:
-            self.order_number = self.generate_order_number()
+            last_order = Order.objects.order_by('-id').first()
+            if last_order and last_order.order_number:
+                try:
+                    last_number = int(last_order.order_number)
+                    self.order_number = str(last_number + 1).zfill(6)
+                except ValueError:
+                    self.order_number = "000001"
+            else:
+                self.order_number = "000001"
         
-        # To'lov holatini yangilash
-        self.update_payment_status()
+        # To'lov statusini yangilash
+        if self.total_amount > 0:
+            if self.paid_amount == 0:
+                self.payment_status = 'pending'
+            elif self.paid_amount < self.total_amount:
+                self.payment_status = 'partial'
+            elif self.paid_amount == self.total_amount:
+                self.payment_status = 'paid'
+            else:
+                self.payment_status = 'overpaid'
         
         super().save(*args, **kwargs)
     
-    def generate_order_number(self):
-        """Buyurtma raqamini yaratish"""
-        import datetime
-        today = datetime.date.today()
-        prefix = f"AA{today.strftime('%Y%m%d')}"
-        
-        # Bugungi oxirgi buyurtma raqamini topish
-        last_order = Order.objects.filter(
-            order_number__startswith=prefix
-        ).order_by('-order_number').first()
-        
-        if last_order:
-            # Oxirgi raqamdan keyingisini yaratish
-            last_number = int(last_order.order_number[-3:])
-            new_number = f"{prefix}{last_number + 1:03d}"
-        else:
-            # Birinchi buyurtma
-            new_number = f"{prefix}001"
-        
-        return new_number
-    
-    def update_payment_status(self):
-        """To'lov holatini yangilash"""
-        if self.paid_amount <= 0:
-            self.payment_status = 'pending'
-        elif self.paid_amount >= self.total_amount:
-            if self.paid_amount > self.total_amount:
-                self.payment_status = 'overpaid'
-            else:
-                self.payment_status = 'paid'
-        else:
-            self.payment_status = 'partial'
-    
     @property
     def remaining_amount(self):
-        """Qolgan qarzdorlik"""
+        """Qolgan to'lov summasi"""
         return max(self.total_amount - self.paid_amount, Decimal('0'))
     
     @property
-    def total_area(self):
-        """Umumiy maydon (m²)"""
-        total = Decimal('0')
-        for item in self.items.all():
-            total += item.area
-        return total
-    
-    def get_absolute_url(self):
-        return reverse('orders:detail', kwargs={'pk': self.pk})
-    
-    def __str__(self):
-        return f"#{self.order_number} - {self.customer.get_full_name()}"
+    def progress_percentage(self):
+        """Buyurtma jarayonining foizi"""
+        status_weights = {
+            'measuring': 20,
+            'processing': 50,
+            'installing': 80,
+            'installed': 100,
+            'cancelled': 0
+        }
+        return status_weights.get(self.status, 0)
 
 
 class OrderItem(models.Model):

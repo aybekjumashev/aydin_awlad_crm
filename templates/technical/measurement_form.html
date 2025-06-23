@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+
+{% block title %}O'lchov olish - {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-rulers me-2"></i>
+                    O'lchov olish - #{{ order.order_number }}
+                </h2>
+                <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Vazifalar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Buyurtma ma'lumotlari -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Buyurtma ma'lumotlari
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Mijoz:</strong><br>
+                        {{ order.customer.get_full_name }}<br>
+                        <small class="text-muted">{{ order.customer.phone }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Manzil:</strong><br>
+                        <small>{{ order.address }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Yaratilgan:</strong><br>
+                        <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    <div class="mb-0">
+                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yordam -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Yordam
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Barcha o'lchamlarni millimetr (mm) da kiriting</li>
+                        <li>Jalyuzi turini aniq tanlang</li>
+                        <li>Narxlarni so'm hisobida kiriting</li>
+                        <li>Avans to'lovni qabul qilishingiz mumkin</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- O'lchov formi -->
+        <div class="col-md-8">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Jalyuzlar ro'yxati
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="items-container">
+                            <!-- JavaScript orqali dinamik ravishda qo'shiladi -->
+                        </div>
+                        
+                        <button type="button" id="add-item" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus me-1"></i>
+                            Yangi jalyuzi qo'shish
+                        </button>
+                        
+                        <input type="hidden" id="item-count" name="item_count" value="1">
+                    </div>
+                </div>
+
+                <!-- O'lchov izohlari -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-chat-text me-2"></i>
+                            O'lchov izohlari
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="measurement_notes" class="form-control" rows="3" placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Avans to'lov -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-cash-stack me-2"></i>
+                            Avans to'lov (ixtiyoriy)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">To'lov summasi (so'm)</label>
+                                <input type="number" name="advance_payment" class="form-control" min="0" step="1000" placeholder="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">To'lov usuli</label>
+                                <select name="payment_method" class="form-select">
+                                    <option value="cash">Naqd pul</option>
+                                    <option value="card">Karta</option>
+                                    <option value="transfer">Bank o'tkazmasi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tugmalar -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Bekor qilish
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-1"></i>
+                                O'lchov yakunlash va ishlab chiqarishga yuborish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+let itemCount = 1;
+
+// Jalyuzi turlari
+const blindTypes = [
+    'Gorizontal jalyuzi',
+    'Vertikal jalyuzi', 
+    'Rulon jalyuzi',
+    'Rimskiy jalyuzi',
+    'Zebra jalyuzi',
+    'Fotoshora',
+    'Boshqa'
+];
+
+// Material turlari
+const materialTypes = [
+    'Alyuminiy',
+    'Plastik',
+    'Yog\'och',
+    'Mato',
+    'PVX',
+    'Boshqa'
+];
+
+function createItemForm(index) {
+    return `
+        <div class="item-form border rounded p-3 mb-3" data-index="${index}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Jalyuzi #${index + 1}</h6>
+                <button type="button" class="btn btn-danger btn-sm remove-item" onclick="removeItem(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Jalyuzi turi *</label>
+                    <select name="blind_type_${index}" class="form-select" required>
+                        <option value="">Tanlang...</option>
+                        ${blindTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Material turi</label>
+                    <select name="material_type_${index}" class="form-select">
+                        <option value="">Tanlang...</option>
+                        ${materialTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Eni (mm) *</label>
+                    <input type="number" name="width_${index}" class="form-control" min="100" max="5000" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Bo'yi (mm) *</label>
+                    <input type="number" name="height_${index}" class="form-control" min="100" max="5000" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Donasi</label>
+                    <input type="number" name="quantity_${index}" class="form-control" min="1" value="1">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Narxi (so'm) *</label>
+                    <input type="number" name="unit_price_${index}" class="form-control" min="0" step="1000" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">O'rnatish turi</label>
+                    <select name="installation_type_${index}" class="form-select">
+                        <option value="">Tanlang...</option>
+                        <option value="Devorga">Devorga</option>
+                        <option value="Shiftga">Shiftga</option>
+                        <option value="Oynaga">Oynaga</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Mexanizm turi</label>
+                    <select name="mechanism_type_${index}" class="form-select">
+                        <option value="">Tanlang...</option>
+                        <option value="Qo'lda">Qo'lda</option>
+                        <option value="Elektrik">Elektrik</option>
+                        <option value="Avtomatik">Avtomatik</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Qo'shimcha izoh</label>
+                    <textarea name="notes_${index}" class="form-control" rows="2" placeholder="Ushbu jalyuzi haqida qo'shimcha ma'lumotlar..."></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addItem() {
+    const container = document.getElementById('items-container');
+    container.insertAdjacentHTML('beforeend', createItemForm(itemCount));
+    itemCount++;
+    updateItemCount();
+}
+
+function removeItem(index) {
+    const item = document.querySelector(`[data-index="${index}"]`);
+    if (item) {
+        item.remove();
+        updateItemNumbers();
+    }
+}
+
+function updateItemCount() {
+    document.getElementById('item-count').value = document.querySelectorAll('.item-form').length;
+}
+
+function updateItemNumbers() {
+    const items = document.querySelectorAll('.item-form');
+    items.forEach((item, index) => {
+        const title = item.querySelector('h6');
+        title.textContent = `Jalyuzi #${index + 1}`;
+    });
+    updateItemCount();
+}
+
+// Sahifa yuklanganda birinchi item qo'shish
+document.addEventListener('DOMContentLoaded', function() {
+    addItem();
+    
+    // Add item tugmasi
+    document.getElementById('add-item').addEventListener('click', addItem);
+    
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+});
+</script>
+
+<style>
+.item-form {
+    background-color: #f8f9fa;
+}
+.item-form:hover {
+    background-color: #e9ecef;
+}
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+</style>
+{% endblock %}
