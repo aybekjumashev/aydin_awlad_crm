@@ -372,7 +372,7 @@ def my_tasks(request):
         'title': 'Mening vazifalarim'
     }
     
-    return render(request, 'accounts/my_tasks.html', context)
+    return render(request, 'technical/my_tasks.html', context)
 
 
 @login_required
