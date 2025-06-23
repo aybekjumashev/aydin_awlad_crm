@@ -1,17 +1,12 @@
 {% extends 'base.html' %}
-{% load customer_tags %}
 
-{% block title %}{{ customer.get_full_name }} - Mijoz tafsilotlari - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ customer.get_full_name }} - Mijozlar - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
-<!-- Sahifa sarlavhasi -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
-        <i class="bi bi-person-circle me-2"></i>
+        <i class="bi bi-person me-2"></i>
         {{ customer.get_full_name }}
-        <span class="badge bg-{{ customer.category|category_badge_class }} ms-2">
-            {{ customer.get_category_display }}
-        </span>
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
@@ -20,138 +15,70 @@
                 Mijozlar ro'yxati
             </a>
             {% if user.is_manager or user.is_admin %}
-            <a href="{% url 'customers:edit' customer.pk %}" class="btn btn-sm btn-outline-primary">
+            <a href="{% url 'customers:edit' customer.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
                 Tahrirlash
             </a>
             {% endif %}
         </div>
-        {% if user.is_admin %}
-        <div class="btn-group">
-            <a href="{% url 'customers:delete' customer.pk %}" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash me-1"></i>
-                O'chirish
-            </a>
-        </div>
-        {% endif %}
     </div>
 </div>
 
 <div class="row">
     <!-- Mijoz ma'lumotlari -->
     <div class="col-md-4">
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-person-badge me-2"></i>
-                    Asosiy ma'lumotlar
+                    Mijoz ma'lumotlari
                 </h5>
             </div>
             <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td class="fw-bold">To'liq ism:</td>
-                        <td>{{ customer.get_full_name }}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Asosiy telefon:</td>
-                        <td>
-                            <a href="tel:{{ customer.phone }}" class="text-decoration-none">
-                                {{ customer.phone }}
-                            </a>
-                        </td>
-                    </tr>
-                    {% if customer.birth_date %}
-                    <tr>
-                        <td class="fw-bold">Tug'ilgan kun:</td>
-                        <td>{{ customer.birth_date|date:"d.m.Y" }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                        <td class="fw-bold">Kategoriya:</td>
-                        <td>
-                            <span class="badge bg-{{ customer.category|category_badge_class }}">
-                                {{ customer.get_category_display }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Qo'shilgan:</td>
-                        <td>{{ customer.created_at|date:"d.m.Y H:i" }}</td>
-                    </tr>
-                    {% if customer.created_by %}
-                    <tr>
-                        <td class="fw-bold">Qo'shgan:</td>
-                        <td>{{ customer.created_by.get_full_name }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
-                
-                <!-- Manzil -->
-                <div class="mt-3">
-                    <h6 class="fw-bold">Manzil:</h6>
-                    <p class="text-muted">{{ customer.address }}</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">To'liq ism:</label>
+                    <div>{{ customer.get_full_name }}</div>
                 </div>
                 
-                <!-- Izohlar -->
-                {% if customer.notes %}
-                <div class="mt-3">
-                    <h6 class="fw-bold">Izohlar:</h6>
-                    <p class="text-muted">{{ customer.notes }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Qo'shimcha telefon raqamlar -->
-        <div class="card mt-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <i class="bi bi-telephone-plus me-2"></i>
-                    Qo'shimcha telefonlar
-                </h6>
-                {% if user.is_manager or user.is_admin %}
-                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPhoneModal">
-                    <i class="bi bi-plus"></i>
-                </button>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                {% if additional_phones %}
-                    <div class="list-group list-group-flush">
-                        {% for phone in additional_phones %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-bold">
-                                    <a href="tel:{{ phone.phone_number }}" class="text-decoration-none">
-                                        {{ phone.phone_number }}
-                                    </a>
-                                    {% if phone.is_primary %}
-                                        <span class="badge bg-success ms-1">Asosiy</span>
-                                    {% endif %}
-                                </div>
-                                <small class="text-muted">{{ phone.get_phone_type_display }}</small>
-                                {% if phone.notes %}
-                                    <br><small class="text-muted">{{ phone.notes }}</small>
-                                {% endif %}
-                            </div>
-                            {% if user.is_manager or user.is_admin %}
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="deletePhone({{ phone.pk }})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Asosiy telefon:</label>
+                    <div>
+                        <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                            {{ customer.phone }}
+                        </a>
                     </div>
-                {% else %}
-                    <p class="text-muted mb-0">Qo'shimcha telefon raqamlar yo'q</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Manzil:</label>
+                    <div class="text-muted">{{ customer.address }}</div>
+                </div>
+
+                {% if customer.birth_date %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tug'ilgan kun:</label>
+                    <div>{{ customer.birth_date|date:"d.m.Y" }}</div>
+                </div>
                 {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Kategoriya:</label>
+                    <div>
+                        <span class="badge bg-{{ customer.category|default:'secondary' }}">
+                            {{ customer.get_category_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-0">
+                    <label class="form-label fw-bold">Qo'shilgan sana:</label>
+                    <div>{{ customer.created_at|date:"d.m.Y H:i" }}</div>
+                </div>
             </div>
         </div>
-        
+
         <!-- Statistika -->
-        <div class="card mt-3">
+        <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-graph-up me-2"></i>
@@ -161,16 +88,16 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-4">
-                        <div class="fw-bold text-primary">{{ stats.total_orders }}</div>
-                        <small class="text-muted">Jami buyurtma</small>
+                        <div class="fw-bold text-primary">{{ orders_count }}</div>
+                        <small class="text-muted">Buyurtmalar</small>
                     </div>
                     <div class="col-4">
-                        <div class="fw-bold text-success">{{ stats.completed_orders }}</div>
-                        <small class="text-muted">Bajarilgan</small>
+                        <div class="fw-bold text-success">{{ total_spent|floatformat:0|default:"0" }}</div>
+                        <small class="text-muted">Sarflangan</small>
                     </div>
                     <div class="col-4">
-                        <div class="fw-bold text-warning">{{ stats.active_orders }}</div>
-                        <small class="text-muted">Faol</small>
+                        <div class="fw-bold text-info">5</div>
+                        <small class="text-muted">Telefon</small>
                     </div>
                 </div>
             </div>
@@ -184,7 +111,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-bag me-2"></i>
-                    Buyurtmalar ({{ orders.count }})
+                    Buyurtmalar ({{ orders_count }})
                 </h5>
                 {% if user.is_manager or user.is_admin %}
                 <a href="{% url 'orders:create' %}?customer={{ customer.pk }}" class="btn btn-sm btn-primary">
@@ -194,84 +121,121 @@
                 {% endif %}
             </div>
             <div class="card-body">
-                {% if orders %}
+                {% if recent_orders %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Raqam</th>
                                     <th>Sana</th>
-                                    <th>Jalyuzi turi</th>
                                     <th>Holat</th>
-                                    <th>Narx</th>
+                                    <th>Summa</th>
                                     <th>Amallar</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for order in orders|slice:":10" %}
+                                {% for order in recent_orders %}
                                 <tr>
-                                    <td>#{{ order.pk }}</td>
-                                    <td>{{ order.created_at|date:"d.m.Y" }}</td>
-                                    <td>{{ order.blind_type|default:"-" }}</td>
                                     <td>
-                                        <span class="badge bg-{{ order.status|order_status_badge }}">
-                                            {{ order.get_status_display }}
-                                        </span>
+                                        <strong>#{{ order.order_number|default:order.pk }}</strong>
                                     </td>
-                                    <td>{{ order.total_price|floatformat:0|default:"-" }} so'm</td>
+                                    <td>{{ order.created_at|date:"d.m.Y" }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="alert('Buyurtma tafsilotlari hali tayyor emas')">
+                                        {% if order.status == 'new' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'measuring' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'processing' %}
+                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'installing' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'installed' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.total_amount %}
+                                        {{ order.total_amount|floatformat:0 }} so'm
+                                        {% else %}
+                                        <span class="text-muted">Belgilanmagan</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- ✅ TUZATILDI: To'g'ri URL bilan -->
+                                        <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>
                                             Ko'rish
-                                        </button>
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    {% if orders.count > 10 %}
-                    <div class="text-center">
-                        <a href="#" class="btn btn-outline-secondary" onclick="alert('Buyurtmalar bo\'limi hali tayyor emas')">
-                            Barcha buyurtmalarni ko'rish ({{ orders.count }})
+                    
+                    {% if orders_count > 5 %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'orders:list' %}?customer={{ customer.pk }}" class="btn btn-outline-secondary">
+                            Barcha buyurtmalarni ko'rish ({{ orders_count }})
                         </a>
                     </div>
                     {% endif %}
                 {% else %}
-                    <p class="text-muted">Hali buyurtmalar yo'q</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-cart-x text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Hali buyurtmalar yo'q</h5>
+                        <p class="text-muted">Bu mijoz hali buyurtma bermagan</p>
+                        {% if user.is_manager or user.is_admin %}
+                        <a href="{% url 'orders:create' %}?customer={{ customer.pk }}" class="btn btn-primary">
+                            <i class="bi bi-plus me-1"></i>
+                            Birinchi buyurtma yaratish
+                        </a>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
         </div>
         
-        <!-- Eslatmalar -->
-        <div class="card mt-3">
+        <!-- Qo'shimcha telefon raqamlar -->
+        <div class="card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
-                    <i class="bi bi-sticky me-2"></i>
-                    Eslatmalar ({{ notes.count }})
+                    <i class="bi bi-telephone me-2"></i>
+                    Qo'shimcha telefon raqamlar
                 </h6>
-                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                {% if user.is_manager or user.is_admin %}
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPhoneModal">
                     <i class="bi bi-plus"></i>
                 </button>
+                {% endif %}
             </div>
             <div class="card-body">
-                {% if notes %}
-                    {% for note in notes|slice:":5" %}
-                    <div class="border-start border-3 border-{% if note.is_important %}warning{% else %}secondary{% endif %} ps-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <p class="mb-1">{{ note.note }}</p>
-                                <small class="text-muted">
-                                    {{ note.created_by.get_full_name }} - {{ note.created_at|date:"d.m.Y H:i" }}
-                                    {% if note.is_important %}
-                                        <span class="badge bg-warning ms-1">Muhim</span>
-                                    {% endif %}
-                                </small>
-                            </div>
+                {% if customer.phones.all %}
+                    {% for phone in customer.phones.all %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ phone.phone }}</strong>
+                            <span class="badge bg-secondary ms-2">{{ phone.get_phone_type_display }}</span>
+                            {% if phone.is_primary %}
+                            <span class="badge bg-warning ms-1">Asosiy</span>
+                            {% endif %}
+                            {% if phone.notes %}
+                            <br><small class="text-muted">{{ phone.notes }}</small>
+                            {% endif %}
                         </div>
+                        {% if user.is_manager or user.is_admin %}
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePhone({{ phone.pk }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p class="text-muted">Eslatmalar yo'q</p>
+                    <p class="text-muted mb-0">Qo'shimcha telefon raqamlar yo'q</p>
                 {% endif %}
             </div>
         </div>
@@ -292,12 +256,12 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="phoneNumber" class="form-label">Telefon raqam</label>
-                        <input type="text" class="form-control" id="phoneNumber" name="phone_number" 
+                        <input type="text" class="form-control" id="phoneNumber" name="phone" 
                                placeholder="+998901234567" required>
                     </div>
                     <div class="mb-3">
                         <label for="phoneType" class="form-label">Telefon turi</label>
-                        <select class="form-select" id="phoneType" name="phone_type" required>
+                        <select class="form-select" id="phoneType" name="phone_type">
                             <option value="mobile">Mobil</option>
                             <option value="home">Uy</option>
                             <option value="work">Ish</option>
@@ -306,12 +270,13 @@
                     </div>
                     <div class="mb-3">
                         <label for="phoneNotes" class="form-label">Izoh</label>
-                        <input type="text" class="form-control" id="phoneNotes" name="notes" placeholder="Qo'shimcha ma'lumot">
+                        <input type="text" class="form-control" id="phoneNotes" name="notes" 
+                               placeholder="Kimning telefoni...">
                     </div>
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="isPrimary" name="is_primary">
                         <label class="form-check-label" for="isPrimary">
-                            Asosiy telefon raqami
+                            Asosiy telefon raqam
                         </label>
                     </div>
                 </div>
@@ -324,38 +289,6 @@
     </div>
 </div>
 {% endif %}
-
-<!-- Eslatma qo'shish modali -->
-<div class="modal fade" id="addNoteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Eslatma qo'shish</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{% url 'customers:add_note' customer.pk %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="noteText" class="form-label">Eslatma matni</label>
-                        <textarea class="form-control" id="noteText" name="note" rows="4" 
-                                  placeholder="Eslatma yozing..." required></textarea>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="isImportant" name="is_important">
-                        <label class="form-check-label" for="isImportant">
-                            Muhim eslatma
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
 
@@ -391,7 +324,7 @@ document.getElementById('addPhoneForm')?.addEventListener('submit', function(e) 
 // Telefon o'chirish
 function deletePhone(phoneId) {
     if (confirm('Telefon raqamni o\'chirmoqchimisiz?')) {
-        fetch(`/customers/phone/${phoneId}/delete/`, {
+        fetch(`{% url 'customers:delete_phone' 0 %}`.replace('0', phoneId), {
             method: 'POST',
             headers: {
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value

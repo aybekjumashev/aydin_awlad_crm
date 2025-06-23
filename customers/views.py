@@ -86,7 +86,7 @@ def customer_detail(request, pk):
         
         context = {
             'customer': customer,
-            'orders': orders,
+            'recent_orders': orders,
             'additional_phones': additional_phones,
             'notes': notes,
             'stats': {
