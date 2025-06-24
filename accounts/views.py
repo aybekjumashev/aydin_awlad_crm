@@ -14,7 +14,7 @@ from .models import User
 from orders.models import Order
 from customers.models import Customer
 from payments.models import Payment
-
+from .technical_views import my_tasks
 
 @login_required
 def dashboard(request):
@@ -22,7 +22,7 @@ def dashboard(request):
     
     # Texnik xodim uchun maxsus dashboard
     if request.user.is_technical:
-        return technical_dashboard(request)
+        return my_tasks(request)
     
     # Admin va menejer uchun umumiy dashboard
     return manager_dashboard(request)

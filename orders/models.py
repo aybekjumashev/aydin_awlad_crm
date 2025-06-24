@@ -205,6 +205,20 @@ class Order(models.Model):
         }
         return status_weights.get(self.status, 0)
 
+    def update_payment_status(self):
+        """To'lov statusini yangilash"""
+        if self.total_amount > 0:
+            if self.paid_amount == 0:
+                self.payment_status = 'pending'
+            elif self.paid_amount < self.total_amount:
+                self.payment_status = 'partial'
+            elif self.paid_amount == self.total_amount:
+                self.payment_status = 'paid'
+            else:
+                self.payment_status = 'overpaid'
+        else:
+            self.payment_status = 'pending'
+
 
 class OrderItem(models.Model):
     """

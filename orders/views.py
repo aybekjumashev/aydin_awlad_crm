@@ -22,7 +22,8 @@ from .forms import (
 )
 from payments.models import Payment
 import json
-
+from decimal import Decimal
+import decimal
 
 @login_required
 def order_list(request):
@@ -213,30 +214,78 @@ def order_delete(request, pk):
     
     return render(request, 'orders/delete.html', context)
 
-
 @login_required
 def order_measurement(request, pk):
-    """O'lchov olish"""
+    """O'lchov olish va itemlarni saqlash - TUZATILGAN VERSIYA"""
     
     order = get_object_or_404(Order, pk=pk)
     
-    # Huquqlarni tekshirish
-    if not (getattr(request.user, 'can_measure', False) or 
-            getattr(request.user, 'is_manager', False) or 
-            getattr(request.user, 'is_admin', False)):
+    # Ruxsat tekshirish
+    if not (request.user.is_admin or request.user.is_manager or 
+            (hasattr(request.user, 'can_measure') and request.user.can_measure)):
         messages.error(request, 'O\'lchov olish huquqingiz yo\'q!')
         return redirect('orders:detail', pk=order.pk)
     
+    # Status tekshirish
+    if order.status not in ['measuring', 'processing']:
+        messages.error(request, 'Bu buyurtma uchun o\'lchov olish mumkin emas!')
+        return redirect('orders:detail', pk=order.pk)
+    
     if request.method == 'POST':
+        # O'lchov ma'lumotlarini saqlash
+        measurement_notes = request.POST.get('measurement_notes', '')
+        
+        # Formset ma'lumotlarini olish
         formset = MeasurementFormSet(request.POST, instance=order)
         
         if formset.is_valid():
-            formset.save()
+            # Eski itemlarni o'chirish
+            order.items.all().delete()
             
-            # O'lchov yakunlangan sanani belgilash
+            # Yangi itemlarni saqlash
+            instances = formset.save(commit=False)
+            total_amount = Decimal('0')
+            
+            for instance in instances:
+                if instance.width and instance.height and instance.blind_type:
+                    instance.order = order
+                    instance.save()
+                    total_amount += instance.total_price
+            
+            # Qo'shimcha itemlarni o'chirish (DELETE flag bilan)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            
+            # Avans to'lov qo'shish
+            advance_amount = request.POST.get('advance_payment')
+            if advance_amount:
+                try:
+                    advance_amount = Decimal(advance_amount)
+                    if advance_amount > 0:
+                        Payment.objects.create(
+                            order=order,
+                            amount=advance_amount,
+                            payment_method=request.POST.get('payment_method', 'cash'),
+                            payment_type='prepayment',
+                            payment_date=timezone.now(),
+                            received_by=request.user,
+                            notes='O\'lchov paytida qabul qilingan avans to\'lov',
+                            status='confirmed'
+                        )
+                        order.paid_amount = advance_amount
+                except (ValueError, TypeError, decimal.InvalidOperation):
+                    messages.warning(request, 'Avans to\'lov miqdorida xatolik!')
+            
+            # Buyurtmani yangilash
+            order.total_amount = total_amount
+            order.measurement_notes = measurement_notes
             order.measurement_completed_date = timezone.now()
+            
+            # Faqat measuring holatida bo'lsa keyingi bosqichga o'tkazish
             if order.status == 'measuring':
                 order.status = 'processing'
+                order.assigned_measurer = request.user
+            
             order.save()
             
             messages.success(
@@ -245,12 +294,18 @@ def order_measurement(request, pk):
                 'ishlab chiqarish bosqichiga o\'tkazildi'
             )
             return redirect('orders:detail', pk=order.pk)
+        else:
+            # Formset xatolarini ko'rsatish
+            messages.error(request, 'Ma\'lumotlarda xatoliklar mavjud. Qaytadan tekshiring.')
     else:
+        # GET so'rovi - formset yaratish
         formset = MeasurementFormSet(instance=order)
     
+    # Context tayyorlash
     context = {
         'order': order,
         'formset': formset,
+        'today': timezone.now().date(),
         'title': f'#{order.order_number} - O\'lchov olish'
     }
     

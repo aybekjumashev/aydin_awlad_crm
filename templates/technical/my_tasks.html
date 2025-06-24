@@ -9,12 +9,23 @@
         <i class="bi bi-list-task me-2"></i>
         Barcha vazifalar
     </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{% url 'technical:dashboard' %}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>
-                Dashboard
+        <!-- User info -->
+    <div class="user-info">
+        <div class="dropdown dropup">
+            <a class="dropdown-toggle d-flex align-items-center justify-content-center" href="#" id="userDropdown" role="button" 
+                data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle me-2 fs-5"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
+                </div>
             </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+                <li>
+                    <a class="dropdown-item" href="{% url 'logout' %}">
+                        <i class="bi bi-box-arrow-right me-2"></i>Chiqish
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </div>
@@ -95,56 +106,7 @@
                     Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
                 </p>
                 
-                <!-- Tayinlangan xodimlar ma'lumoti -->
-                <div class="mb-3">
-                    {% if order.status == 'measuring' %}
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-rulers text-info me-2"></i>
-                        <span class="small">O'lchov kerak</span>
-                        {% if order.assigned_measurer %}
-                        <span class="ms-auto badge bg-info">
-                            {{ order.assigned_measurer.get_full_name|default:order.assigned_measurer.username }}
-                        </span>
-                        {% else %}
-                        <span class="ms-auto badge bg-light text-dark">
-                            Tayinlanmagan
-                        </span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    
-                    {% if order.status == 'processing' %}
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-gear-fill text-warning me-2"></i>
-                        <span class="small">Ishlab chiqarish</span>
-                        {% if order.assigned_manufacturer %}
-                        <span class="ms-auto badge bg-warning">
-                            {{ order.assigned_manufacturer.get_full_name|default:order.assigned_manufacturer.username }}
-                        </span>
-                        {% else %}
-                        <span class="ms-auto badge bg-light text-dark">
-                            Tayinlanmagan
-                        </span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    
-                    {% if order.status == 'installing' %}
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-tools text-success me-2"></i>
-                        <span class="small">O'rnatish kerak</span>
-                        {% if order.assigned_installer %}
-                        <span class="ms-auto badge bg-success">
-                            {{ order.assigned_installer.get_full_name|default:order.assigned_installer.username }}
-                        </span>
-                        {% else %}
-                        <span class="ms-auto badge bg-light text-dark">
-                            Tayinlanmagan
-                        </span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
+
                 
                 <!-- To'lov ma'lumoti (o'rnatish uchun) -->
                 {% if order.status == 'installing' and order.total_amount > 0 %}
@@ -285,132 +247,12 @@
     </ul>
 </nav>
 {% endif %}
-
-<!-- Tezkor ma'lumot -->
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-                <h5 class="text-primary">Mening huquqlarim</h5>
-                <div class="mt-3">
-                    {% if user.can_measure %}
-                    <span class="badge bg-info me-2 mb-2">O'lchov olish</span>
-                    {% endif %}
-                    {% if user.can_manufacture %}
-                    <span class="badge bg-warning me-2 mb-2">Ishlab chiqarish</span>
-                    {% endif %}
-                    {% if user.can_install %}
-                    <span class="badge bg-success me-2 mb-2">O'rnatish</span>
-                    {% endif %}
-                    {% if user.can_create_order %}
-                    <span class="badge bg-primary me-2 mb-2">Buyurtma yaratish</span>
-                    {% endif %}
-                    {% if user.can_manage_payments %}
-                    <span class="badge bg-secondary me-2 mb-2">To'lovlar</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-                <h5 class="text-success">Bu oy natijam</h5>
-                <div class="mt-3">
-                    <h3 class="text-success">{{ completed_this_month|default:0 }}</h3>
-                    <p class="mb-0 text-muted">Yakunlangan vazifalar</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-                <h5 class="text-info">Tezkor havolalar</h5>
-                <div class="mt-3">
-                    {% if user.can_create_order %}
-                    <a href="{% url 'orders:create' %}" class="btn btn-outline-primary btn-sm mb-2 d-block">
-                        <i class="bi bi-plus-circle me-1"></i>
-                        Yangi buyurtma
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'orders:list' %}" class="btn btn-outline-secondary btn-sm mb-2 d-block">
-                        <i class="bi bi-list-ul me-1"></i>
-                        Barcha buyurtmalar
-                    </a>
-                    {% if user.can_manage_payments %}
-                    <a href="{% url 'payments:list' %}" class="btn btn-outline-success btn-sm mb-2 d-block">
-                        <i class="bi bi-cash-stack me-1"></i>
-                        To'lovlar
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Statistika qatori -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-bar-chart me-2"></i>
-                    Vazifalar statistikasi
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <div class="border-end">
-                            <h4 class="text-info mb-1">
-                                {% if user.can_measure %}
-                                    {{ orders.object_list|length|default:0 }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </h4>
-                            <small class="text-muted">O'lchov kerak</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border-end">
-                            <h4 class="text-warning mb-1">
-                                {% if user.can_manufacture %}
-                                    {{ orders.object_list|length|default:0 }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </h4>
-                            <small class="text-muted">Ishlab chiqarish</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border-end">
-                            <h4 class="text-success mb-1">
-                                {% if user.can_install %}
-                                    {{ orders.object_list|length|default:0 }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </h4>
-                            <small class="text-muted">O'rnatish</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <h4 class="text-primary mb-1">{{ completed_this_month|default:0 }}</h4>
-                        <small class="text-muted">Bu oy bajarildi</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
+a {
+    text-decoration: none;
+}
 .alert-sm {
     padding: 0.375rem 0.75rem;
     margin-bottom: 0.5rem;

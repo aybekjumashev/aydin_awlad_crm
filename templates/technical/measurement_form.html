@@ -70,7 +70,7 @@
 
         <!-- O'lchov formi -->
         <div class="col-md-8">
-            <form method="post" class="needs-validation" novalidate>
+            <form method="post" class="needs-validation" novalidate id="measurement-form">
                 {% csrf_token %}
                 
                 <div class="card mb-4">
@@ -90,7 +90,8 @@
                             Yangi jalyuzi qo'shish
                         </button>
                         
-                        <input type="hidden" id="item-count" name="item_count" value="1">
+                        <!-- ✅ TUZATILDI: item_count ni to'g'ri boshqarish -->
+                        <input type="hidden" id="item-count" name="item_count" value="0">
                     </div>
                 </div>
 
@@ -155,7 +156,8 @@
 
 <!-- JavaScript -->
 <script>
-let itemCount = 1;
+// ✅ TUZATILDI: 0 dan boshlash (backend bilan mos)
+let itemCount = 0;
 
 // Jalyuzi turlari
 const blindTypes = [
@@ -249,8 +251,9 @@ function createItemForm(index) {
 function addItem() {
     const container = document.getElementById('items-container');
     container.insertAdjacentHTML('beforeend', createItemForm(itemCount));
-    itemCount++;
+    itemCount++; // Index oshirish
     updateItemCount();
+    console.log('Item qo\'shildi. Hozirgi count:', itemCount); // Debug uchun
 }
 
 function removeItem(index) {
@@ -258,39 +261,82 @@ function removeItem(index) {
     if (item) {
         item.remove();
         updateItemNumbers();
+        console.log('Item o\'chirildi. Yangi count:', document.querySelectorAll('.item-form').length); // Debug uchun
     }
 }
 
+// ✅ TUZATILDI: item_count ni to'g'ri hisoblash
 function updateItemCount() {
-    document.getElementById('item-count').value = document.querySelectorAll('.item-form').length;
+    const actualCount = document.querySelectorAll('.item-form').length;
+    document.getElementById('item-count').value = actualCount;
+    console.log('Item count yangilandi:', actualCount); // Debug uchun
 }
 
+// ✅ TUZATILDI: raqamlarni qayta indekslash
 function updateItemNumbers() {
     const items = document.querySelectorAll('.item-form');
     items.forEach((item, index) => {
+        // Title yangilash
         const title = item.querySelector('h6');
         title.textContent = `Jalyuzi #${index + 1}`;
+        
+        // data-index yangilash
+        item.setAttribute('data-index', index);
+        
+        // Form field name'larini yangilash
+        const inputs = item.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name && name.includes('_')) {
+                const [prefix, oldIndex] = name.split('_');
+                input.setAttribute('name', `${prefix}_${index}`);
+            }
+        });
+        
+        // Remove button onclick yangilash
+        const removeBtn = item.querySelector('.remove-item');
+        if (removeBtn) {
+            removeBtn.setAttribute('onclick', `removeItem(${index})`);
+        }
     });
     updateItemCount();
 }
 
+// ✅ QOSHILDI: Form submit'da debug
+function debugFormData() {
+    const formData = new FormData(document.getElementById('measurement-form'));
+    console.log('Form submit qilinyapti:');
+    console.log('item_count:', formData.get('item_count'));
+    
+    // Barcha item ma'lumotlarini ko'rsatish
+    for (let i = 0; i < parseInt(formData.get('item_count')); i++) {
+        console.log(`Item ${i}:`, {
+            width: formData.get(`width_${i}`),
+            height: formData.get(`height_${i}`),
+            blind_type: formData.get(`blind_type_${i}`),
+            unit_price: formData.get(`unit_price_${i}`)
+        });
+    }
+}
+
 // Sahifa yuklanganda birinchi item qo'shish
 document.addEventListener('DOMContentLoaded', function() {
+    // Dastlab bitta item qo'shish
     addItem();
     
     // Add item tugmasi
     document.getElementById('add-item').addEventListener('click', addItem);
     
-    // Form validation
-    const forms = document.querySelectorAll('.needs-validation');
-    Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        });
+    // ✅ QOSHILDI: Form submit'da debug
+    document.getElementById('measurement-form').addEventListener('submit', function(e) {
+        debugFormData();
+        
+        // Validation
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        this.classList.add('was-validated');
     });
 });
 </script>
@@ -298,6 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 .item-form {
     background-color: #f8f9fa;
+    transition: background-color 0.2s;
 }
 .item-form:hover {
     background-color: #e9ecef;
@@ -305,6 +352,12 @@ document.addEventListener('DOMContentLoaded', function() {
 .form-label {
     font-weight: 600;
     color: #495057;
+}
+.remove-item {
+    opacity: 0.7;
+}
+.remove-item:hover {
+    opacity: 1;
 }
 </style>
 {% endblock %}

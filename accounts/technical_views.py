@@ -1,4 +1,4 @@
-# accounts/technical_views.py - PAYMENT XATOLIGI TUZATILGAN
+# accounts/technical_views.py - TUZATILGAN VERSIYA
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -10,6 +10,164 @@ from django.core.paginator import Paginator
 from orders.models import Order, OrderItem
 from payments.models import Payment
 from decimal import Decimal
+import logging
+
+# Debug uchun logger
+logger = logging.getLogger(__name__)
+
+@login_required
+def measurement_form(request, order_id):
+    """O'lchov olish formi - TUZATILGAN VERSIYA"""
+    if not request.user.is_technical or not request.user.can_measure:
+        messages.error(request, "Sizda o'lchov olish huquqi yo'q.")
+        return redirect('dashboard')
+    
+    # Faqat status tekshirish
+    order = get_object_or_404(Order, id=order_id, status='measuring')
+    
+    if request.method == 'POST':
+        try:
+            # ✅ DEBUG: POST ma'lumotlarini tekshirish
+            logger.info(f"POST ma'lumotlari: {request.POST}")
+            
+            # O'lchov ma'lumotlarini saqlash
+            measurement_notes = request.POST.get('measurement_notes', '')
+            
+            # ✅ TUZATILDI: item_count ni to'g'ri olish
+            item_count_str = request.POST.get('item_count', '0')
+            print(item_count_str)
+            try:
+                item_count = int(item_count_str)
+                logger.info(f"Item count: {item_count}")
+            except ValueError:
+                logger.error(f"Noto'g'ri item_count: {item_count_str}")
+                messages.error(request, "Jalyuzlar soni noto'g'ri kiritilgan.")
+                return render(request, 'technical/measurement_form.html', {'order': order})
+            
+            if item_count <= 0:
+                messages.error(request, "Kamida bitta jalyuzi qo'shishingiz kerak.")
+                return render(request, 'technical/measurement_form.html', {'order': order})
+            
+            # Mavjud itemlarni tozalash (agar qayta o'lchansa)
+            deleted_count = order.items.all().delete()[0]
+            logger.info(f"O'chirilgan itemlar soni: {deleted_count}")
+            
+            total_amount = Decimal('0')
+            created_items = []
+            
+            # ✅ TUZATILDI: 0 dan item_count gacha
+            for i in range(item_count):
+                # Har bir item uchun ma'lumotlar
+                width = request.POST.get(f'width_{i}')
+                height = request.POST.get(f'height_{i}')
+                blind_type = request.POST.get(f'blind_type_{i}')
+                material_type = request.POST.get(f'material_type_{i}')
+                installation_type = request.POST.get(f'installation_type_{i}')
+                mechanism_type = request.POST.get(f'mechanism_type_{i}')
+                cornice_type = request.POST.get(f'cornice_type_{i}')
+                unit_price = request.POST.get(f'unit_price_{i}')
+                quantity = request.POST.get(f'quantity_{i}', 1)
+                notes = request.POST.get(f'notes_{i}', '')
+                
+                # ✅ DEBUG: har bir item ma'lumotlarini tekshirish
+                logger.info(f"Item {i}: width={width}, height={height}, blind_type={blind_type}, unit_price={unit_price}")
+                
+                # ✅ TUZATILDI: majburiy fieldlarni tekshirish
+                if not width or not height or not blind_type or not unit_price:
+                    logger.warning(f"Item {i} da majburiy ma'lumotlar to'ldirilmagan")
+                    continue  # Bu itemni o'tkazib yuborish
+                
+                try:
+                    # Ma'lumotlarni konvertatsiya qilish
+                    width_int = int(width)
+                    height_int = int(height)
+                    unit_price_decimal = Decimal(str(unit_price))
+                    quantity_int = int(quantity) if quantity else 1
+                    
+                    # ✅ VALIDATSIYA: o'lchamlar mantiqiy bo'lishi kerak
+                    if width_int <= 0 or height_int <= 0:
+                        logger.warning(f"Item {i} da noto'g'ri o'lchamlar: {width_int}x{height_int}")
+                        continue
+                    
+                    if unit_price_decimal < 0:
+                        logger.warning(f"Item {i} da manfiy narx: {unit_price_decimal}")
+                        continue
+                    
+                    # OrderItem yaratish
+                    item = OrderItem.objects.create(
+                        order=order,
+                        blind_type=blind_type,
+                        width=width_int,
+                        height=height_int,
+                        material=material_type or '',
+                        installation_type=installation_type or '',
+                        mechanism=mechanism_type or '',
+                        cornice_type=cornice_type or '',
+                        unit_price=unit_price_decimal,
+                        quantity=quantity_int,
+                        notes=notes
+                    )
+                    
+                    created_items.append(item)
+                    total_amount += item.total_price
+                    logger.info(f"Item {i} muvaffaqiyatli yaratildi: {item.id}")
+                    
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Item {i} yaratishda xatolik: {str(e)}")
+                    continue
+            
+            # ✅ TEKSHIRISH: kamida bitta item yaratilganmi
+            if not created_items:
+                messages.error(request, "Hech qanday jalyuzi yaratilmadi. Ma'lumotlarni to'g'ri to'ldiring.")
+                return render(request, 'technical/measurement_form.html', {'order': order})
+            
+            logger.info(f"Jami {len(created_items)} ta item yaratildi. Umumiy summa: {total_amount}")
+            
+            # ✅ AVANS TO'LOV: payment_date bilan
+            advance_payment = request.POST.get('advance_payment')
+            if advance_payment and float(advance_payment) > 0:
+                try:
+                    payment = Payment.objects.create(
+                        order=order,
+                        amount=Decimal(advance_payment),
+                        payment_method=request.POST.get('payment_method', 'cash'),
+                        payment_type='prepayment',
+                        payment_date=timezone.now(),
+                        received_by=request.user,
+                        notes='O\'lchov paytida qabul qilingan avans to\'lov',
+                        status='confirmed'
+                    )
+                    order.paid_amount = Decimal(advance_payment)
+                    logger.info(f"Avans to'lov yaratildi: {payment.id} - {advance_payment} so'm")
+                except Exception as e:
+                    logger.error(f"Avans to'lov yaratishda xatolik: {str(e)}")
+                    messages.warning(request, "Avans to'lov saqlanmadi, lekin o'lchov yakunlandi.")
+            
+            # Buyurtmani yangilash
+            order.total_amount = total_amount
+            order.measurement_notes = measurement_notes
+            order.status = 'processing'
+            order.measurement_completed_date = timezone.now()
+            order.assigned_measurer = request.user
+            order.save()
+            
+            logger.info(f"Buyurtma {order.id} muvaffaqiyatli yangilandi")
+            
+            messages.success(request, f"O'lchov ma'lumotlari muvaffaqiyatli saqlandi! {len(created_items)} ta jalyuzi qo'shildi va buyurtma ishlab chiqarishga yuborildi.")
+            return redirect('technical:my_tasks')
+            
+        except Exception as e:
+            logger.error(f"Measurement form da umumiy xatolik: {str(e)}")
+            messages.error(request, f"Xatolik yuz berdi: {str(e)}")
+    
+    context = {
+        'order': order,
+        'page_title': 'O\'lchov olish',
+    }
+    
+    return render(request, 'technical/measurement_form.html', context)
+
+# Qolgan funksiyalar o'zgarmasdan qoladi...
 
 @login_required
 def technical_dashboard(request):
@@ -108,96 +266,6 @@ def my_tasks(request):
     return render(request, 'technical/my_tasks.html', context)
 
 @login_required
-def measurement_form(request, order_id):
-    """O'lchov olish formi - PAYMENT XATOLIGI TUZATILGAN"""
-    if not request.user.is_technical or not request.user.can_measure:
-        messages.error(request, "Sizda o'lchov olish huquqi yo'q.")
-        return redirect('dashboard')
-    
-    # Faqat status tekshirish
-    order = get_object_or_404(Order, id=order_id, status='measuring')
-    
-    if request.method == 'POST':
-        try:
-            # O'lchov ma'lumotlarini saqlash
-            measurement_notes = request.POST.get('measurement_notes', '')
-            
-            # OrderItem'larni yaratish yoki yangilash
-            item_count = int(request.POST.get('item_count', 1))
-            
-            # Mavjud itemlarni tozalash (agar qayta o'lchansa)
-            order.items.all().delete()
-            
-            total_amount = Decimal('0')
-            
-            for i in range(item_count):
-                # Har bir item uchun ma'lumotlar
-                width = request.POST.get(f'width_{i}')
-                height = request.POST.get(f'height_{i}')
-                blind_type = request.POST.get(f'blind_type_{i}')
-                material_type = request.POST.get(f'material_type_{i}')
-                installation_type = request.POST.get(f'installation_type_{i}')
-                mechanism_type = request.POST.get(f'mechanism_type_{i}')
-                cornice_type = request.POST.get(f'cornice_type_{i}')
-                unit_price = request.POST.get(f'unit_price_{i}')
-                quantity = request.POST.get(f'quantity_{i}', 1)
-                
-                if width and height and blind_type and unit_price:
-                    item = OrderItem.objects.create(
-                        order=order,
-                        blind_type=blind_type,
-                        width=int(width),
-                        height=int(height),
-                        material_type=material_type or '',
-                        installation_type=installation_type or '',
-                        mechanism_type=mechanism_type or '',
-                        cornice_type=cornice_type or '',
-                        unit_price=Decimal(unit_price),
-                        quantity=int(quantity),
-                        notes=request.POST.get(f'notes_{i}', '')
-                    )
-                    
-                    total_amount += item.total_price
-            
-            # ✅ TUZATILDI: Avans to'lovni qo'shish (payment_date bilan)
-            advance_payment = request.POST.get('advance_payment')
-            if advance_payment and float(advance_payment) > 0:
-                Payment.objects.create(
-                    order=order,
-                    amount=Decimal(advance_payment),
-                    payment_method=request.POST.get('payment_method', 'cash'),
-                    payment_type='prepayment',
-                    payment_date=timezone.now(),  # ✅ QOSHILDI: payment_date
-                    received_by=request.user,
-                    notes='O\'lchov paytida qabul qilingan avans to\'lov',
-                    status='confirmed'
-                )
-                order.paid_amount = Decimal(advance_payment)
-            
-            # Buyurtmani yangilash
-            order.total_amount = total_amount
-            order.measurement_notes = measurement_notes
-            order.status = 'processing'
-            order.measurement_completed_date = timezone.now()
-            order.assigned_measurer = request.user
-            order.save()
-            
-            messages.success(request, "O'lchov ma'lumotlari muvaffaqiyatli saqlandi va buyurtma ishlab chiqarishga yuborildi.")
-            return redirect('technical:my_tasks')
-            
-        except (ValueError, TypeError) as e:
-            messages.error(request, f"Ma'lumotlarda xatolik: {str(e)}")
-        except Exception as e:
-            messages.error(request, f"Xatolik yuz berdi: {str(e)}")
-    
-    context = {
-        'order': order,
-        'page_title': 'O\'lchov olish',
-    }
-    
-    return render(request, 'technical/measurement_form.html', context)
-
-@login_required
 def manufacturing_task(request, order_id):
     """Ishlab chiqarish vazifasi"""
     if not request.user.is_technical or not request.user.can_manufacture:
@@ -234,7 +302,7 @@ def manufacturing_task(request, order_id):
 
 @login_required
 def installation_task(request, order_id):
-    """O'rnatish vazifasi - PAYMENT XATOLIGI TUZATILGAN"""
+    """O'rnatish vazifasi - TUZATILGAN VERSIYA"""
     if not request.user.is_technical or not request.user.can_install:
         messages.error(request, "Sizda o'rnatish huquqi yo'q.")
         return redirect('dashboard')
@@ -250,17 +318,22 @@ def installation_task(request, order_id):
             # ✅ TUZATILDI: Qolgan to'lovni qo'shish (payment_date bilan)
             remaining_payment = request.POST.get('remaining_payment')
             if remaining_payment and float(remaining_payment) > 0:
-                Payment.objects.create(
-                    order=order,
-                    amount=Decimal(remaining_payment),
-                    payment_method=request.POST.get('payment_method', 'cash'),
-                    payment_type='final',
-                    payment_date=timezone.now(),  # ✅ QOSHILDI: payment_date
-                    received_by=request.user,
-                    notes='O\'rnatish paytida qabul qilingan to\'lov',
-                    status='confirmed'
-                )
-                order.paid_amount += Decimal(remaining_payment)
+                try:
+                    payment = Payment.objects.create(
+                        order=order,
+                        amount=Decimal(remaining_payment),
+                        payment_method=request.POST.get('payment_method', 'cash'),
+                        payment_type='final',
+                        payment_date=timezone.now(),
+                        received_by=request.user,
+                        notes='O\'rnatish paytida qabul qilingan to\'lov',
+                        status='confirmed'
+                    )
+                    order.paid_amount += Decimal(remaining_payment)
+                    logger.info(f"Qolgan to'lov yaratildi: {payment.id} - {remaining_payment} so'm")
+                except Exception as e:
+                    logger.error(f"Qolgan to'lov yaratishda xatolik: {str(e)}")
+                    messages.warning(request, "To'lov saqlanmadi, lekin o'rnatish yakunlandi.")
             
             # Buyurtmani yakunlash
             order.status = 'installed'
@@ -274,12 +347,16 @@ def installation_task(request, order_id):
             
             order.save()
             
+            logger.info(f"Buyurtma {order.id} muvaffaqiyatli o'rnatildi")
+            
             messages.success(request, "Buyurtma muvaffaqiyatli o'rnatildi va yakunlandi.")
             return redirect('technical:my_tasks')
             
         except (ValueError, TypeError) as e:
+            logger.error(f"Installation form da xatolik: {str(e)}")
             messages.error(request, f"Ma'lumotlarda xatolik: {str(e)}")
         except Exception as e:
+            logger.error(f"Installation form da umumiy xatolik: {str(e)}")
             messages.error(request, f"Xatolik yuz berdi: {str(e)}")
     
     # Qolgan summa hisoblash
