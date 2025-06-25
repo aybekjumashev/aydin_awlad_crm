@@ -7,9 +7,9 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-list-task me-2"></i>
-        Barcha vazifalar
+        Mening vazifalarim
     </h1>
-        <!-- User info -->
+    <!-- User info -->
     <div class="user-info">
         <div class="dropdown dropup">
             <a class="dropdown-toggle d-flex align-items-center justify-content-center" href="#" id="userDropdown" role="button" 
@@ -31,248 +31,202 @@
 </div>
 
 
-
-<!-- Filtrlash -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Vazifa holati</label>
-                <select name="status" class="form-select">
-                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Faol vazifalar</option>
-                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Yakunlangan</option>
-                    <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>Kechikkan</option>
-                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Barchasi</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Vazifa turi</label>
-                <select name="task_type" class="form-select">
-                    <option value="all" {% if task_type == 'all' %}selected{% endif %}>Barcha vazifalar</option>
-                    {% if user.can_measure %}
-                    <option value="measure" {% if task_type == 'measure' %}selected{% endif %}>O'lchov olish</option>
-                    {% endif %}
-                    {% if user.can_manufacture %}
-                    <option value="manufacture" {% if task_type == 'manufacture' %}selected{% endif %}>Ishlab chiqarish</option>
-                    {% endif %}
-                    {% if user.can_install %}
-                    <option value="install" {% if task_type == 'install' %}selected{% endif %}>O'rnatish</option>
-                    {% endif %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">&nbsp;</label>
-                <div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-funnel me-1"></i>
-                        Filtrlash
-                    </button>
-                    <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Tozalash
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Vazifalar ro'yxati -->
-<div class="row">
-    {% for order in orders %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 {% if order.measurement_date and order.measurement_date < current_time or order.installation_date and order.installation_date < current_time %}border-danger{% endif %}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
-                        #{{ order.order_number }}
-                    </a>
-                </h6>
-                <span class="badge bg-{% if order.status == 'measuring' %}info{% elif order.status == 'processing' %}warning{% elif order.status == 'installing' %}primary{% elif order.status == 'installed' %}success{% else %}secondary{% endif %}">
-                    {{ order.get_status_display }}
-                </span>
-            </div>
-            <div class="card-body">
-                <h6 class="card-title">
-                    <i class="bi bi-person me-2"></i>
-                    {{ order.customer.get_full_name }}
-                </h6>
-                <p class="card-text text-muted small mb-2">
-                    <i class="bi bi-geo-alt me-1"></i>
-                    {{ order.address|truncatechars:50 }}
-                </p>
-                <p class="card-text text-muted small mb-3">
-                    <i class="bi bi-calendar me-1"></i>
-                    Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
-                </p>
-                
-
-                
-                <!-- To'lov ma'lumoti (o'rnatish uchun) -->
-                {% if order.status == 'installing' and order.total_amount > 0 %}
-                <div class="mb-2">
-                    {% with remaining=order.total_amount|sub:order.paid_amount %}
-                        {% if remaining > 0 %}
-                            <small class="text-danger">
-                                <i class="bi bi-cash me-1"></i>
-                                Qolgan: {{ remaining|floatformat:0 }} so'm
-                            </small>
-                        {% else %}
-                            <small class="text-success">
-                                <i class="bi bi-check-circle me-1"></i>
-                                To'liq to'langan
-                            </small>
-                        {% endif %}
-                    {% endwith %}
-                </div>
-                {% endif %}
-
-                <!-- Kechikkan vazifalar uchun ogohlantirish -->
-                {% if order.measurement_date and order.measurement_date < current_time and order.status == 'measuring' %}
-                <div class="alert alert-danger alert-sm py-2">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
-                    <small>O'lchov muddati o'tgan!</small>
-                </div>
-                {% elif order.installation_date and order.installation_date < current_time and order.status == 'installing' %}
-                <div class="alert alert-danger alert-sm py-2">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
-                    <small>O'rnatish muddati o'tgan!</small>
-                </div>
-                {% endif %}
-            </div>
+<!-- Vazifa turlari bo'yicha tablar -->
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="tasksTab" role="tablist">
+            <!-- Barcha vazifalar tab -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tasks" 
+                        type="button" role="tab" aria-controls="all-tasks" aria-selected="true">
+                    <i class="bi bi-list-ul me-2"></i>
+                    Barchasi <span class="badge bg-secondary ms-1">{{ total_tasks|default:0 }}</span>
+                </button>
+            </li>
             
-            <div class="card-footer">
-                <div class="d-flex gap-2">
-                    <!-- O'lchov tugmasi (huquqi bor va status measuring bo'lsa) -->
-                    {% if user.can_measure and order.status == 'measuring' %}
-                    <a href="{% url 'technical:measurement' order.pk %}" 
-                       class="btn btn-info btn-sm flex-fill">
-                        <i class="bi bi-rulers me-1"></i>
-                        O'lchov olish
-                    </a>
-                    {% endif %}
-                    
-                    <!-- Ishlab chiqarish tugmasi (huquqi bor va status processing bo'lsa) -->
-                    {% if user.can_manufacture and order.status == 'processing' %}
-                    <a href="{% url 'technical:manufacturing' order.pk %}" 
-                       class="btn btn-warning btn-sm flex-fill">
-                        <i class="bi bi-gear-fill me-1"></i>
-                        Ishlab chiqarish
-                    </a>
-                    {% endif %}
-                    
-                    <!-- O'rnatish tugmasi (huquqi bor va status installing bo'lsa) -->
-                    {% if user.can_install and order.status == 'installing' %}
-                    <a href="{% url 'technical:installation' order.pk %}" 
-                       class="btn btn-success btn-sm flex-fill">
-                        <i class="bi bi-tools me-1"></i>
-                        O'rnatish
-                    </a>
-                    {% endif %}
-                    
-                    <!-- Agar hech qanday tugma ko'rsatilmasa, faqat ko'rish -->
-                    {% if not user.can_measure or order.status != 'measuring' %}
-                        {% if not user.can_manufacture or order.status != 'processing' %}
-                            {% if not user.can_install or order.status != 'installing' %}
-                                {% if order.status != 'installed' %}
-                                <span class="btn btn-outline-secondary btn-sm flex-fill disabled">
-                                    <i class="bi bi-eye me-1"></i>
-                                    Faqat ko'rish
-                                </span>
-                                {% endif %}
-                            {% endif %}
-                        {% endif %}
-                    {% endif %}
-                    
-                    <!-- Buyurtma tafsilotlari -->
-                    <a href="{% url 'orders:detail' order.pk %}" 
-                       class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="text-center py-5">
-            <i class="bi bi-list-task" style="font-size: 4rem; opacity: 0.3;"></i>
-            <h4 class="mt-3 text-muted">Vazifalar topilmadi</h4>
-            {% if status_filter == 'active' %}
-            <p class="text-muted">Hozirda faol vazifa yo'q.</p>
-            {% elif status_filter == 'completed' %}
-            <p class="text-muted">Yakunlangan vazifalar yo'q.</p>
-            {% elif status_filter == 'overdue' %}
-            <p class="text-muted">Kechikkan vazifalar yo'q - bu yaxshi!</p>
-            {% else %}
-            <p class="text-muted">Filtr shartlariga mos vazifalar topilmadi.</p>
+            <!-- O'lchov olish tab -->
+            {% if user.can_measure %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="measure-tab" data-bs-toggle="tab" data-bs-target="#measure-tasks" 
+                        type="button" role="tab" aria-controls="measure-tasks" aria-selected="false">
+                    <i class="bi bi-rulers me-2"></i>
+                    O'lchov <span class="badge bg-info ms-1">{{ measuring_count|default:0 }}</span>
+                </button>
+            </li>
             {% endif %}
             
-            <!-- Debug ma'lumoti -->
-            <div class="mt-4">
-                <small class="text-muted">
-                    Debug: Jami {{ orders.paginator.count|default:0 }} ta buyurtma mavjud
-                </small>
+            <!-- Ishlab chiqarish tab -->
+            {% if user.can_manufacture %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="manufacture-tab" data-bs-toggle="tab" data-bs-target="#manufacture-tasks" 
+                        type="button" role="tab" aria-controls="manufacture-tasks" aria-selected="false">
+                    <i class="bi bi-gear-fill me-2"></i>
+                    Ishlab chiqarish <span class="badge bg-warning ms-1">{{ manufacturing_count|default:0 }}</span>
+                </button>
+            </li>
+            {% endif %}
+            
+            <!-- O'rnatish tab -->
+            {% if user.can_install %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="install-tab" data-bs-toggle="tab" data-bs-target="#install-tasks" 
+                        type="button" role="tab" aria-controls="install-tasks" aria-selected="false">
+                    <i class="bi bi-tools me-2"></i>
+                    O'rnatish <span class="badge bg-success ms-1">{{ installing_count|default:0 }}</span>
+                </button>
+            </li>
+            {% endif %}
+            
+        </ul>
+    </div>
+    
+    <div class="card-body">
+        <div class="tab-content" id="tasksTabContent">
+            <!-- Barcha vazifalar -->
+            <div class="tab-pane fade show active" id="all-tasks" role="tabpanel" aria-labelledby="all-tab">
+                <div class="row">
+                    {% for order in all_orders %}
+                    {% include 'technical/task_card.html' with order=order task_type='all' %}
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-list-task" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3 text-muted">Hozirda vazifa yo'q</h5>
+                        <p class="text-muted">Sizga yangi vazifa tayinlanganida bu yerda ko'rinadi.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- O'lchov vazifalari -->
+            {% if user.can_measure %}
+            <div class="tab-pane fade" id="measure-tasks" role="tabpanel" aria-labelledby="measure-tab">
+                <div class="row">
+                    {% for order in measuring_orders %}
+                    {% include 'technical/task_card.html' with order=order task_type='measure' %}
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-rulers" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3 text-muted">O'lchov vazifalari yo'q</h5>
+                        <p class="text-muted">Barcha o'lchov ishlari bajarilgan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Ishlab chiqarish vazifalari -->
+            {% if user.can_manufacture %}
+            <div class="tab-pane fade" id="manufacture-tasks" role="tabpanel" aria-labelledby="manufacture-tab">
+                <div class="row">
+                    {% for order in manufacturing_orders %}
+                    {% include 'technical/task_card.html' with order=order task_type='manufacture' %}
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-gear-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3 text-muted">Ishlab chiqarish vazifalari yo'q</h5>
+                        <p class="text-muted">Barcha ishlab chiqarish ishlari bajarilgan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- O'rnatish vazifalari -->
+            {% if user.can_install %}
+            <div class="tab-pane fade" id="install-tasks" role="tabpanel" aria-labelledby="install-tab">
+                <div class="row">
+                    {% for order in installing_orders %}
+                    {% include 'technical/task_card.html' with order=order task_type='install' %}
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-tools" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3 text-muted">O'rnatish vazifalari yo'q</h5>
+                        <p class="text-muted">Barcha o'rnatish ishlari bajarilgan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Yakunlangan vazifalar -->
+            <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tab">
+                <div class="row">
+                    {% for order in completed_orders %}
+                    {% include 'technical/task_card.html' with order=order task_type='completed' %}
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h5 class="mt-3 text-muted">Yakunlangan vazifalar yo'q</h5>
+                        <p class="text-muted">Hali hech qanday vazifa yakunlanmagan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
-    {% endfor %}
 </div>
 
-<!-- Sahifalash -->
-{% if orders.has_other_pages %}
-<nav aria-label="Vazifalar sahifalash">
-    <ul class="pagination justify-content-center">
-        {% if orders.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Birinchi</a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="?page={{ orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Oldingi</a>
-        </li>
-        {% endif %}
-        
-        <li class="page-item active">
-            <span class="page-link">{{ orders.number }} / {{ orders.paginator.num_pages }}</span>
-        </li>
-        
-        {% if orders.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Keyingi</a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if task_type %}&task_type={{ task_type }}{% endif %}">Oxirgi</a>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
-{% endif %}
-</div>
+<!-- Task card template (include qilinadi) -->
+<script type="text/template" id="task-card-template">
+    <!-- Bu qism alohida task_card.html faylida bo'ladi -->
+</script>
 
 <style>
-a {
-    text-decoration: none;
+.nav-tabs .nav-link {
+    border-bottom: 2px solid transparent;
 }
-.alert-sm {
-    padding: 0.375rem 0.75rem;
-    margin-bottom: 0.5rem;
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: var(--bs-primary);
+    font-weight: 600;
 }
+
 .card {
-    transition: transform 0.2s;
+    transition: transform 0.2s ease-in-out;
 }
+
 .card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-.border-end {
-    border-right: 1px solid #dee2e6;
+
+.badge {
+    font-size: 0.75rem;
 }
-@media (max-width: 767px) {
-    .border-end {
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
+
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-item {
+        margin-bottom: 0.5rem;
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab-lar uchun Bootstrap JavaScript
+    var triggerTabList = [].slice.call(document.querySelectorAll('#tasksTab button'))
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+    
+    // URL hash bo'yicha tab ochish
+    var hash = window.location.hash;
+    if (hash) {
+        var tabEl = document.querySelector('#tasksTab button[data-bs-target="' + hash + '"]');
+        if (tabEl) {
+            var tab = new bootstrap.Tab(tabEl);
+            tab.show();
+        }
+    }
+});
+</script>
 {% endblock %}

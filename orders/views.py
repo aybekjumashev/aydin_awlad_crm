@@ -133,17 +133,7 @@ def order_detail(request, pk):
     """Buyurtma tafsilotlari"""
     
     order = get_object_or_404(Order, pk=pk)
-    
-    # Texnik xodim faqat o'ziga tayinlangan buyurtmalarni ko'ra oladi
-    if (hasattr(request.user, 'is_technical') and 
-        request.user.is_technical and 
-        not getattr(request.user, 'can_view_all_orders', False)):
-        
-        if not (order.assigned_measurer == request.user or 
-                order.assigned_manufacturer == request.user or 
-                order.assigned_installer == request.user):
-            messages.error(request, 'Bu buyurtmani ko\'rish huquqingiz yo\'q!')
-            return redirect('orders:list')
+
     
     # Buyurtma elementlari
     items = order.items.all()

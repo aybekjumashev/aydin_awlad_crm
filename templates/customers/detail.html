@@ -61,47 +61,39 @@
                 </div>
                 {% endif %}
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Kategoriya:</label>
-                    <div>
-                        <span class="badge bg-{{ customer.category|default:'secondary' }}">
-                            {{ customer.get_category_display }}
-                        </span>
-                    </div>
-                </div>
-
                 <div class="mb-0">
                     <label class="form-label fw-bold">Qo'shilgan sana:</label>
                     <div>{{ customer.created_at|date:"d.m.Y H:i" }}</div>
                 </div>
             </div>
         </div>
-
-        <!-- Statistika -->
-        <div class="card">
-            <div class="card-header">
+                <!-- Qo'shimcha telefon raqamlar -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
-                    <i class="bi bi-graph-up me-2"></i>
-                    Statistika
+                    <i class="bi bi-telephone me-2"></i>
+                    Qo'shimcha telefon raqamlar
                 </h6>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="fw-bold text-primary">{{ orders_count }}</div>
-                        <small class="text-muted">Buyurtmalar</small>
+                {% if customer.additional_phones.all %}
+                    {% for phone in customer.additional_phones.all %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ phone.phone_number }}</strong>
+                            <span class="badge bg-secondary ms-2">{{ phone.get_phone_type_display }}</span>
+                            {% if phone.notes %}
+                            <br><small class="text-muted">{{ phone.notes }}</small>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="col-4">
-                        <div class="fw-bold text-success">{{ total_spent|floatformat:0|default:"0" }}</div>
-                        <small class="text-muted">Sarflangan</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="fw-bold text-info">5</div>
-                        <small class="text-muted">Telefon</small>
-                    </div>
-                </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">Qo'shimcha telefon raqamlar yo'q</p>
+                {% endif %}
             </div>
         </div>
+
     </div>
     
     <!-- Buyurtmalar va eslatmalar -->
@@ -200,45 +192,7 @@
             </div>
         </div>
         
-        <!-- Qo'shimcha telefon raqamlar -->
-        <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                    <i class="bi bi-telephone me-2"></i>
-                    Qo'shimcha telefon raqamlar
-                </h6>
-                {% if user.is_manager or user.is_admin %}
-                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPhoneModal">
-                    <i class="bi bi-plus"></i>
-                </button>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                {% if customer.phones.all %}
-                    {% for phone in customer.phones.all %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <strong>{{ phone.phone }}</strong>
-                            <span class="badge bg-secondary ms-2">{{ phone.get_phone_type_display }}</span>
-                            {% if phone.is_primary %}
-                            <span class="badge bg-warning ms-1">Asosiy</span>
-                            {% endif %}
-                            {% if phone.notes %}
-                            <br><small class="text-muted">{{ phone.notes }}</small>
-                            {% endif %}
-                        </div>
-                        {% if user.is_manager or user.is_admin %}
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePhone({{ phone.pk }})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted mb-0">Qo'shimcha telefon raqamlar yo'q</p>
-                {% endif %}
-            </div>
-        </div>
+
     </div>
 </div>
 

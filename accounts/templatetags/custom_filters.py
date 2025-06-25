@@ -28,3 +28,8 @@ def percentage(value, arg):
         return (float(value) / float(arg)) * 100 if float(arg) != 0 else 0
     except (ValueError, TypeError):
         return 0
+
+
+@register.filter
+def split(value, delimiter=','):
+    return value.split(delimiter)

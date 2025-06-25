@@ -257,6 +257,7 @@ def add_customer_phone(request, customer_pk):
         if request.method == 'POST':
             form = CustomerPhoneForm(request.POST)
             if form.is_valid():
+                print('aaaaa')
                 phone = form.save(commit=False)
                 phone.customer = customer
                 phone.save()
@@ -276,6 +277,7 @@ def add_customer_phone(request, customer_pk):
         
         return JsonResponse({'success': False, 'error': 'POST so\'rov kerak'})
     except Exception as e:
+        print('bbb')
         return JsonResponse({'success': False, 'error': str(e)})
 
 

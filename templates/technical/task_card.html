@@ -1,0 +1,236 @@
+<!-- technical/task_card.html -->
+{% load custom_filters %}
+
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card h-100 
+        {% if order.measurement_date and order.measurement_date < current_time or order.installation_date and order.installation_date < current_time %}
+            border-danger
+        {% elif task_type == 'measure' %}
+            border-info
+        {% elif task_type == 'manufacture' %}
+            border-warning
+        {% elif task_type == 'install' %}
+            border-success
+        {% elif task_type == 'completed' %}
+            border-secondary
+        {% endif %}">
+        
+        <!-- Card header -->
+        <div class="card-header d-flex justify-content-between align-items-center
+            {% if task_type == 'measure' %}
+                bg-info-subtle
+            {% elif task_type == 'manufacture' %}
+                bg-warning-subtle
+            {% elif task_type == 'install' %}
+                bg-success-subtle
+            {% elif task_type == 'completed' %}
+                bg-secondary-subtle
+            {% endif %}">
+            <h6 class="mb-0">
+                <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none">
+                    #{{ order.order_number }}
+                </a>
+            </h6>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Vazifa turi belgisi -->
+                {% if task_type == 'measure' %}
+                    <i class="bi bi-rulers text-info" title="O'lchov olish"></i>
+                {% elif task_type == 'manufacture' %}
+                    <i class="bi bi-gear-fill text-warning" title="Ishlab chiqarish"></i>
+                {% elif task_type == 'install' %}
+                    <i class="bi bi-tools text-success" title="O'rnatish"></i>
+                {% elif task_type == 'completed' %}
+                    <i class="bi bi-check-circle text-success" title="Yakunlangan"></i>
+                {% endif %}
+                
+                <!-- Status badge -->
+                <span class="badge bg-{% if order.status == 'measuring' %}info{% elif order.status == 'processing' %}warning{% elif order.status == 'installing' %}primary{% elif order.status == 'installed' %}success{% else %}secondary{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Card body -->
+        <div class="card-body">
+            <!-- Mijoz ma'lumoti -->
+            <h6 class="card-title">
+                <i class="bi bi-person me-2"></i>
+                {{ order.customer.get_full_name }}
+            </h6>
+            
+            <!-- Manzil -->
+            <p class="card-text text-muted small mb-2">
+                <i class="bi bi-geo-alt me-1"></i>
+                {{ order.address|truncatechars:50 }}
+            </p>
+            
+            <!-- Sana ma'lumoti -->
+            <p class="card-text text-muted small mb-2">
+                <i class="bi bi-calendar me-1"></i>
+                Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
+            </p>
+            
+            <!-- Vazifa muddati (agar mavjud bo'lsa) -->
+            {% if order.measurement_date and order.status == 'measuring' %}
+            <p class="card-text small mb-2 
+                {% if order.measurement_date < current_time %}text-danger{% else %}text-primary{% endif %}">
+                <i class="bi bi-clock me-1"></i>
+                O'lchov: {{ order.measurement_date|date:"d.m.Y H:i" }}
+                {% if order.measurement_date < current_time %}
+                    <span class="badge bg-danger ms-1">Kechikkan</span>
+                {% endif %}
+            </p>
+            {% elif order.installation_date and order.status == 'installing' %}
+            <p class="card-text small mb-2 
+                {% if order.installation_date < current_time %}text-danger{% else %}text-primary{% endif %}">
+                <i class="bi bi-clock me-1"></i>
+                O'rnatish: {{ order.installation_date|date:"d.m.Y H:i" }}
+                {% if order.installation_date < current_time %}
+                    <span class="badge bg-danger ms-1">Kechikkan</span>
+                {% endif %}
+            </p>
+            {% endif %}
+            
+            <!-- To'lov ma'lumoti (o'rnatish uchun) -->
+            {% if order.status == 'installing' and order.total_amount > 0 %}
+            <div class="mb-2">
+                {% with remaining=order.total_amount|sub:order.paid_amount %}
+                    {% if remaining > 0 %}
+                        <small class="text-danger">
+                            <i class="bi bi-cash me-1"></i>
+                            Qolgan: {{ remaining|floatformat:0 }} so'm
+                        </small>
+                    {% else %}
+                        <small class="text-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            To'liq to'langan
+                        </small>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% endif %}
+            
+            <!-- Yakunlangan sana (yakunlangan vazifalar uchun) -->
+            {% if task_type == 'completed' and order.installation_completed_date %}
+            <p class="card-text small text-success mb-2">
+                <i class="bi bi-check-circle me-1"></i>
+                Yakunlangan: {{ order.installation_completed_date|date:"d.m.Y H:i" }}
+            </p>
+            {% endif %}
+            
+            <!-- Kechikkan vazifalar uchun ogohlantirish -->
+            {% if order.measurement_date and order.measurement_date < current_time and order.status == 'measuring' %}
+            <div class="alert alert-danger alert-sm py-2 mb-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <small>O'lchov muddati o'tgan!</small>
+            </div>
+            {% elif order.installation_date and order.installation_date < current_time and order.status == 'installing' %}
+            <div class="alert alert-danger alert-sm py-2 mb-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <small>O'rnatish muddati o'tgan!</small>
+            </div>
+            {% endif %}
+            
+            <!-- Jalyuzlar soni (agar mavjud bo'lsa) -->
+            {% if order.items.count > 0 %}
+            <div class="mb-2">
+                <small class="text-muted">
+                    <i class="bi bi-grid me-1"></i>
+                    {{ order.items.count }} ta jalyuzi
+                </small>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Card footer - tugmalar -->
+        <div class="card-footer bg-transparent">
+            <div class="d-flex gap-2">
+                <!-- O'lchov tugmasi -->
+                {% if user.can_measure and order.status == 'measuring' and task_type != 'completed' %}
+                <a href="{% url 'technical:measurement' order.pk %}" 
+                   class="btn btn-info btn-sm flex-fill">
+                    <i class="bi bi-rulers me-1"></i>
+                    O'lchov olish
+                </a>
+                {% endif %}
+                
+                <!-- Ishlab chiqarish tugmasi -->
+                {% if user.can_manufacture and order.status == 'processing' and task_type != 'completed' %}
+                <a href="{% url 'technical:manufacturing' order.pk %}" 
+                   class="btn btn-warning btn-sm flex-fill">
+                    <i class="bi bi-gear-fill me-1"></i>
+                    Ishlab chiqarish
+                </a>
+                {% endif %}
+                
+                <!-- O'rnatish tugmasi -->
+                {% if user.can_install and order.status == 'installing' and task_type != 'completed' %}
+                <a href="{% url 'technical:installation' order.pk %}" 
+                   class="btn btn-success btn-sm flex-fill">
+                    <i class="bi bi-tools me-1"></i>
+                    O'rnatish
+                </a>
+                {% endif %}
+                
+                <!-- Yakunlangan vazifalar uchun ko'rish tugmasi -->
+                {% if task_type == 'completed' %}
+                <span class="btn btn-outline-success btn-sm flex-fill disabled">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Yakunlangan
+                </span>
+                {% endif %}
+                
+                <!-- Agar hech qanday vazifa tugmasi ko'rsatilmasa -->
+                {% if task_type != 'completed' %}
+                    {% if not user.can_measure or order.status != 'measuring' %}
+                        {% if not user.can_manufacture or order.status != 'processing' %}
+                            {% if not user.can_install or order.status != 'installing' %}
+                                {% if order.status != 'installed' %}
+                                <span class="btn btn-outline-secondary btn-sm flex-fill disabled">
+                                    <i class="bi bi-eye me-1"></i>
+                                    Faqat ko'rish
+                                </span>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                
+                <!-- Buyurtma tafsilotlari tugmasi -->
+                <a href="{% url 'orders:detail' order.pk %}" 
+                   class="btn btn-outline-primary btn-sm"
+                   title="Buyurtma tafsilotlari">
+                    <i class="bi bi-eye"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+
+.bg-info-subtle {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.bg-warning-subtle {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-success-subtle {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-secondary-subtle {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+}
+</style>
