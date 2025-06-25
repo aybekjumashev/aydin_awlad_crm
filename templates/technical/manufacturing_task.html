@@ -49,38 +49,6 @@
                 </div>
             </div>
 
-            <!-- O'lchov ma'lumotlari -->
-            {% if order.measurement_notes %}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="bi bi-rulers me-2"></i>
-                        O'lchov izohlari
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <small>{{ order.measurement_notes|linebreaks }}</small>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Ishlab chiqarish ko'rsatmalari -->
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="bi bi-lightbulb me-2"></i>
-                        Ko'rsatmalar
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <ul class="small mb-0">
-                        <li>Barcha o'lchamlarni diqqat bilan tekshiring</li>
-                        <li>Material sifatiga e'tibor bering</li>
-                        <li>Tayyor mahsulotni nazorat qiling</li>
-                        <li>Ishni yakunlagach "Tayyor" tugmasini bosing</li>
-                    </ul>
-                </div>
-            </div>
         </div>
 
         <!-- Mahsulotlar ro'yxati va ishlab chiqarish formi -->
@@ -121,7 +89,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {{ item.material_type|default:"—" }}
+                                        {{ item.material|default:"—" }}
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary">{{ item.quantity }} dona</span>
@@ -165,11 +133,6 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Ishlab chiqarish izohlari</label>
-                            <textarea name="manufacturing_notes" class="form-control" rows="4" placeholder="Ishlab chiqarish jarayoni, qiynchiliklar, qo'shimcha ma'lumotlar..."></textarea>
-                        </div>
-
                         {% if order.notes %}
                         <div class="mb-3">
                             <label class="form-label">Avvalgi izohlar</label>
@@ -178,6 +141,10 @@
                             </div>
                         </div>
                         {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">Ishlab chiqarish izohlari</label>
+                            <textarea name="manufacturing_notes" class="form-control" rows="4" placeholder="Ishlab chiqarish jarayoni, qiynchiliklar, qo'shimcha ma'lumotlar..."></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -186,10 +153,10 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <button type="submit" name="save_progress" class="btn btn-outline-warning btn-lg w-100">
-                                    <i class="bi bi-save me-1"></i>
-                                    Jarayonni saqlash
-                                </button>
+                                <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    Vazifalar ro'yxatiga qaytish
+                                </a>
                             </div>
                             <div class="col-md-6">
                                 <button type="submit" name="complete_manufacturing" class="btn btn-success btn-lg w-100" onclick="return confirm('Ishlab chiqarish yakunlandimi? Bu buyurtma o\'rnatishga yuboriladi.')">
@@ -199,12 +166,6 @@
                             </div>
                         </div>
                         
-                        <div class="text-center mt-3">
-                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>
-                                Vazifalar ro'yxatiga qaytish
-                            </a>
-                        </div>
                     </div>
                 </div>
             </form>

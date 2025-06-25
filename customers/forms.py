@@ -74,6 +74,13 @@ class CustomerForm(forms.ModelForm):
         # Majburiy bo'lmagan maydonlar
         self.fields['birth_date'].required = False
         self.fields['notes'].required = False
+
+        
+        # Birth_date input format - Django HTML5 date input uchun
+        if self.instance and self.instance.pk and self.instance.birth_date:
+            # Edit holatida birth_date mavjud bo'lsa, format="%Y-%m-%d"
+            self.fields['birth_date'].widget.format = '%Y-%m-%d'
+            self.fields['birth_date'].input_formats = ['%Y-%m-%d']
         
         # Telefon validatori
         self.fields['phone'].validators = [

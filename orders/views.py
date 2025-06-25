@@ -434,7 +434,6 @@ def order_print(request, pk):
     
     return render(request, 'orders/print.html', context)
 
-
 @login_required
 def order_add_payment(request, pk):
     """Buyurtmaga to'lov qo'shish"""
@@ -447,14 +446,16 @@ def order_add_payment(request, pk):
         notes = request.POST.get('notes', '')
         
         try:
-            amount = float(amount)
+            amount = Decimal(str(amount))  # ⭐ TUZATILDI: Decimal ishlatamiz
             if amount > 0:
-                # To'lovni yaratish
+                # To'lovni yaratish - TUZATILDI: payment_date qo'shildi
                 payment = Payment.objects.create(
                     order=order,
                     amount=amount,
                     payment_method=payment_method,
                     payment_type='partial',
+                    payment_date=timezone.now(),  # ⭐ Bu qator qo'shildi
+                    received_by=request.user,     # ⭐ Qabul qilgan xodim ham qo'shildi
                     notes=notes,
                     status='confirmed'
                 )
@@ -466,7 +467,7 @@ def order_add_payment(request, pk):
                 messages.success(request, f'{amount:,.0f} so\'m to\'lov qo\'shildi!')
             else:
                 messages.error(request, 'To\'lov summasi 0 dan katta bo\'lishi kerak!')
-        except ValueError:
+        except (ValueError, decimal.InvalidOperation):  # ⭐ TUZATILDI: decimal xatoligini ham qo'shdik
             messages.error(request, 'Noto\'g\'ri summa kiritildi!')
     
     return redirect('orders:detail', pk=pk)

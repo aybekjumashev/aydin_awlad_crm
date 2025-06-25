@@ -240,6 +240,7 @@ def measurement_form(request, order_id):
                 unit_price = request.POST.get(f'unit_price_{i}')
                 quantity = request.POST.get(f'quantity_{i}', 1)
                 notes = request.POST.get(f'notes_{i}', '')
+
                 
                 if not width or not height or not blind_type or not unit_price:
                     continue
@@ -298,8 +299,14 @@ def measurement_form(request, order_id):
             # Buyurtmani yangilash
             order.total_amount = total_amount
             order.measurement_notes = measurement_notes
+
+            current_notes = order.notes or ''
+            measurement_info = f"O'lchash izohlar: {measurement_notes}"
+            order.notes = f"{current_notes}\n[O'lchash yakunlandi]: {measurement_info}".strip()
+
             order.status = 'processing'
             order.measurement_completed_date = timezone.now()
+            order.update_payment_status()
             order.save()
             
             messages.success(request, f"O'lchov ma'lumotlari muvaffaqiyatli saqlandi! {len(created_items)} ta jalyuzi qo'shildi.")

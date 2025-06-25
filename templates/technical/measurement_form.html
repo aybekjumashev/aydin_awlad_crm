@@ -22,7 +22,7 @@
     <div class="row">
         <!-- Buyurtma ma'lumotlari -->
         <div class="col-md-4">
-            <div class="card mb-4">
+            <div class="card mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
@@ -34,6 +34,16 @@
                         <strong>Mijoz:</strong><br>
                         {{ order.customer.get_full_name }}<br>
                         <small class="text-muted">{{ order.customer.phone }}</small>
+                        {% for phone in order.customer.additional_phones.all %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">{{ phone.phone_number }}</small>
+                                {% if phone.notes %}
+                                <small class="text-muted">({{ phone.notes }})</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                     <div class="mb-3">
                         <strong>Manzil:</strong><br>
@@ -49,32 +59,6 @@
                 </div>
             </div>
 
-                       <!-- Qo'shimcha telefon raqamlar -->
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">
-                        <i class="bi bi-telephone me-2"></i>
-                        Qo'shimcha telefon raqamlar
-                    </h6>
-                </div>
-                <div class="card-body">
-                    {% if order.customer.additional_phones.all %}
-                        {% for phone in order.customer.additional_phones.all %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <strong>{{ phone.phone_number }}</strong>
-                                <span class="badge bg-secondary ms-2">{{ phone.get_phone_type_display }}</span>
-                                {% if phone.notes %}
-                                <br><small class="text-muted">{{ phone.notes }}</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted mb-0">Qo'shimcha telefon raqamlar yo'q</p>
-                    {% endif %}
-                </div>
-            </div>
         </div>
 
         <!-- O'lchov formi -->
@@ -127,11 +111,11 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">To'lov summasi (so'm)</label>
                                 <input type="number" name="advance_payment" class="form-control" min="0" step="1000" placeholder="0">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">To'lov usuli</label>
                                 <select name="payment_method" class="form-select">
                                     <option value="cash">Naqd pul</option>
@@ -146,14 +130,14 @@
                 <!-- Tugmalar -->
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Bekor qilish
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    Vazifalar ro'yxatiga qaytish
                             </a>
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle me-1"></i>
-                                O'lchov yakunlash va ishlab chiqarishga yuborish
+                                O'lchovni yakunlash - ishlab chiqarishga yuborish
                             </button>
                         </div>
                     </div>
@@ -200,37 +184,37 @@ function createItemForm(index) {
             </div>
             
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-sm-6 mb-3">
                     <label class="form-label">Jalyuzi turi *</label>
                     <select name="blind_type_${index}" class="form-select" required>
                         <option value="">Tanlang...</option>
                         ${blindTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-sm-6 mb-3">
                     <label class="form-label">Material turi</label>
                     <select name="material_type_${index}" class="form-select">
                         <option value="">Tanlang...</option>
                         ${materialTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Eni (mm) *</label>
+                <div class="col-sm-3 mb-3">
+                    <label class="form-label">Eni (sm) *</label>
                     <input type="number" name="width_${index}" class="form-control" min="100" max="5000" required>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Bo'yi (mm) *</label>
+                <div class="col-sm-3 mb-3">
+                    <label class="form-label">Bo'yi (sm) *</label>
                     <input type="number" name="height_${index}" class="form-control" min="100" max="5000" required>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-sm-4 mb-3">
+                    <label class="form-label">Birlik narxi *</label>
+                    <input type="number" name="unit_price_${index}" class="form-control" min="0" step="1000" required>
+                </div>
+                <div class="col-sm-2 mb-3">
                     <label class="form-label">Donasi</label>
                     <input type="number" name="quantity_${index}" class="form-control" min="1" value="1">
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Narxi (so'm) *</label>
-                    <input type="number" name="unit_price_${index}" class="form-control" min="0" step="1000" required>
-                </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-sm-6 mb-3">
                     <label class="form-label">O'rnatish turi</label>
                     <select name="installation_type_${index}" class="form-select">
                         <option value="">Tanlang...</option>
@@ -239,7 +223,7 @@ function createItemForm(index) {
                         <option value="Oynaga">Oynaga</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-sm-6 mb-3">
                     <label class="form-label">Mexanizm turi</label>
                     <select name="mechanism_type_${index}" class="form-select">
                         <option value="">Tanlang...</option>

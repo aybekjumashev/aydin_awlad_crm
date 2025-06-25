@@ -31,6 +31,16 @@
                     <label class="form-label fw-bold">Mijoz:</label>
                     <div>{{ order.customer.get_full_name }}</div>
                     <small class="text-muted">{{ order.customer.phone }}</small>
+                    {% for phone in order.customer.additional_phones.all %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">{{ phone.phone_number }}</small>
+                                {% if phone.notes %}
+                                <small class="text-muted">({{ phone.notes }})</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                 </div>
                 
                 <div class="mb-3">
@@ -45,7 +55,7 @@
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">To'langan:</label>
-                    <div class="h6 text-info">{{ paid_amount|floatformat:0|default:"0" }} so'm</div>
+                    <div class="h6 text-info">{{ order.paid_amount|floatformat:0|default:"0" }} so'm</div>
                 </div>
                 
                 <div class="mb-3">
@@ -86,25 +96,6 @@
             </div>
         </div>
 
-        <!-- Qo'llanma -->
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0">
-                    <i class="bi bi-lightbulb me-2"></i>
-                    O'rnatish bosqichlari
-                </h6>
-            </div>
-            <div class="card-body">
-                <ol class="mb-0">
-                    <li class="mb-2">Mijoz bilan bog'laning</li>
-                    <li class="mb-2">O'rnatish vaqtini kelishing</li>
-                    <li class="mb-2">Kerakli asboblarni tayyorlang</li>
-                    <li class="mb-2">Jalyuzilarni o'rnating</li>
-                    <li class="mb-2">Sifatni tekshiring</li>
-                    <li class="mb-0">Qolgan to'lovni qabul qiling</li>
-                </ol>
-            </div>
-        </div>
     </div>
 
     <div class="col-md-8">
@@ -141,7 +132,7 @@
                                     <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
                                 </td>
                                 <td>
-                                    {{ item.material_type|default:"—" }}
+                                    {{ item.material|default:"—" }}
                                 </td>
                                 <td>
                                     {{ item.installation_type|default:"—" }}
@@ -175,26 +166,19 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Aniq o'rnatish manzili</label>
-                        <textarea name="installation_address" class="form-control" rows="2" 
-                                  placeholder="Aniq xona, deraza, o'rnatish joyi...">{{ order.address }}</textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">O'rnatish izohlari</label>
-                        <textarea name="installation_notes" class="form-control" rows="3" 
-                                  placeholder="O'rnatish jarayoni, qiyinchiliklar, mijoz izohlari..."></textarea>
-                    </div>
-
                     {% if order.notes %}
-                    <div class="mb-0">
+                    <div class="mb-3">
                         <label class="form-label">Avvalgi jarayon izohlari</label>
                         <div class="border rounded p-3 bg-light">
                             <small>{{ order.notes|linebreaks }}</small>
                         </div>
                     </div>
                     {% endif %}
+                    <div class="mb-0">
+                        <label class="form-label">O'rnatish izohlari</label>
+                        <textarea name="installation_notes" class="form-control" rows="3" 
+                                  placeholder="O'rnatish jarayoni, qiyinchiliklar, mijoz izohlari..."></textarea>
+                    </div>
                 </div>
             </div>
 
@@ -232,7 +216,14 @@
             <!-- Tugmalar -->
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-center">
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <div class="text-center">
+                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Vazifalar ro'yxatiga qaytish
+                            </a>
+                        </div>
                         <button type="submit" class="btn btn-success btn-lg" 
                                 onclick="return confirm('O\'rnatish yakunlandimi? Bu buyurtma tugallangan holatga o\'tadi.')">
                             <i class="bi bi-check-circle me-1"></i>
@@ -240,12 +231,7 @@
                         </button>
                     </div>
                     
-                    <div class="text-center mt-3">
-                        <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Vazifalar ro'yxatiga qaytish
-                        </a>
-                    </div>
+
                 </div>
             </div>
         </form>
