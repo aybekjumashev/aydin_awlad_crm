@@ -59,12 +59,66 @@
                 </div>
             </div>
 
+            <!-- GPS Koordinatalar kartasi -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        GPS Joylashuv
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        O'rnatish vaqtida oson topish uchun aniq joylashuvni belgilang
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Kenglik (Latitude)</label>
+                        <input type="number" id="latitude" name="latitude" 
+                               class="form-control" step="any" 
+                               placeholder="41.311081" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Uzunlik (Longitude)</label>
+                        <input type="number" id="longitude" name="longitude" 
+                               class="form-control" step="any" 
+                               placeholder="69.240562" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Aniqlik (metr)</label>
+                        <input type="number" id="location_accuracy" name="location_accuracy" 
+                               class="form-control" readonly>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" id="getLocationBtn" class="btn btn-success">
+                            <i class="bi bi-geo-alt-fill me-1"></i>
+                            Hozirgi joylashuvni olish
+                        </button>
+                        
+                        <button type="button" id="openMapBtn" class="btn btn-outline-primary" 
+                                style="display: none;">
+                            <i class="bi bi-map me-1"></i>
+                            Xaritada ko'rish
+                        </button>
+                    </div>
+                    
+                    <div id="locationStatus" class="mt-2"></div>
+                </div>
+            </div>
         </div>
 
         <!-- O'lchov formi -->
         <div class="col-md-8">
             <form method="post" class="needs-validation" novalidate id="measurement-form">
                 {% csrf_token %}
+                
+                <!-- GPS ma'lumotlari hidden fieldlar -->
+                <input type="hidden" name="measurement_latitude" id="measurement_latitude">
+                <input type="hidden" name="measurement_longitude" id="measurement_longitude">
+                <input type="hidden" name="measurement_location_accuracy" id="measurement_location_accuracy">
                 
                 <div class="card mb-4">
                     <div class="card-header">
@@ -83,7 +137,6 @@
                             Yangi jalyuzi qo'shish
                         </button>
                         
-                        <!-- ✅ TUZATILDI: item_count ni to'g'ri boshqarish -->
                         <input type="hidden" id="item-count" name="item_count" value="0">
                     </div>
                 </div>
@@ -97,7 +150,8 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <textarea name="measurement_notes" class="form-control" rows="3" placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar..."></textarea>
+                        <textarea name="measurement_notes" class="form-control" rows="3" 
+                                  placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar..."></textarea>
                     </div>
                 </div>
 
@@ -113,7 +167,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">To'lov summasi (so'm)</label>
-                                <input type="number" name="advance_payment" class="form-control" min="0" step="1000" placeholder="0">
+                                <input type="number" name="advance_payment" class="form-control" 
+                                       min="0" step="1000" placeholder="0">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">To'lov usuli</label>
@@ -132,8 +187,8 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center gap-3">
                             <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
-                                    <i class="bi bi-arrow-left me-1"></i>
-                                    Vazifalar ro'yxatiga qaytish
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Vazifalar ro'yxatiga qaytish
                             </a>
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle me-1"></i>
@@ -149,10 +204,9 @@
 
 <!-- JavaScript -->
 <script>
-// ✅ TUZATILDI: 0 dan boshlash (backend bilan mos)
+// ✅ Jalyuzi form logikasi
 let itemCount = 0;
 
-// Jalyuzi turlari
 const blindTypes = [
     'Gorizontal jalyuzi',
     'Vertikal jalyuzi', 
@@ -163,7 +217,6 @@ const blindTypes = [
     'Boshqa'
 ];
 
-// Material turlari
 const materialTypes = [
     'Alyuminiy',
     'Plastik',
@@ -234,7 +287,8 @@ function createItemForm(index) {
                 </div>
                 <div class="col-12">
                     <label class="form-label">Qo'shimcha izoh</label>
-                    <textarea name="notes_${index}" class="form-control" rows="2" placeholder="Ushbu jalyuzi haqida qo'shimcha ma'lumotlar..."></textarea>
+                    <textarea name="notes_${index}" class="form-control" rows="2" 
+                              placeholder="Ushbu jalyuzi haqida qo'shimcha ma'lumotlar..."></textarea>
                 </div>
             </div>
         </div>
@@ -244,9 +298,8 @@ function createItemForm(index) {
 function addItem() {
     const container = document.getElementById('items-container');
     container.insertAdjacentHTML('beforeend', createItemForm(itemCount));
-    itemCount++; // Index oshirish
+    itemCount++;
     updateItemCount();
-    console.log('Item qo\'shildi. Hozirgi count:', itemCount); // Debug uchun
 }
 
 function removeItem(index) {
@@ -254,29 +307,21 @@ function removeItem(index) {
     if (item) {
         item.remove();
         updateItemNumbers();
-        console.log('Item o\'chirildi. Yangi count:', document.querySelectorAll('.item-form').length); // Debug uchun
     }
 }
 
-// ✅ TUZATILDI: item_count ni to'g'ri hisoblash
 function updateItemCount() {
     const actualCount = document.querySelectorAll('.item-form').length;
     document.getElementById('item-count').value = actualCount;
-    console.log('Item count yangilandi:', actualCount); // Debug uchun
 }
 
-// ✅ TUZATILDI: raqamlarni qayta indekslash
 function updateItemNumbers() {
     const items = document.querySelectorAll('.item-form');
     items.forEach((item, index) => {
-        // Title yangilash
         const title = item.querySelector('h6');
         title.textContent = `Jalyuzi #${index + 1}`;
-        
-        // data-index yangilash
         item.setAttribute('data-index', index);
         
-        // Form field name'larini yangilash
         const inputs = item.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
             const name = input.getAttribute('name');
@@ -286,7 +331,6 @@ function updateItemNumbers() {
             }
         });
         
-        // Remove button onclick yangilash
         const removeBtn = item.querySelector('.remove-item');
         if (removeBtn) {
             removeBtn.setAttribute('onclick', `removeItem(${index})`);
@@ -295,36 +339,138 @@ function updateItemNumbers() {
     updateItemCount();
 }
 
-// ✅ QOSHILDI: Form submit'da debug
-function debugFormData() {
-    const formData = new FormData(document.getElementById('measurement-form'));
-    console.log('Form submit qilinyapti:');
-    console.log('item_count:', formData.get('item_count'));
+// ✅ GPS Geolocation logikasi
+function initializeGPS() {
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const openMapBtn = document.getElementById('openMapBtn');
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const accuracyInput = document.getElementById('location_accuracy');
+    const statusDiv = document.getElementById('locationStatus');
     
-    // Barcha item ma'lumotlarini ko'rsatish
-    for (let i = 0; i < parseInt(formData.get('item_count')); i++) {
-        console.log(`Item ${i}:`, {
-            width: formData.get(`width_${i}`),
-            height: formData.get(`height_${i}`),
-            blind_type: formData.get(`blind_type_${i}`),
-            unit_price: formData.get(`unit_price_${i}`)
-        });
-    }
+    // Hidden form fieldlar
+    const hiddenLatInput = document.getElementById('measurement_latitude');
+    const hiddenLngInput = document.getElementById('measurement_longitude');
+    const hiddenAccuracyInput = document.getElementById('measurement_location_accuracy');
+    
+    getLocationBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            statusDiv.innerHTML = '<div class="alert alert-danger">Brauzeringiz GPS ni qo\'llab-quvvatlamaydi!</div>';
+            return;
+        }
+        
+        // Loading holatiga o'tkazish
+        getLocationBtn.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i> Joylashuv aniqlanmoqda...';
+        getLocationBtn.disabled = true;
+        statusDiv.innerHTML = '<div class="alert alert-info">GPS signal kutilmoqda...</div>';
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Muvaffaqiyatli joylashuv olindi
+                const lat = position.coords.latitude.toFixed(6);
+                const lng = position.coords.longitude.toFixed(6);
+                const accuracy = Math.round(position.coords.accuracy);
+                
+                // Ko'rinadigan inputlarni to'ldirish
+                latInput.value = lat;
+                lngInput.value = lng;
+                accuracyInput.value = accuracy;
+                
+                // Hidden form inputlarni to'ldirish
+                hiddenLatInput.value = lat;
+                hiddenLngInput.value = lng;
+                hiddenAccuracyInput.value = accuracy;
+                
+                // Muvaffaqiyat xabari
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Joylashuv muvaffaqiyatli aniqlandi! 
+                        <br><small>Aniqlik: ${accuracy} metr</small>
+                    </div>
+                `;
+                
+                // Tugmalarni yangilash
+                getLocationBtn.innerHTML = '<i class="bi bi-check me-1"></i> Joylashuv saqlandi';
+                getLocationBtn.classList.remove('btn-success');
+                getLocationBtn.classList.add('btn-outline-success');
+                getLocationBtn.disabled = false;
+                
+                // Xarita tugmasini ko'rsatish
+                openMapBtn.style.display = 'block';
+                
+                // 3 soniyadan keyin asl holatga qaytarish
+                setTimeout(() => {
+                    getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Joylashuvni yangilash';
+                    getLocationBtn.classList.remove('btn-outline-success');
+                    getLocationBtn.classList.add('btn-success');
+                }, 3000);
+            },
+            function(error) {
+                // Xatolik yuz berdi
+                let errorMessage = 'Joylashuvni aniqlab bo\'lmadi';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'GPS ruxsati berilmagan. Brauzer sozlamalarida ruxsat bering.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'GPS signal topilmadi. Internetni tekshiring.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'GPS signal kutish vaqti tugadi. Qayta urinib ko\'ring.';
+                        break;
+                }
+                
+                statusDiv.innerHTML = `<div class="alert alert-warning">${errorMessage}</div>`;
+                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Qayta urinish';
+                getLocationBtn.disabled = false;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 60000
+            }
+        );
+    });
+    
+    // Xaritada ko'rish tugmasi
+    openMapBtn.addEventListener('click', function() {
+        const lat = latInput.value;
+        const lng = lngInput.value;
+        
+        if (lat && lng) {
+            // Google Maps da ochish
+            const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=18`;
+            window.open(mapsUrl, '_blank');
+        }
+    });
 }
 
-// Sahifa yuklanganda birinchi item qo'shish
+// Sahifa yuklanganda
 document.addEventListener('DOMContentLoaded', function() {
-    // Dastlab bitta item qo'shish
+    // GPS funksiyalarini ishga tushirish
+    initializeGPS();
+    
+    // Birinchi jalyuzi qo'shish
     addItem();
     
     // Add item tugmasi
     document.getElementById('add-item').addEventListener('click', addItem);
     
-    // ✅ QOSHILDI: Form submit'da debug
+    // Form submit validation
     document.getElementById('measurement-form').addEventListener('submit', function(e) {
-        debugFormData();
+        // GPS ma'lumotlarni hidden fieldlarga nusxa ko'chirish
+        const lat = document.getElementById('latitude').value;
+        const lng = document.getElementById('longitude').value;
+        const accuracy = document.getElementById('location_accuracy').value;
         
-        // Validation
+        if (lat && lng) {
+            document.getElementById('measurement_latitude').value = lat;
+            document.getElementById('measurement_longitude').value = lng;
+            document.getElementById('measurement_location_accuracy').value = accuracy || '';
+        }
+        
+        // Form validation
         if (!this.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
@@ -351,6 +497,21 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .remove-item:hover {
     opacity: 1;
+}
+
+/* GPS animatsiya */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.alert {
+    border-radius: 8px;
+    font-size: 0.9rem;
 }
 </style>
 {% endblock %}

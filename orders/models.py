@@ -9,7 +9,7 @@ from decimal import Decimal
 import uuid
 
 class Order(models.Model):
-    """Buyurtma modeli"""
+    """Buyurtma modeli - GPS koordinatalar bilan"""
     
     STATUS_CHOICES = [
         ('measuring', 'O\'lchovda'),      # O'lchov olish kerak
@@ -50,6 +50,32 @@ class Order(models.Model):
     address = models.TextField(
         verbose_name='O\'lchov manzili',
         help_text='Jalyuzi o\'rnatilishi kerak bo\'lgan aniq manzil'
+    )
+    
+    # ✅ GPS KOORDINATALAR - YANGI FIELDLAR
+    measurement_latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        verbose_name='O\'lchov joyi kenglik (Latitude)',
+        help_text='GPS koordinat - kenglik (-90 dan +90 gacha)'
+    )
+    
+    measurement_longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        verbose_name='O\'lchov joyi uzunlik (Longitude)',
+        help_text='GPS koordinat - uzunlik (-180 dan +180 gacha)'
+    )
+    
+    measurement_location_accuracy = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='GPS aniqlik',
+        help_text='GPS aniqlik darajasi (metrlarda)'
     )
     
     # Narx va to'lov
@@ -205,6 +231,33 @@ class Order(models.Model):
         }
         return status_weights.get(self.status, 0)
 
+    @property
+    def has_gps_location(self):
+        """GPS koordinatlar mavjudligini tekshirish"""
+        return self.measurement_latitude is not None and self.measurement_longitude is not None
+    
+    @property
+    def google_maps_url(self):
+        """Google Maps URL yaratish"""
+        if self.has_gps_location:
+            return f"https://www.google.com/maps?q={self.measurement_latitude},{self.measurement_longitude}&z=18"
+        return None
+    
+    @property
+    def yandex_maps_url(self):
+        """Yandex Maps URL yaratish (O'zbekiston uchun)"""
+        if self.has_gps_location:
+            return f"https://yandex.uz/maps/?ll={self.measurement_longitude},{self.measurement_latitude}&z=18&pt={self.measurement_longitude},{self.measurement_latitude}"
+        return None
+    
+    def get_location_display(self):
+        """GPS koordinatlarni chiroyli ko'rinishda qaytarish"""
+        if self.has_gps_location:
+            lat_dir = "S" if float(self.measurement_latitude) < 0 else "S"
+            lng_dir = "G" if float(self.measurement_longitude) < 0 else "S"
+            return f"{abs(float(self.measurement_latitude)):.6f}°{lat_dir}, {abs(float(self.measurement_longitude)):.6f}°{lng_dir}"
+        return "GPS ma'lumot yo'q"
+
     def update_payment_status(self):
         """To'lov statusini yangilash"""
         if self.total_amount > 0:
@@ -218,7 +271,6 @@ class Order(models.Model):
                 self.payment_status = 'overpaid'
         else:
             self.payment_status = 'pending'
-
 
 class OrderItem(models.Model):
     """

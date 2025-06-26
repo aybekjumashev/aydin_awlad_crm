@@ -1,255 +1,503 @@
 {% extends 'base.html' %}
 
-{% block title %}O'rnatish - {{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
+{% block title %}O'rnatish - {{ order.order_number }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="bi bi-house-gear me-2"></i>
-        O'rnatish - Buyurtma #{{ order.order_number }}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>
-            Vazifalar ro'yxatiga qaytish
-        </a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-4">
-        <!-- Buyurtma ma'lumotlari -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h6 class="mb-0">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Buyurtma ma'lumotlari
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Mijoz:</label>
-                    <div>{{ order.customer.get_full_name }}</div>
-                    <small class="text-muted">{{ order.customer.phone }}</small>
-                    {% for phone in order.customer.additional_phones.all %}
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-muted">{{ phone.phone_number }}</small>
-                                {% if phone.notes %}
-                                <small class="text-muted">({{ phone.notes }})</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">O'rnatish manzili:</label>
-                    <div class="text-muted">{{ order.address }}</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Umumiy summa:</label>
-                    <div class="h5 text-success">{{ order.total_amount|floatformat:0|default:"0" }} so'm</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">To'langan:</label>
-                    <div class="h6 text-info">{{ order.paid_amount|floatformat:0|default:"0" }} so'm</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Qolgan summa:</label>
-                    <div class="h5 text-warning">{{ remaining_amount|floatformat:0|default:"0" }} so'm</div>
-                </div>
-
-                {% if order.production_completed_date %}
-                <div class="mb-0">
-                    <label class="form-label fw-bold">Ishlab chiqarildi:</label>
-                    <div>
-                        <span class="badge bg-success">
-                            {{ order.production_completed_date|date:"d.m.Y H:i" }}
-                        </span>
-                    </div>
-                </div>
-                {% endif %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-tools me-2"></i>
+                    O'rnatish - #{{ order.order_number }}
+                </h2>
+                <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Vazifalar
+                </a>
             </div>
         </div>
-
-        <!-- To'lov ma'lumotlari -->
-        <div class="card mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0">
-                    <i class="bi bi-cash-stack me-2"></i>
-                    To'lov ma'lumotlari
-                </h6>
-            </div>
-            <div class="card-body">
-                {% for payment in order.payments.all %}
-                <div class="d-flex justify-content-between mb-2">
-                    <span>{{ payment.get_payment_type_display }}</span>
-                    <strong>{{ payment.amount|floatformat:0 }} so'm</strong>
-                </div>
-                {% empty %}
-                <div class="text-muted">Hali to'lov amalga oshirilmagan</div>
-                {% endfor %}
-            </div>
-        </div>
-
     </div>
 
-    <div class="col-md-8">
-        <!-- Mahsulotlar ro'yxati -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-list-ul me-2"></i>
-                    O'rnatiladigan mahsulotlar
-                </h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Jalyuzi turi</th>
-                                <th>O'lcham</th>
-                                <th>Material</th>
-                                <th>O'rnatish turi</th>
-                                <th>Donasi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in order.items.all %}
-                            <tr>
-                                <td>
-                                    <strong>{{ item.blind_type }}</strong>
-                                    {% if item.mechanism_type %}
-                                    <br><small class="text-muted">{{ item.mechanism_type }}</small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
-                                </td>
-                                <td>
-                                    {{ item.material|default:"—" }}
-                                </td>
-                                <td>
-                                    {{ item.installation_type|default:"—" }}
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ item.quantity }} dona</span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
-                                    Mahsulot ma'lumotlari mavjud emas
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- O'rnatish formi -->
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="card mb-4">
+    <div class="row">
+        <!-- Buyurtma va GPS ma'lumotlari -->
+        <div class="col-md-4">
+            <!-- Buyurtma ma'lumotlari -->
+            <div class="card mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
-                        <i class="bi bi-geo-alt me-2"></i>
-                        O'rnatish ma'lumotlari
+                        <i class="bi bi-info-circle me-2"></i>
+                        Buyurtma ma'lumotlari
                     </h6>
                 </div>
                 <div class="card-body">
-                    {% if order.notes %}
                     <div class="mb-3">
-                        <label class="form-label">Avvalgi jarayon izohlari</label>
-                        <div class="border rounded p-3 bg-light">
-                            <small>{{ order.notes|linebreaks }}</small>
+                        <strong>Mijoz:</strong><br>
+                        {{ order.customer.get_full_name }}<br>
+                        <small class="text-muted">{{ order.customer.phone }}</small>
+                        {% for phone in order.customer.additional_phones.all %}
+                        <div>
+                            <small class="text-muted">{{ phone.phone_number }}</small>
+                            {% if phone.notes %}
+                            <small class="text-muted">({{ phone.notes }})</small>
+                            {% endif %}
                         </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Manzil:</strong><br>
+                        <small>{{ order.address }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Umumiy narx:</strong><br>
+                        <span class="h5 text-success">{{ order.total_amount|floatformat:0 }} so'm</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>To'langan:</strong><br>
+                        <span class="h6 text-info">{{ order.paid_amount|floatformat:0 }} so'm</span>
+                    </div>
+                    {% if remaining_amount > 0 %}
+                    <div class="mb-0">
+                        <strong>Qolgan summa:</strong><br>
+                        <span class="h5 text-warning">{{ remaining_amount|floatformat:0 }} so'm</span>
                     </div>
                     {% endif %}
-                    <div class="mb-0">
-                        <label class="form-label">O'rnatish izohlari</label>
-                        <textarea name="installation_notes" class="form-control" rows="3" 
-                                  placeholder="O'rnatish jarayoni, qiyinchiliklar, mijoz izohlari..."></textarea>
-                    </div>
                 </div>
             </div>
 
-            <!-- Qolgan to'lov -->
-            {% if remaining_amount > 0 %}
-            <div class="card mb-4">
-                <div class="card-header bg-warning text-dark">
+            <!-- GPS Joylashuv ma'lumotlari -->
+            {% if order.has_gps_location %}
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
                     <h6 class="mb-0">
-                        <i class="bi bi-cash-stack me-2"></i>
-                        Qolgan to'lov ({{ remaining_amount|floatformat:0 }} so'm)
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        GPS Joylashuv
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">To'lov summasi (so'm)</label>
-                            <input type="number" name="remaining_payment" class="form-control" 
-                                   min="0" max="{{ remaining_amount }}" value="{{ remaining_amount }}" 
-                                   step="1000" placeholder="0">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">To'lov usuli</label>
-                            <select name="payment_method" class="form-select">
-                                <option value="cash">Naqd pul</option>
-                                <option value="card">Plastik karta</option>
-                                <option value="transfer">Bank o'tkazmasi</option>
-                                <option value="mobile">Mobil to'lov</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <strong>Koordinatlar:</strong><br>
+                        <small class="font-monospace">{{ order.get_location_display }}</small>
                     </div>
+                    
+                    {% if order.measurement_location_accuracy %}
+                    <div class="mb-3">
+                        <strong>Aniqlik:</strong><br>
+                        <small>{{ order.measurement_location_accuracy }} metr</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        {% if order.google_maps_url %}
+                        <a href="{{ order.google_maps_url }}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-map me-1"></i>
+                            Google Maps da ochish
+                        </a>
+                        {% endif %}
+                        
+                        {% if order.yandex_maps_url %}
+                        <a href="{{ order.yandex_maps_url }}" target="_blank" class="btn btn-warning btn-sm">
+                            <i class="bi bi-compass me-1"></i>
+                            Yandex Maps da ochish
+                        </a>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="copyCoordinates()">
+                            <i class="bi bi-clipboard me-1"></i>
+                            Koordinatalarni nusxa olish
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showOnMap()">
+                            <i class="bi bi-geo me-1"></i>
+                            Mening joylashuvim bilan solishtirib ko'rish
+                        </button>
+                    </div>
+                    
+                    <div id="locationComparison" class="mt-3" style="display: none;">
+                        <!-- JavaScript orqali to'ldiriladi -->
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        GPS Ma'lumot Yo'q
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-muted">
+                        O'lchov vaqtida GPS koordinatlar saqlanmagan. 
+                        Mijoz bilan bog'lanib aniq manzilni aniqlang.
+                    </p>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Tugmalar -->
-            <div class="card">
-                <div class="card-body">
+        </div>
 
-                    <div class="d-flex justify-content-center gap-3">
-                        <div class="text-center">
+        <!-- O'rnatish formi -->
+        <div class="col-md-8">
+            
+            <!-- Mahsulotlar ro'yxati -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Ishlab chiqarilishi kerak bo'lgan mahsulotlar
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Jalyuzi turi</th>
+                                    <th>O'lcham</th>
+                                    <th>Material</th>
+                                    <th>Donasi</th>
+                                    <th>Narxi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.blind_type }}</strong>
+                                        {% if item.installation_type %}
+                                        <br><small class="text-muted">{{ item.installation_type }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
+                                        {% if item.mechanism_type %}
+                                        <br><small class="text-muted">{{ item.mechanism_type }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ item.material|default:"—" }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ item.quantity }} dona</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
+                                    </td>
+                                </tr>
+                                {% if item.notes %}
+                                <tr>
+                                    <td colspan="5">
+                                        <small class="text-muted">
+                                            <i class="bi bi-chat-text me-1"></i>
+                                            {{ item.notes }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Mahsulot ma'lumotlari mavjud emas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- O'rnatish ma'lumotlari -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>
+                            O'rnatish ma'lumotlari
+                        </h6>
+                    </div>
+                    <div class="card-body">                        
+                        {% if order.notes %}
+                        <div class="mb-3">
+                            <label class="form-label">Avvalgi izohlar</label>
+                            <div class="border rounded p-3 bg-light">
+                                <small>{{ order.notes|linebreaks }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-0">
+                            <label for="installation_notes" class="form-label">
+                                O'rnatish jarayoni haqida izohlar
+                            </label>
+                            <textarea name="installation_notes" id="installation_notes" 
+                                      class="form-control" rows="3" 
+                                      placeholder="O'rnatish jarayoni, qiyinchiliklar, qo'shimcha ishlar va boshqa izohlar..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- To'lov ma'lumotlari -->
+                {% if remaining_amount > 0 %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="bi bi-cash-stack me-2"></i>
+                            Qolgan to'lov ({{ remaining_amount|floatformat:0 }} so'm)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="remaining_payment" class="form-label">
+                                    Qabul qilingan summa (so'm)
+                                </label>
+                                <input type="number" name="remaining_payment" id="remaining_payment" 
+                                       class="form-control" min="0" step="1000" 
+                                       placeholder="0" max="{{ remaining_amount }}">
+                                <div class="form-text">
+                                    Maksimal: {{ remaining_amount|floatformat:0 }} so'm
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_method" class="form-label">
+                                    To'lov usuli
+                                </label>
+                                <select name="payment_method" id="payment_method" class="form-select">
+                                    <option value="cash">Naqd pul</option>
+                                    <option value="card">Karta</option>
+                                    <option value="transfer">Bank o'tkazmasi</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Eslatma:</strong> Agar to'lov keyinroq amalga oshirilsa, bu maydonni bo'sh qoldiring.
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            To'lov holati
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Buyurtma to'liq to'langan. Qo'shimcha to'lov talab qilinmaydi.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Tugmalar -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center gap-3">
                             <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
                                 <i class="bi bi-arrow-left me-1"></i>
                                 Vazifalar ro'yxatiga qaytish
                             </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-1"></i>
+                                O'rnatishni yakunlash
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-success btn-lg" 
-                                onclick="return confirm('O\'rnatish yakunlandimi? Bu buyurtma tugallangan holatga o\'tadi.')">
-                            <i class="bi bi-check-circle me-1"></i>
-                            O'rnatish yakunlandi - Buyurtmani tugallash
-                        </button>
                     </div>
-                    
-
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
-<style>
-.table td {
-    vertical-align: middle;
+<!-- Hidden GPS ma'lumotlar JavaScript uchun -->
+{% if order.has_gps_location %}
+<script>
+const TARGET_COORDINATES = {
+    lat: {{ order.measurement_latitude }},
+    lng: {{ order.measurement_longitude }}
+};
+</script>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            this.classList.add('was-validated');
+        });
+    }
+    
+    // To'lov summasi validatsiyasi
+    const remainingPaymentInput = document.getElementById('remaining_payment');
+    if (remainingPaymentInput) {
+        const maxAmount = {{ remaining_amount|default:0 }};
+        
+        remainingPaymentInput.addEventListener('input', function() {
+            const value = parseFloat(this.value) || 0;
+            if (value > maxAmount) {
+                this.value = maxAmount;
+            }
+        });
+    }
+});
+
+// GPS funksiyalar
+{% if order.has_gps_location %}
+function copyCoordinates() {
+    const coordinates = `{{ order.measurement_latitude }},{{ order.measurement_longitude }}`;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(coordinates).then(function() {
+            showToast('Koordinatalar nusxa olindi!', 'success');
+        }).catch(function() {
+            fallbackCopy(coordinates);
+        });
+    } else {
+        fallbackCopy(coordinates);
+    }
 }
-.badge {
-    font-size: 0.75em;
+
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Koordinatalar nusxa olindi!', 'success');
+    } catch (err) {
+        showToast('Nusxa olishda xatolik!', 'error');
+    }
+    
+    document.body.removeChild(textArea);
 }
-.card-header h6 {
-    color: #495057;
+
+function showOnMap() {
+    if (!navigator.geolocation) {
+        showToast('Brauzeringiz GPS ni qo\'llab-quvvatlamaydi!', 'error');
+        return;
+    }
+    
+    const comparisonDiv = document.getElementById('locationComparison');
+    comparisonDiv.style.display = 'block';
+    comparisonDiv.innerHTML = `
+        <div class="alert alert-info">
+            <i class="bi bi-arrow-repeat spin me-1"></i>
+            Sizning joylashuvingiz aniqlanmoqda...
+        </div>
+    `;
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const myLat = position.coords.latitude;
+            const myLng = position.coords.longitude;
+            const accuracy = Math.round(position.coords.accuracy);
+            
+            // Masofa hisoblash (Haversine formula)
+            const distance = calculateDistance(myLat, myLng, TARGET_COORDINATES.lat, TARGET_COORDINATES.lng);
+            
+            let distanceText, alertClass;
+            if (distance < 0.1) {
+                distanceText = `${Math.round(distance * 1000)} metr`;
+                alertClass = 'alert-success';
+            } else if (distance < 1) {
+                distanceText = `${Math.round(distance * 1000)} metr`;
+                alertClass = 'alert-warning';
+            } else {
+                distanceText = `${distance.toFixed(1)} km`;
+                alertClass = 'alert-danger';
+            }
+            
+            comparisonDiv.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <h6><i class="bi bi-geo me-1"></i> Masofa tahlili:</h6>
+                    <p class="mb-1"><strong>Maqsad:</strong> O'rnatish joyi</p>
+                    <p class="mb-1"><strong>Siz:</strong> Hozirgi joylashuv</p>
+                    <p class="mb-2"><strong>Masofa:</strong> ${distanceText}</p>
+                    <small class="text-muted">Aniqlik: ${accuracy}m</small>
+                </div>
+                <div class="d-grid">
+                    <a href="https://www.google.com/maps/dir/${myLat},${myLng}/${TARGET_COORDINATES.lat},${TARGET_COORDINATES.lng}" 
+                       target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        Yo'nalish olish (Google Maps)
+                    </a>
+                </div>
+            `;
+        },
+        function(error) {
+            comparisonDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Sizning joylashuvingizni aniqlab bo'lmadi. GPS ruxsatini tekshiring.
+                </div>
+            `;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+        }
+    );
 }
-.alert-warning {
-    border-left: 4px solid #ffc107;
+
+// Masofa hisoblash funksiyasi (Haversine formula)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Yer radiusi (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
 }
-</style>
+{% endif %}
+
+// Toast notification funksiyasi
+function showToast(message, type = 'info') {
+    // Oddiy alert (keyinroq toast library bilan almashtirishingiz mumkin)
+    if (type === 'success') {
+        alert('✅ ' + message);
+    } else if (type === 'error') {
+        alert('❌ ' + message);
+    } else {
+        alert('ℹ️ ' + message);
+    }
+}
+
+// CSS animatsiya
+const style = document.createElement('style');
+style.textContent = `
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

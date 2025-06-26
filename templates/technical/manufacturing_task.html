@@ -34,6 +34,16 @@
                         <strong>Mijoz:</strong><br>
                         {{ order.customer.get_full_name }}<br>
                         <small class="text-muted">{{ order.customer.phone }}</small>
+                        {% for phone in order.customer.additional_phones.all %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">{{ phone.phone_number }}</small>
+                                {% if phone.notes %}
+                                <small class="text-muted">({{ phone.notes }})</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                     <div class="mb-3">
                         <strong>Yaratilgan:</strong><br>

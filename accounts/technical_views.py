@@ -190,7 +190,7 @@ def take_task(request, order_id, task_type):
 
 @login_required
 def measurement_form(request, order_id):
-    """O'lchov olish formi"""
+    """O'lchov olish formi - GPS koordinatalar bilan"""
     if not request.user.is_technical or not request.user.can_measure:
         messages.error(request, "Sizda o'lchov olish huquqi yo'q.")
         return redirect('dashboard')
@@ -212,6 +212,11 @@ def measurement_form(request, order_id):
         try:
             measurement_notes = request.POST.get('measurement_notes', '')
             item_count_str = request.POST.get('item_count', '0')
+            
+            # GPS koordinatlarni olish
+            measurement_latitude = request.POST.get('measurement_latitude')
+            measurement_longitude = request.POST.get('measurement_longitude')
+            measurement_location_accuracy = request.POST.get('measurement_location_accuracy')
             
             try:
                 item_count = int(item_count_str)
@@ -296,13 +301,35 @@ def measurement_form(request, order_id):
                 except Exception as e:
                     messages.warning(request, "Avans to'lov saqlanmadi, lekin o'lchov yakunlandi.")
             
+            # GPS koordinatlarni saqlash
+            gps_info = ""
+            if measurement_latitude and measurement_longitude:
+                try:
+                    # Koordinatlarni float formatda tekshirish
+                    lat = float(measurement_latitude)
+                    lng = float(measurement_longitude)
+                    accuracy = measurement_location_accuracy or "Noma'lum"
+                    
+                    # GPS ma'lumotlarni order modeliga saqlash
+                    order.measurement_latitude = lat
+                    order.measurement_longitude = lng
+                    order.measurement_location_accuracy = accuracy
+                    
+                    gps_info = f"\nGPS koordinatlar: {lat:.6f}, {lng:.6f} (Aniqlik: {accuracy}m)"
+                    messages.success(request, "GPS joylashuv ma'lumotlari saqlandi.")
+                    
+                except (ValueError, TypeError):
+                    messages.warning(request, "GPS koordinatlar noto'g'ri formatda. Saqlanmadi.")
+            else:
+                messages.info(request, "GPS koordinatlar kiritilmagan.")
+            
             # Buyurtmani yangilash
             order.total_amount = total_amount
             order.measurement_notes = measurement_notes
 
             current_notes = order.notes or ''
-            measurement_info = f"O'lchash izohlar: {measurement_notes}"
-            order.notes = f"{current_notes}\n[O'lchash yakunlandi]: {measurement_info}".strip()
+            measurement_info = f"{measurement_notes}{gps_info}"
+            order.notes = f"{current_notes}\n[O'lchash yakunlandi] {measurement_info}".strip()
 
             order.status = 'processing'
             order.measurement_completed_date = timezone.now()
@@ -349,8 +376,8 @@ def manufacturing_task(request, order_id):
         order.production_completed_date = timezone.now()
         
         current_notes = order.notes or ''
-        manufacturing_info = f"Ishlab chiqarish izohlar: {manufacturing_notes}"
-        order.notes = f"{current_notes}\n[Ishlab chiqarish yakunlandi]: {manufacturing_info}".strip()
+        manufacturing_info = f"{manufacturing_notes}"
+        order.notes = f"{current_notes}\n[Ishlab chiqarish yakunlandi] {manufacturing_info}".strip()
         
         order.save()
         
@@ -412,8 +439,8 @@ def installation_task(request, order_id):
             order.installation_completed_date = timezone.now()
             
             current_notes = order.notes or ''
-            installation_info = f"O'rnatish manzili: {installation_address}\nIzohlar: {installation_notes}"
-            order.notes = f"{current_notes}\n[O'rnatish yakunlandi]: {installation_info}".strip()
+            installation_info = f"{installation_notes}"
+            order.notes = f"{current_notes}\n[O'rnatish yakunlandi] {installation_info}".strip()
             
             order.save()
             

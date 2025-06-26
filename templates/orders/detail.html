@@ -98,7 +98,14 @@
                 </div>
                 {% if order.notes %}
                 <div class="mb-0">
-                    <strong>Izoh:</strong> {{ order.notes }}
+                    {% if order.notes %}
+                    <strong>Izoh:</strong>
+                        <div class="mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <small>{{ order.notes|linebreaks }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
