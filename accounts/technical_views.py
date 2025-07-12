@@ -197,11 +197,7 @@ def measurement_form(request, order_id):
     
     order = get_object_or_404(Order, id=order_id, status='measuring')
     
-    # Agar vazifa boshqa kimgadir tayinlangan bo'lsa
-    if order.assigned_measurer and order.assigned_measurer != request.user:
-        messages.error(request, f"Bu vazifa {order.assigned_measurer.get_full_name()} ga tayinlangan.")
-        return redirect('technical:my_tasks')
-    
+
     # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
     if not order.assigned_measurer:
         order.assigned_measurer = request.user
@@ -358,11 +354,7 @@ def manufacturing_task(request, order_id):
     
     order = get_object_or_404(Order, id=order_id, status='processing')
     
-    # Vazifa tayinlanishini tekshirish
-    if order.assigned_manufacturer and order.assigned_manufacturer != request.user:
-        messages.error(request, f"Bu vazifa {order.assigned_manufacturer.get_full_name()} ga tayinlangan.")
-        return redirect('technical:my_tasks')
-    
+
     # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
     if not order.assigned_manufacturer:
         order.assigned_manufacturer = request.user
@@ -399,12 +391,7 @@ def installation_task(request, order_id):
         return redirect('dashboard')
     
     order = get_object_or_404(Order, id=order_id, status='installing')
-    
-    # Vazifa tayinlanishini tekshirish
-    if order.assigned_installer and order.assigned_installer != request.user:
-        messages.error(request, f"Bu vazifa {order.assigned_installer.get_full_name()} ga tayinlangan.")
-        return redirect('technical:my_tasks')
-    
+
     # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
     if not order.assigned_installer:
         order.assigned_installer = request.user

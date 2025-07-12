@@ -38,6 +38,17 @@ def order_list(request):
             Q(assigned_manufacturer=request.user) |
             Q(assigned_installer=request.user)
         )
+
+        # Statistika ("new" status olib tashlandi)
+    stats = {
+        'total': orders.count(),
+        'measuring': orders.filter(status='measuring').count(),
+        'processing': orders.filter(status='processing').count(),
+        'installing': orders.filter(status='installing').count(),
+        'installed': orders.filter(status='installed').count(),
+        'cancelled': orders.filter(status='cancelled').count(),
+    }
+    
     
     # Filtrlash
     filter_form = OrderFilterForm(request.GET)
@@ -81,16 +92,7 @@ def order_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Statistika ("new" status olib tashlandi)
-    stats = {
-        'total': orders.count(),
-        'measuring': orders.filter(status='measuring').count(),
-        'processing': orders.filter(status='processing').count(),
-        'installing': orders.filter(status='installing').count(),
-        'installed': orders.filter(status='installed').count(),
-        'cancelled': orders.filter(status='cancelled').count(),
-    }
-    
+
     context = {
         'page_obj': page_obj,
         'filter_form': filter_form,

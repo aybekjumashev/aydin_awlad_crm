@@ -64,7 +64,7 @@ class PaymentAdmin(admin.ModelAdmin):
     
     def get_customer_name(self, obj):
         """Mijoz ismi"""
-        return obj.order.customer.full_name
+        return obj.order.customer
     get_customer_name.short_description = 'Mijoz'
     get_customer_name.admin_order_field = 'order__customer__first_name'
     

@@ -9,7 +9,7 @@ import uuid
 
 class Customer(models.Model):
     """
-    Mijozlar modeli - Yangilangan versiya
+    Mijozlar modeli - Telegram integration bilan yangilangan
     """
     
     # YANGI: Mijoz kategoriyalari
@@ -52,6 +52,17 @@ class Customer(models.Model):
         max_length=15,
         verbose_name='Asosiy telefon raqam',
         help_text='Asosiy aloqa telefon raqami'
+    )
+    
+    # YANGI: Telegram ID field
+    telegram_id = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        verbose_name='Telegram ID',
+        help_text='Telegram bot orqali registratsiya qilingan foydalanuvchi ID'
     )
     
     # Manzil va izoh
@@ -100,6 +111,7 @@ class Customer(models.Model):
             models.Index(fields=['first_name', 'last_name']),
             models.Index(fields=['phone']),
             models.Index(fields=['category']),
+            models.Index(fields=['telegram_id']),  # YANGI index
         ]
     
     def __str__(self):
@@ -117,6 +129,12 @@ class Customer(models.Model):
         """Mijoz uchun public sahifa havolasi"""
         return reverse('customers:public_detail', kwargs={'uuid': self.public_uuid})
     
+    def get_telegram_public_url(self):
+        """YANGI: Telegram ID bilan public sahifa havolasi"""
+        if self.telegram_id:
+            return reverse('customers:telegram_public', kwargs={'tgid': self.telegram_id})
+        return None
+    
     def total_orders(self):
         """Umumiy buyurtmalar soni"""
         return self.orders.count()
@@ -127,7 +145,6 @@ class Customer(models.Model):
         from payments.models import Payment
         return Payment.objects.filter(
             order__customer=self,
-            is_confirmed=True
         ).aggregate(
             total=models.Sum('amount')
         )['total'] or 0
@@ -148,38 +165,31 @@ class Customer(models.Model):
             )
         return None
     
-    def get_category_display_badge(self):
-        """YANGI: Kategoriya badge rangi"""
-        badge_classes = {
-            'new': 'badge bg-info',
-            'regular': 'badge bg-secondary',
-            'vip': 'badge bg-warning text-dark',
-            'inactive': 'badge bg-danger',
-        }
-        return badge_classes.get(self.category, 'badge bg-secondary')
+    def is_complete_profile(self):
+        """YANGI: Profil to'liqligini tekshirish"""
+        required_fields = [self.first_name, self.last_name, self.phone, self.address]
+        return all(field and field.strip() for field in required_fields)
     
-    def is_birthday_today(self):
-        """YANGI: Bugun tug'ilgan kun ekanligini tekshirish"""
-        if self.birth_date:
-            from datetime import date
-            today = date.today()
-            return (today.month == self.birth_date.month and 
-                   today.day == self.birth_date.day)
-        return False
+    @classmethod
+    def get_by_telegram_id(cls, telegram_id):
+        """YANGI: Telegram ID bo'yicha mijozni topish"""
+        try:
+            return cls.objects.get(telegram_id=str(telegram_id))
+        except cls.DoesNotExist:
+            return None
     
-    def days_until_birthday(self):
-        """YANGI: Tug'ilgan kungacha qolgan kunlar"""
-        if self.birth_date:
-            from datetime import date
-            today = date.today()
-            birthday_this_year = self.birth_date.replace(year=today.year)
-            
-            if birthday_this_year < today:
-                birthday_this_year = birthday_this_year.replace(year=today.year + 1)
-            
-            return (birthday_this_year - today).days
-        return None
-
+    @classmethod
+    def create_from_telegram(cls, telegram_id, phone_number, first_name=None, last_name=None):
+        """YANGI: Telegram ma'lumotlaridan mijoz yaratish"""
+        customer = cls.objects.create(
+            telegram_id=str(telegram_id),
+            phone=phone_number,
+            first_name=first_name or '',
+            last_name=last_name or '',
+            address='',  # Bo'sh manzil, keyinchalik to'ldiriladi
+            category='new'
+        )
+        return customer
 
 class CustomerPhone(models.Model):
     """

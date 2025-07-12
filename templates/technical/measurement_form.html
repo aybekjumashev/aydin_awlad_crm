@@ -251,17 +251,25 @@ function createItemForm(index) {
                         ${materialTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
                     </select>
                 </div>
-                <div class="col-sm-3 mb-3">
+                <div class="col-sm-2 mb-3">
                     <label class="form-label">Eni (sm) *</label>
-                    <input type="number" name="width_${index}" class="form-control" min="100" max="5000" required>
+                    <input type="number" name="width_${index}" id="width_${index}" class="form-control" min="10" max="5000" required oninput=change_kv(${index})>
                 </div>
-                <div class="col-sm-3 mb-3">
+                <div class="col-sm-2 mb-3">
                     <label class="form-label">Bo'yi (sm) *</label>
-                    <input type="number" name="height_${index}" class="form-control" min="100" max="5000" required>
+                    <input type="number" name="height_${index}" id="height_${index}" class="form-control" min="10" max="5000" required oninput=change_kv(${index})>
                 </div>
-                <div class="col-sm-4 mb-3">
+                <div class="col-sm-2 mb-3">
+                    <label class="form-label">m<sup>2</sup></label>
+                    <input type="number" name="kv_${index}" id="kv_${index}" disabled class="form-control" min="100" max="5000" required>
+                </div>
+                <div class="col-sm-2 mb-3">
                     <label class="form-label">Birlik narxi *</label>
-                    <input type="number" name="unit_price_${index}" class="form-control" min="0" step="1000" required>
+                    <input type="number" name="unit_price_${index}" id="unit_price_${index}" class="form-control" min="0" step="1000" required oninput=change_kv_price(${index})>
+                </div>
+                <div class="col-sm-2 mb-3">
+                    <label class="form-label">m<sup>2</sup> narxi *</label>
+                    <input type="number" name="kv_price_${index}" id="kv_price_${index}" class="form-control" oninput=change_unit_price(${index})>
                 </div>
                 <div class="col-sm-2 mb-3">
                     <label class="form-label">Donasi</label>
@@ -293,6 +301,24 @@ function createItemForm(index) {
             </div>
         </div>
     `;
+}
+
+function change_unit_price(index) {
+    const w = document.getElementById(`width_${index}`).value;
+    const h = document.getElementById(`height_${index}`).value;
+    document.getElementById(`unit_price_${index}`).value = document.getElementById(`kv_price_${index}`).value * w * h/10000;
+}
+
+function change_kv_price(index) {
+    const w = document.getElementById(`width_${index}`).value;
+    const h = document.getElementById(`height_${index}`).value;
+    document.getElementById(`kv_price_${index}`).value = Math.round(document.getElementById(`unit_price_${index}`).value/(w * h/10000));
+}
+
+function change_kv(index) {
+    const w = document.getElementById(`width_${index}`).value;
+    const h = document.getElementById(`height_${index}`).value;
+    document.getElementById(`kv_${index}`).value = w * h/10000;
 }
 
 function addItem() {

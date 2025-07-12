@@ -79,7 +79,7 @@
                         <td>
                             <span class="badge bg-info">{{ customer.orders.count }}</span>
                             {% if customer.orders.count > 0 %}
-                                <br><small class="text-muted">So'nggi: {{ customer.orders.first.created_at|date:"d.m.Y" }}</small>
+                                <br><small class="text-muted">So'nggi: {{ customer.orders.first.created_at|date:"d.m.Y H:m" }}</small>
                             {% endif %}
                         </td>
                         <td>

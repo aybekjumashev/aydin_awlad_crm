@@ -32,7 +32,7 @@ class CustomerAdmin(admin.ModelAdmin):
     
     list_display = (
         'get_full_name', 'phone', 'category', 'get_age_display', 
-        'total_orders', 'get_debt_status', 'is_birthday_today', 'created_at'
+        'total_orders', 'get_debt_status', 'created_at'
     )
     list_filter = (
         'category', 'created_at', 'birth_date', 'created_by'
@@ -89,21 +89,13 @@ class CustomerAdmin(admin.ModelAdmin):
         debt = obj.total_debt()
         if debt > 0:
             return format_html(
-                '<span style="color: red; font-weight: bold;">{:,.0f} so\'m</span>',
+                '<span style="color: red; font-weight: bold;">{} so\'m</span>',
                 debt
             )
         return format_html('<span style="color: green;">✓ To\'liq</span>')
     get_debt_status.short_description = 'Qarzdorlik'
     
-    def is_birthday_today(self, obj):
-        """Bugun tug'ilgan kun"""
-        if obj.is_birthday_today():
-            return format_html(
-                '<span style="color: orange; font-weight: bold;">🎂 Tug\'ilgan kun!</span>'
-            )
-        return "-"
-    is_birthday_today.short_description = 'Tug\'ilgan kun'
-    
+
     def get_public_link(self, obj):
         """Public sahifa havolasi"""
         if obj.pk:

@@ -131,7 +131,7 @@
                                     <td>
                                         <strong>#{{ order.order_number|default:order.pk }}</strong>
                                     </td>
-                                    <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                                    <td>{{ order.created_at|date:"d.m.Y H:m" }}</td>
                                     <td>
                                         {% if order.status == 'new' %}
                                         <span class="badge bg-primary">{{ order.get_status_display }}</span>

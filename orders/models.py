@@ -272,6 +272,15 @@ class Order(models.Model):
         else:
             self.payment_status = 'pending'
 
+    def total_price(self):
+        """
+        Buyurtmaning umumiy narxi (barcha OrderItem'larning yig'indisi)
+        """
+        total = sum(item.total_price for item in self.items.all())
+        return total if total else self.total_amount
+    
+
+
 class OrderItem(models.Model):
     """
     Buyurtma elementlari (Jalyuzilar)

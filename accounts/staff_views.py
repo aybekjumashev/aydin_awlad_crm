@@ -104,11 +104,10 @@ def staff_add(request):
     
     return render(request, 'accounts/staff_form.html', context)
 
-
 @login_required  
 def staff_detail(request, pk):
     """
-    Texnik xodim tafsilotlari
+    Texnik xodim tafsilotlari - YAXSHILANGAN VERSIYA
     """
     if not (request.user.is_manager or request.user.is_admin):
         messages.error(request, 'Sizda bu sahifani ko\'rish huquqi yo\'q!')
@@ -116,37 +115,190 @@ def staff_detail(request, pk):
     
     staff_member = get_object_or_404(User, pk=pk, role='technical')
     
-    # Xodimning statistikalari
+    # Import qilish kerak bo'lgan modellar
+    from django.db.models import Q, Sum, Count
+    from orders.models import Order
+    from payments.models import Payment  # MUHIM: Payment modelini import qilish
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # ASOSIY STATISTIKALAR - Template bilan mos keluvchi
     stats = {
+        # 1. Ishtirok etgan buyurtmalar (created_by field yo'q, shuning uchun ishtirok etgan buyurtmalar)
+        'created_orders': Order.objects.filter(
+            Q(assigned_measurer=staff_member) |
+            Q(assigned_manufacturer=staff_member) |
+            Q(assigned_installer=staff_member)
+        ).count(),
+        
+        # 2. O'lchov olgan buyurtmalar
+        'measured_orders': Order.objects.filter(
+            assigned_measurer=staff_member,
+            measurement_completed_date__isnull=False  # O'lchov tugagan
+        ).count(),
+        
+        # 3. Ishlab chiqargan buyurtmalar  
+        'processed_orders': Order.objects.filter(
+            assigned_manufacturer=staff_member,
+            production_completed_date__isnull=False  # Ishlab chiqarish tugagan
+        ).count(),
+        
+        # 4. O'rnatgan buyurtmalar
+        'installed_orders': Order.objects.filter(
+            assigned_installer=staff_member,
+            installation_completed_date__isnull=False  # O'rnatish tugagan
+        ).count(),
+        
+        # 5. Qabul qilgan to'lovlar soni
+        'received_payments': Payment.objects.filter(
+            received_by=staff_member,
+            status='confirmed'  # Faqat tasdiqlangan to'lovlar
+        ).count(),
+        
+        # 6. Jami qabul qilingan summa
+        'total_received': Payment.objects.filter(
+            received_by=staff_member,
+            status='confirmed'
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+    }
+    
+    # QO'SHIMCHA FOYDALI STATISTIKALAR
+    additional_stats = {
+        # Jami tayinlangan buyurtmalar
         'total_assigned_orders': Order.objects.filter(
             Q(assigned_measurer=staff_member) |
             Q(assigned_manufacturer=staff_member) |
             Q(assigned_installer=staff_member)
         ).count(),
+        
+        # Tugallangan buyurtmalar
         'completed_orders': Order.objects.filter(
             Q(assigned_measurer=staff_member) |
             Q(assigned_manufacturer=staff_member) |
             Q(assigned_installer=staff_member),
             status='installed'
         ).count(),
+        
+        # Faol (davom etayotgan) buyurtmalar
         'active_orders': Order.objects.filter(
             Q(assigned_measurer=staff_member) |
             Q(assigned_manufacturer=staff_member) |
             Q(assigned_installer=staff_member)
         ).exclude(status__in=['installed', 'cancelled']).count(),
+        
+        # Bu oyda qabul qilgan to'lovlar
+        'month_payments': Payment.objects.filter(
+            received_by=staff_member,
+            status='confirmed',
+            payment_date__month=timezone.now().month,
+            payment_date__year=timezone.now().year
+        ).count(),
+        
+        # Bu oyda qabul qilingan summa
+        'month_received': Payment.objects.filter(
+            received_by=staff_member,
+            status='confirmed',
+            payment_date__month=timezone.now().month,
+            payment_date__year=timezone.now().year
+        ).aggregate(total=Sum('amount'))['total'] or 0,
+        
+        # Bu haftada bajarilgan ishlar
+        'week_completed_tasks': Order.objects.filter(
+            Q(
+                assigned_measurer=staff_member,
+                measurement_completed_date__gte=timezone.now() - timedelta(days=7)
+            ) |
+            Q(
+                assigned_manufacturer=staff_member,
+                production_completed_date__gte=timezone.now() - timedelta(days=7)
+            ) |
+            Q(
+                assigned_installer=staff_member,
+                installation_completed_date__gte=timezone.now() - timedelta(days=7)
+            )
+        ).count(),
     }
     
-    # Oxirgi buyurtmalar
+    # Statistikalarni birlashtirish
+    stats.update(additional_stats)
+    
+    # So'nggi buyurtmalar (xodim ishtirok etgan)
     recent_orders = Order.objects.filter(
         Q(assigned_measurer=staff_member) |
         Q(assigned_manufacturer=staff_member) |
         Q(assigned_installer=staff_member)
     ).select_related('customer').order_by('-created_at')[:10]
     
+    # So'nggi qabul qilgan to'lovlar (xodim qabul qilgan)
+    try:
+        recent_payments = Payment.objects.filter(
+            received_by=staff_member
+        ).exclude(
+            status__in=['cancelled', 'pending']  # Bekor qilingan va kutilayotganlarni chiqarib tashlash
+        ).select_related('order', 'order__customer').order_by('-payment_date')[:5]
+    except Exception as e:
+        # Agar Payment modeli yoki fieldlari bilan muammo bo'lsa
+        recent_payments = []
+    
+    # SAMARADORLIK HISOBI (Performance Metrics)
+    performance_stats = {}
+    
+    # O'lchov olish samaradorligi
+    if staff_member.can_measure:
+        measuring_orders = Order.objects.filter(assigned_measurer=staff_member)
+        performance_stats['measuring_efficiency'] = {
+            'total_assigned': measuring_orders.count(),
+            'completed': measuring_orders.filter(measurement_completed_date__isnull=False).count(),
+            'pending': measuring_orders.filter(measurement_completed_date__isnull=True).count(),
+        }
+        # Foiz hisobi
+        if performance_stats['measuring_efficiency']['total_assigned'] > 0:
+            performance_stats['measuring_efficiency']['completion_rate'] = round(
+                (performance_stats['measuring_efficiency']['completed'] / 
+                 performance_stats['measuring_efficiency']['total_assigned']) * 100, 1
+            )
+        else:
+            performance_stats['measuring_efficiency']['completion_rate'] = 0
+    
+    # Ishlab chiqarish samaradorligi  
+    if staff_member.can_manufacture:
+        manufacturing_orders = Order.objects.filter(assigned_manufacturer=staff_member)
+        performance_stats['manufacturing_efficiency'] = {
+            'total_assigned': manufacturing_orders.count(),
+            'completed': manufacturing_orders.filter(production_completed_date__isnull=False).count(),
+            'pending': manufacturing_orders.filter(production_completed_date__isnull=True).count(),
+        }
+        if performance_stats['manufacturing_efficiency']['total_assigned'] > 0:
+            performance_stats['manufacturing_efficiency']['completion_rate'] = round(
+                (performance_stats['manufacturing_efficiency']['completed'] / 
+                 performance_stats['manufacturing_efficiency']['total_assigned']) * 100, 1
+            )
+        else:
+            performance_stats['manufacturing_efficiency']['completion_rate'] = 0
+    
+    # O'rnatish samaradorligi
+    if staff_member.can_install:
+        installing_orders = Order.objects.filter(assigned_installer=staff_member)
+        performance_stats['installing_efficiency'] = {
+            'total_assigned': installing_orders.count(),
+            'completed': installing_orders.filter(installation_completed_date__isnull=False).count(),
+            'pending': installing_orders.filter(installation_completed_date__isnull=True).count(),
+        }
+        if performance_stats['installing_efficiency']['total_assigned'] > 0:
+            performance_stats['installing_efficiency']['completion_rate'] = round(
+                (performance_stats['installing_efficiency']['completed'] / 
+                 performance_stats['installing_efficiency']['total_assigned']) * 100, 1
+            )
+        else:
+            performance_stats['installing_efficiency']['completion_rate'] = 0
+    
+    stats['performance'] = performance_stats
+    
     context = {
         'staff_member': staff_member,
         'stats': stats,
         'recent_orders': recent_orders,
+        'recent_payments': recent_payments,
         'title': f'{staff_member.get_full_name() or staff_member.username} - Tafsilotlar'
     }
     

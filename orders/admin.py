@@ -10,7 +10,6 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     fields = ['blind_type', 'width', 'height', 'material', 'quantity', 'unit_price']
-    readonly_fields = ['total_price']
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -46,7 +45,9 @@ class OrderAdmin(admin.ModelAdmin):
         'remaining_amount',
         'progress_percentage',
         'gps_location_display',
-        'maps_links'
+        'maps_links',
+        'created_at',
+        'updated_at'
     ]
     
     fieldsets = (
@@ -176,7 +177,6 @@ class OrderItemAdmin(admin.ModelAdmin):
         'material',
         'quantity',
         'unit_price',
-        'total_price',
         'created_at'
     ]
     
@@ -196,7 +196,6 @@ class OrderItemAdmin(admin.ModelAdmin):
         'material'
     ]
     
-    readonly_fields = ['total_price', 'area']
     
     fieldsets = (
         ('Buyurtma ma\'lumotlari', {
@@ -210,7 +209,7 @@ class OrderItemAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Narx ma\'lumotlari', {
-            'fields': ('quantity', 'unit_price', 'total_price', 'area')
+            'fields': ('quantity', 'unit_price', 'area')
         }),
         ('Qo\'shimcha', {
             'fields': ('notes',),
@@ -231,19 +230,10 @@ class OrderItemAdmin(admin.ModelAdmin):
         return f"{obj.width} x {obj.height} sm"
     dimensions.short_description = 'O\'lcham'
     
-    def total_price(self, obj):
-        return f"{obj.total_price:,.0f} so'm"
-    total_price.short_description = 'Umumiy narx'
+
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('order', 'order__customer')
 
-# Admin panelda GPS ma'lumotlarni yanada chiroyli ko'rsatish uchun CSS
-admin.site.index_template = 'admin/custom_index.html'  # Agar custom template kerak bo'lsa
 
-# Admin panel uchun qo'shimcha CSS va JavaScript
-class AdminGPSMedia:
-    css = {
-        'all': ('admin/css/gps_admin.css',)
-    }
-    js = ('admin/js/gps_admin.js',)
+
