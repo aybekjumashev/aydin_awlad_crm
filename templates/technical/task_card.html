@@ -69,6 +69,13 @@
                 <i class="bi bi-calendar me-1"></i>
                 Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
             </p>
+
+            {% if order.installation_scheduled_date %}
+            <p class="card-text text-muted small mb-2">
+                <i class="bi bi-calendar me-1"></i>
+                O'rnatilishi kerak: {{ order.installation_scheduled_date|date:"d.m.Y H:i" }}
+            </p>
+            {% endif %}
             
             <!-- Vazifa muddati (agar mavjud bo'lsa) -->
             {% if order.measurement_date and order.status == 'measuring' %}

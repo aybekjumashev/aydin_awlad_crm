@@ -187,6 +187,10 @@ class OrderUpdateForm(forms.ModelForm):
         self.fields['assigned_manufacturer'].empty_label = "Ishlab chiquvchini tanlang"
         self.fields['assigned_installer'].empty_label = "O'rnatuvchini tanlang"
 
+        # readonly
+        self.fields['customer'].widget.attrs['disabled'] = True
+        
+
 
 class OrderStatusUpdateForm(forms.ModelForm):
     """

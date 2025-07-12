@@ -29,6 +29,18 @@ class Customer(models.Model):
         max_length=50,
         verbose_name='Familiya'
     )
+    fathers_name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name='Otasining ismi'
+    )
+    passport = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='Passport raqami'
+    )
     
     # YANGI: Tug'ilgan kun
     birth_date = models.DateField(
@@ -119,7 +131,7 @@ class Customer(models.Model):
     
     def get_full_name(self):
         """To'liq ism qaytaradi"""
-        return f"{self.first_name} {self.last_name}".strip()
+        return f"{self.first_name} {self.last_name} {self.fathers_name or ''}".strip()
     
     def get_absolute_url(self):
         """Mijoz sahifasiga havola"""

@@ -59,6 +59,23 @@
                 </div>
             </div>
 
+            <!-- O'rnatish vaqtini belgilash -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        O'rnatish vaqtini belgilash
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">O'rnatish vaqti</label>
+                        <input type="date" class="form-control" id="installation_scheduled_date" required>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- GPS Koordinatalar kartasi -->
             <div class="card mb-3">
                 <div class="card-header bg-success text-white">
@@ -68,28 +85,30 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">
+                    <!-- <p class="text-muted small mb-3">
                         O'rnatish vaqtida oson topish uchun aniq joylashuvni belgilang
                     </p>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Kenglik (Latitude)</label>
-                        <input type="number" id="latitude" name="latitude" 
-                               class="form-control" step="any" 
-                               placeholder="41.311081" readonly>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Uzunlik (Longitude)</label>
-                        <input type="number" id="longitude" name="longitude" 
-                               class="form-control" step="any" 
-                               placeholder="69.240562" readonly>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Aniqlik (metr)</label>
-                        <input type="number" id="location_accuracy" name="location_accuracy" 
-                               class="form-control" readonly>
+                     -->
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div class="mb-3">
+                            <!-- <label class="form-label">Kenglik</label> -->
+                            <input type="hidden" id="latitude" name="latitude" 
+                                class="form-control" step="any" 
+                                placeholder="41.311081" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <!-- <label class="form-label">Uzunlik</label> -->
+                            <input type="hidden" id="longitude" name="longitude" 
+                                class="form-control" step="any" 
+                                placeholder="69.240562" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <!-- <label class="form-label">Aniqlik (metr)</label> -->
+                            <input type="hidden" id="location_accuracy" name="location_accuracy" 
+                                class="form-control" readonly>
+                        </div>
                     </div>
                     
                     <div class="d-grid gap-2">
@@ -119,6 +138,8 @@
                 <input type="hidden" name="measurement_latitude" id="measurement_latitude">
                 <input type="hidden" name="measurement_longitude" id="measurement_longitude">
                 <input type="hidden" name="measurement_location_accuracy" id="measurement_location_accuracy">
+                <input type="hidden" name="installation_scheduled_date" id="measurement_installation_scheduled_date">
+
                 
                 <div class="card mb-4">
                     <div class="card-header">
@@ -489,11 +510,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const lat = document.getElementById('latitude').value;
         const lng = document.getElementById('longitude').value;
         const accuracy = document.getElementById('location_accuracy').value;
+        const installation_scheduled_date = document.getElementById('installation_scheduled_date').value;
+
         
         if (lat && lng) {
             document.getElementById('measurement_latitude').value = lat;
             document.getElementById('measurement_longitude').value = lng;
             document.getElementById('measurement_location_accuracy').value = accuracy || '';
+            document.getElementById('measurement_installation_scheduled_date').value = installation_scheduled_date || '';
         }
         
         // Form validation

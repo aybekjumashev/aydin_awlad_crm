@@ -22,14 +22,10 @@
             </a>
             {% endif %}
             
-            {% if user.is_manager or user.is_admin %}
+            {% if user.is_manager or user.is_admin and order.status != 'cancelled' %}
             <a href="{% url 'orders:edit' order.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
                 Tahrirlash
-            </a>
-            <a href="{% url 'orders:status_update' order.pk %}" class="btn btn-sm btn-info">
-                <i class="bi bi-arrow-repeat me-1"></i>
-                Status
             </a>
             {% endif %}
             <a href="{% url 'orders:print' order.pk %}" class="btn btn-sm btn-secondary" target="_blank">
@@ -88,6 +84,7 @@
                         <span class="badge bg-success">{{ order.get_status_display }}</span>
                     {% elif order.status == 'cancelled' %}
                         <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                        <small class="text-danger">{{ order.cancelled_notes }}</small>
                     {% endif %}
                 </div>
                 <div class="mb-2">

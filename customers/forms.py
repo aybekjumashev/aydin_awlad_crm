@@ -13,7 +13,8 @@ class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            'first_name', 'last_name', 'birth_date', 'category', 
+            'first_name', 'last_name', 'fathers_name', 'passport',
+            'birth_date', 'category', 
             'phone', 'address', 'notes'
         ]
         widgets = {
@@ -26,6 +27,14 @@ class CustomerForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Mijoz familiyasi...',
                 'required': True
+            }),
+            'fathers_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Otasining ismi...'
+            }),
+            "passport": forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'KA1234567'
             }),
             'birth_date': forms.DateInput(attrs={
                 'class': 'form-control',
@@ -55,6 +64,8 @@ class CustomerForm(forms.ModelForm):
         labels = {
             'first_name': 'Ism',
             'last_name': 'Familiya',
+            'fathers_name': 'Otasining ismi',
+            'passport': 'Passport raqami',
             'birth_date': 'Tug\'ilgan kun',
             'category': 'Kategoriya',
             'phone': 'Asosiy telefon raqam',
@@ -74,6 +85,8 @@ class CustomerForm(forms.ModelForm):
         # Majburiy bo'lmagan maydonlar
         self.fields['birth_date'].required = False
         self.fields['notes'].required = False
+        self.fields['fathers_name'].required = False
+        self.fields['passport'].required = False
 
         
         # Birth_date input format - Django HTML5 date input uchun

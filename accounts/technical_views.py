@@ -213,6 +213,7 @@ def measurement_form(request, order_id):
             measurement_latitude = request.POST.get('measurement_latitude')
             measurement_longitude = request.POST.get('measurement_longitude')
             measurement_location_accuracy = request.POST.get('measurement_location_accuracy')
+            installation_scheduled_date = request.POST.get('installation_scheduled_date')
             
             try:
                 item_count = int(item_count_str)
@@ -322,6 +323,7 @@ def measurement_form(request, order_id):
             # Buyurtmani yangilash
             order.total_amount = total_amount
             order.measurement_notes = measurement_notes
+            order.installation_scheduled_date = installation_scheduled_date
 
             current_notes = order.notes or ''
             measurement_info = f"{measurement_notes}{gps_info}"

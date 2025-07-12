@@ -26,7 +26,7 @@
 <form method="post" novalidate>
     {% csrf_token %}
     
-    <div class="row">
+    <div class="row justify-content-center">
         <!-- Buyurtma asosiy ma'lumotlari -->
         <div class="col-md-4 mb-4">
             <div class="card">
@@ -53,185 +53,21 @@
                     <div class="mb-0">
                         {{ form.notes|as_crispy_field }}
                     </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Jalyuzilar formset -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-window me-2"></i>
-                        Jalyuzilar ro'yxati
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" id="add-item-btn">
-                        <i class="bi bi-plus me-1"></i>
-                        Jalyuzi qo'shish
-                    </button>
-                </div>
-                <div class="card-body">
-                    {{ formset.management_form }}
-                    
-                    <div id="formset-container">
-                        {% for form in formset %}
-                        <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="{{ forloop.counter0 }}">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 text-primary">
-                                    <i class="bi bi-window me-1"></i>
-                                    <span class="item-title">Jalyuzi #<span class="item-number">{{ forloop.counter }}</span></span>
-                                </h6>
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" 
-                                        {% if formset.forms|length == 1 %}style="display: none;"{% endif %}>
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                            
-                            <!-- Hidden fields -->
-                            {% for hidden in form.hidden_fields %}
-                                {{ hidden }}
-                            {% endfor %}
-                            
-                            <!-- Form fields -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
-                                    {{ form.blind_type }}
-                                    {% if form.blind_type.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.blind_type.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Material</label>
-                                    {{ form.material }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">O'rnatish turi</label>
-                                    {{ form.installation_type }}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Xona nomi</label>
-                                    {{ form.room_name }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-sm">
-                                        {{ form.width }}
-                                        <span class="input-group-text">sm</span>
-                                    </div>
-                                    {% if form.width.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.width.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-sm">
-                                        {{ form.height }}
-                                        <span class="input-group-text">sm</span>
-                                    </div>
-                                    {% if form.height.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.height.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Donasi</label>
-                                    {{ form.quantity }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-sm">
-                                        {{ form.unit_price }}
-                                        <span class="input-group-text">so'm</span>
-                                    </div>
-                                    {% if form.unit_price.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.unit_price.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Jami narx</label>
-                                    <div class="alert alert-info p-2 mb-0">
-                                        <span class="item-total">0 so'm</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mexanizm turi</label>
-                                    {{ form.mechanism_type }}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Karniz turi</label>
-                                    {{ form.cornice_type }}
-                                </div>
-                            </div>
-                            
-                            <div class="mb-0">
-                                <label class="form-label">Qo'shimcha izohlar</label>
-                                {{ form.notes }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <!-- Umumiy hisob -->
-                    <div class="row mt-4">
-                        <div class="col-md-6 offset-md-6">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <span>Jami elementlar:</span>
-                                        <strong id="total-items">0</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between">
-                                        <span>Umumiy narx:</span>
-                                        <strong id="total-price" class="text-primary">0 so'm</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Saqlash tugmalari -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            O'zgarishlar darhol saqlanadi
-                        </div>
+
+                    <div class="d-flex justify-content-between">
+                        <!-- <a href="{% url 'orders:delete' order.pk %}" class="btn btn-danger me-2">
+                            <i class="bi bi-x-circle me-1"></i>
+                            O'chirish
+                        </a> -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Bekor qilish
+                        </button>
                         
-                        <div>
-                            <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary me-2">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Bekor qilish
-                            </a>
-                            
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-1"></i>
-                                O'zgarishlarni saqlash
-                            </button>
-                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            O'zgarishlarni saqlash
+                        </button>
                     </div>
                 </div>
             </div>
@@ -239,6 +75,33 @@
     </div>
 </form>
 
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">#{{ order.order_number }}- Bekor qilish </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'orders:delete' order.pk %}" method="post">
+        {% csrf_token %}
+        <div class="modal-body">        
+            <div class="mb-3">
+                <label class="form-label">Bekor qilish izohini kiriting</label>
+                <textarea name="notes" class="form-control" rows="3" required></textarea>
+            </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+            <span class="text-danger">Rostdan ham buyurtmani bekor qilmoqchimisiz?</span>
+            <button type="submit" class="btn btn-danger">Ha</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

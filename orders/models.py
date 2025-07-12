@@ -159,6 +159,16 @@ class Order(models.Model):
         null=True,
         verbose_name='O\'rnatish yakunlanish sanasi'
     )
+    installation_scheduled_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='O\'rnatish sanasi'
+    )
+    cancelled_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Bekor qilingan sana'
+    )
     
     # Qo'shimcha ma'lumotlar
     notes = models.TextField(
@@ -169,6 +179,12 @@ class Order(models.Model):
         blank=True,
         verbose_name='O\'lchov ishi izohlari'
     )
+    cancelled_notes = models.TextField(
+        blank=True,
+        verbose_name='Bekor qilingan izohlar'
+    )
+    
+
     
     # Tizim sanalari
     created_at = models.DateTimeField(

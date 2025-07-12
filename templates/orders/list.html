@@ -196,7 +196,7 @@
                                 <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline-primary btn-sm" title="Ko'rish">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                {% if user.is_manager or user.is_admin %}
+                                {% if user.is_manager or user.is_admin and order.status != 'cancelled' %}
                                 <a href="{% url 'orders:edit' order.pk %}" class="btn btn-outline-secondary btn-sm" title="Tahrirlash">
                                     <i class="bi bi-pencil"></i>
                                 </a>

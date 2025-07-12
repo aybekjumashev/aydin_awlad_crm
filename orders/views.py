@@ -195,16 +195,13 @@ def order_delete(request, pk):
     
     if request.method == 'POST':
         order_number = order.order_number
-        order.delete()
+        order.status = 'cancelled'
+        order.cancelled_notes = request.POST.get('notes', '')
+        order.save()
         messages.success(request, f'Buyurtma #{order_number} o\'chirildi!')
-        return redirect('orders:list')
+
+    return redirect('orders:list')
     
-    context = {
-        'order': order,
-        'title': f'#{order.order_number} - O\'chirish'
-    }
-    
-    return render(request, 'orders/delete.html', context)
 
 @login_required
 def order_measurement(request, pk):

@@ -66,7 +66,7 @@
                                         </a>
                                     </strong>
                                     <br>
-                                    <small class="text-muted">{{ customer.address|truncatechars:40 }}</small>
+                                    <small class="text-muted">{% if customer.passport %} {{ customer.passport }} | {% endif %} {{ customer.address|truncatechars:40 }}</small>
                                 </div>
                             </div>
                         </td>
