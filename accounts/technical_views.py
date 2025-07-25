@@ -424,6 +424,8 @@ def measurement_form(request, order_id):
             order.total_amount = total_amount
             order.measurement_notes = measurement_notes
             order.installation_scheduled_date = installation_scheduled_date
+            order.assigned_measurer = request.user
+            
 
             current_notes = order.notes or ''
             measurement_info = f"{measurement_notes}{gps_info}"
@@ -540,17 +542,11 @@ def manufacturing_task(request, order_id):
     
     order = get_object_or_404(Order, id=order_id, status='processing')
     
-
-    # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
-    if not order.assigned_manufacturer:
-        order.assigned_manufacturer = request.user
-        order.save()
-        messages.info(request, "Vazifa sizga tayinlandi.")
-    
     if request.method == 'POST':
         manufacturing_notes = request.POST.get('manufacturing_notes', '')
         
         order.status = 'installing'
+        order.assigned_manufacturer = request.user
         order.production_completed_date = timezone.now()
         
         current_notes = order.notes or ''
@@ -577,12 +573,6 @@ def installation_task(request, order_id):
         return redirect('dashboard')
     
     order = get_object_or_404(Order, id=order_id, status='installing')
-
-    # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
-    if not order.assigned_installer:
-        order.assigned_installer = request.user
-        order.save()
-        messages.info(request, "Vazifa sizga tayinlandi.")
     
     if request.method == 'POST':
         try:
@@ -610,6 +600,7 @@ def installation_task(request, order_id):
             # Buyurtmani yakunlash
             order.status = 'installed'
             order.installation_completed_date = timezone.now()
+            order.assigned_installer = request.user
             
             current_notes = order.notes or ''
             installation_info = f"{installation_notes}"

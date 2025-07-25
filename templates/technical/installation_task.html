@@ -163,48 +163,50 @@
                             </thead>
                             <tbody>
                                 {% for item in order.items.all %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ item.blind_type }}</strong>
-                                        {% if item.installation_type %}
-                                        <br><small class="text-muted">{{ item.installation_type }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
-                                        {% if item.mechanism_type %}
-                                        <br><small class="text-muted">{{ item.mechanism_type }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {{ item.material|default:"—" }}
-                                    </td>
-                                    <td>
-                                        {{ item.room_name|default:"—" }}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary">{{ item.quantity }} dona</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
-                                    </td>
-                                </tr>
-                                {% if item.notes %}
-                                <tr>
-                                    <td colspan="5">
-                                        <small class="text-muted">
-                                            <i class="bi bi-chat-text me-1"></i>
-                                            {{ item.notes }}
-                                        </small>
-                                    </td>
-                                </tr>
+                                {% if item.is_measured %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.blind_type }}</strong>
+                                            {% if item.installation_type %}
+                                            <br><small class="text-muted">{{ item.installation_type }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
+                                            {% if item.mechanism_type %}
+                                            <br><small class="text-muted">{{ item.mechanism_type }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ item.material|default:"—" }}
+                                        </td>
+                                        <td>
+                                            {{ item.room_name|default:"—" }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ item.quantity }} dona</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
+                                        </td>
+                                    </tr>
+                                    {% if item.notes %}
+                                    <tr>
+                                        <td colspan="5">
+                                            <small class="text-muted">
+                                                <i class="bi bi-chat-text me-1"></i>
+                                                {{ item.notes }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            Mahsulot ma'lumotlari mavjud emas
+                                        </td>
+                                    </tr>
                                 {% endif %}
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        Mahsulot ma'lumotlari mavjud emas
-                                    </td>
-                                </tr>
                                 {% endfor %}
                             </tbody>
                         </table>

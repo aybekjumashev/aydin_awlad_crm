@@ -162,17 +162,17 @@
 
 
         <!-- Items Table -->
-        <div class="section-title">Buyurtma tarkibi</div>
+        <div class="section-title">Буйыртпа қурамы</div>
         <table>
             <thead>
                 <tr>
                     <th>№</th>
-                    <th>Jalyuzi turi</th>
-                    <th>O'lcham (sm)</th>
-                    <th>Maydon (m²)</th>
-                    <th>Dona</th>
-                    <th>Birlik narxi</th>
-                    <th>Jami narx</th>
+                    <th>Жалузы түри</th>
+                    <th>Өлшем (см)</th>
+                    <th>Майдан (м2)</th>
+                    <th>Дона</th>
+                    <th>Бирлик баҳасы</th>
+                    <th>Жәми баҳа</th>
                 </tr>
             </thead>
             <tbody>
@@ -186,19 +186,19 @@
                     <td class="text-center">{{ item.width|floatformat:0 }} × {{ item.height|floatformat:0 }}</td>
                     <td class="text-center">{{ item.area|floatformat:2 }}</td>
                     <td class="text-center">{{ item.quantity }}</td>
-                    <td class="text-right">{{ item.unit_price|floatformat:0 }} so'm</td>
-                    <td class="text-right">{{ item.total_price|floatformat:0 }} so'm</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:0 }} сум</td>
+                    <td class="text-right">{{ item.total_price|floatformat:0 }} сум</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center">Hozircha jalyuzilar qo'shilmagan</td>
+                    <td colspan="7" class="text-center">Ҳәзирше жалюзилер қосылмаған</td>
                 </tr>
                 {% endfor %}
                 
                 {% if order.items.all %}
                 <tr class="total-row">
-                    <td colspan="6" class="text-right"><strong>Jami:</strong></td>
-                    <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
+                    <td colspan="6" class="text-right"><strong>Жәми:</strong></td>
+                    <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} сум</strong></td>
                 </tr>
                 {% endif %}
             </tbody>
@@ -207,16 +207,16 @@
         <!-- Moliyaviy ma'lumotlar -->
         {% if order.total_amount > 0 %}
         <div class="summary">
-            <div class="section-title">Moliyaviy ma'lumotlar</div>
+            <div class="section-title">Финанслық мағлыўматлар</div>
             <div class="summary-grid">
                 <div>
-                    <div class="info-row"><span class="info-label">Umumiy narx:</span> {{ order.total_amount|floatformat:0 }} so'm</div>
-                    <div class="info-row"><span class="info-label">To'langan:</span> {{ order.paid_amount|floatformat:0 }} so'm</div>
-                    <div class="info-row"><span class="info-label">Qoldiq:</span> {{ order.remaining_amount|floatformat:0 }} so'm</div>
+                    <div class="info-row"><span class="info-label">Улыўма баҳа:</span> {{ order.total_amount|floatformat:0 }} сум</div>
+                    <div class="info-row"><span class="info-label">Төленген:</span> {{ order.paid_amount|floatformat:0 }} сум</div>
+                    <div class="info-row"><span class="info-label">Қалдық:</span> {{ order.remaining_amount|floatformat:0 }} сум</div>
                 </div>
                 <div>
                     <div class="info-row">
-                        <span class="info-label">To'lov holati:</span>
+                        <span class="info-label">Төлем жағдайы:</span>
                         <span style="font-weight: bold;">{{ order.get_payment_status_display }}</span>
                     </div>
                 </div>
