@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шәртнама №{{ order.order_number }}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; background-color: white; }
+            .page-container { box-shadow: none; margin: 0; }
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14pt;
+            line-height: 1.5;
+            background-color: #f0f0f0;
+        }
+        .page-container {
+            /* Ekranda chiroyli ko'rinishi uchun A4 o'lchamini saqlaymiz, lekin PDF ga ta'sir qilmaydigan qilib */
+            max-width: 210mm; 
+            margin: 1cm auto; /* Ekranda markazlashtirish uchun */
+            padding: 2cm 1.5cm; /* Ekranda ichki bo'shliqlarni ko'rsatish uchun */
+            
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+
+            /* PDF generatsiya uchun bu xususiyatlarni olib tashlaymiz yoki o'zgartiramiz */
+            /* width: 210mm; <-- OLIB TASHLANDI */
+            /* min-height: 297mm; <-- OLIB TASHLANDI, kerak emas */
+        }
+        h1, h2 {
+            text-align: center;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 16pt;
+            margin-bottom: 5px;
+        }
+        h2 {
+            font-size: 14pt;
+            margin-bottom: 15px;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        p {
+            text-align: justify;
+            text-indent: 1.25cm;
+            margin: 10px 0;
+        }
+        .section-title {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .placeholder {
+            font-weight: bold;
+            color: #333;
+        }
+        .table-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-container td {
+            padding: 5px 0;
+        }
+        .table-container .label {
+            width: 40%;
+        }
+        .table-container .value {
+            border-bottom: 1px solid black;
+            font-weight: bold;
+        }
+        .signature {
+            text-align: center;
+        }
+        .signature .name {
+            margin-top: 20px;
+        }
+        .no-indent {
+            text-indent: 0;
+        }
+        .controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-print { background-color: #0d6efd; }
+        .btn-pdf { background-color: #198754; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls no-print">
+        <button class="btn btn-print" onclick="window.print()">Chop etish</button>
+        <button class="btn btn-pdf" id="download-pdf">PDF Yuklash</button>
+    </div>
+
+    <div class="page-container" id="contract-content">
+        <h1>Пуллы хызмет көрсетиў ҳаққында<br>ШӘРТНАМА</h1>
+        <h2>№ <span class="placeholder">{{ order.order_number }}</span></h2>
+        
+        <div class="header-info">
+            <span></span>
+            <span>{{ today|date:"«d» E Y" }}-жыл</span>
+            <span>Нөкис қаласы</span>
+        </div>
+
+        <p>
+            Устав тийкарында ис көриўши «AYDIN AWLAD» жуўапкершилиги шекленген жәмийети (кейинги қатарларда «Хызмет көрсетиўши» деб жүритиледи) баслығы Худайбергенов Исламбек Бахадырович ҳәм Устав тийкарында ис көриўши «<span class="placeholder">{{ customer.get_full_name }}</span>» (кейинги қатарларда «Буйыртпашы» деб жүритиледи) баслығы «<span class="placeholder">{{ customer.get_full_name }}</span>», биргеликте Тәреплер деп аталыўшылар усы шәртнаманы төмендегилер ҳаққында дүзеди:
+        </p>
+
+        <div class="section-title">I. ШӘРТНАМА ПРЕДМЕТИ</div>
+        <p>
+            1.1. Усы шәртнама бойынша «Хызмет көрсетиўши» «Буйыртпашы»ға усы шәртнамада белгиленген тәртипте ҳәм шәртлерде пуллы хызмет яғный, узақ жылларға хызмет көрсетиўге арналған беккем, сапалы, заманагой дизайндағы “ЖАЛЮЗИ” ҳәм Маскитный сетка орнатып (кейинги қатарларда «Пуллы хызмет» деп жүритиледи) береди. «Буйыртпашы» болса усы шәртнамада белгиленген тәртипте ҳәм муғдарда хызмет ҳақы төлейди.
+        </p>
+        <p>
+            1.2. «Пуллы хызмет» «Буйыртпашы»ға тийисли болған <span class="placeholder">{{ order.address }}</span> жайда жайласқан имараттағы жәми <span class="placeholder">{{ total_area_sqm|floatformat:2 }}</span> кв. метрли ханаға исленеди. «Пуллы хызметин» көрсетиў басланатуғын сәне <span class="placeholder">{{ order.created_at|date:"Y-жыл «d»-F" }}</span> күни басланып, <span class="placeholder">{{ order.installation_scheduled_date|date:"Y-жыл «d»-F"|default:"(көрсетилмеген)" }}</span> күни жуўмақланады.
+        </p>
+
+
+        <!-- Items Table -->
+        <div class="section-title">Buyurtma tarkibi</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Jalyuzi turi</th>
+                    <th>O'lcham (sm)</th>
+                    <th>Maydon (m²)</th>
+                    <th>Dona</th>
+                    <th>Birlik narxi</th>
+                    <th>Jami narx</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ item.get_blind_type_display }}</strong>
+                        <br><small>{{ item.get_installation_type_display }} / {{ item.get_material_display }}</small>
+                    </td>
+                    <td class="text-center">{{ item.width|floatformat:0 }} × {{ item.height|floatformat:0 }}</td>
+                    <td class="text-center">{{ item.area|floatformat:2 }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:0 }} so'm</td>
+                    <td class="text-right">{{ item.total_price|floatformat:0 }} so'm</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">Hozircha jalyuzilar qo'shilmagan</td>
+                </tr>
+                {% endfor %}
+                
+                {% if order.items.all %}
+                <tr class="total-row">
+                    <td colspan="6" class="text-right"><strong>Jami:</strong></td>
+                    <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <!-- Moliyaviy ma'lumotlar -->
+        {% if order.total_amount > 0 %}
+        <div class="summary">
+            <div class="section-title">Moliyaviy ma'lumotlar</div>
+            <div class="summary-grid">
+                <div>
+                    <div class="info-row"><span class="info-label">Umumiy narx:</span> {{ order.total_amount|floatformat:0 }} so'm</div>
+                    <div class="info-row"><span class="info-label">To'langan:</span> {{ order.paid_amount|floatformat:0 }} so'm</div>
+                    <div class="info-row"><span class="info-label">Qoldiq:</span> {{ order.remaining_amount|floatformat:0 }} so'm</div>
+                </div>
+                <div>
+                    <div class="info-row">
+                        <span class="info-label">To'lov holati:</span>
+                        <span style="font-weight: bold;">{{ order.get_payment_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+
+        <div class="section-title">II. «ХЫЗМЕТ КӨРСЕТИЎШИ»НИҢ ҲУҚЫҚ ҲӘМ МӘЖБҮРИЯТЛАРЫ</div>
+        <p class="no-indent">
+            <b>2.1. «Хызмет көрсетиўши»ниң ҳуқықлары:</b><br>
+            - «Буйыртпашы»дан усы шәртнамада белгиленген төлемлерди өз ўақтында төлеўди талап қылыў;<br>
+            - Төлемлер усы шәртнамада көрсетилген тәртипте әмелге асырылмаған жағдайда «Пуллы хызметин» тоқтатып қойыў;<br>
+            - «Пуллы хызмет» тамамланғаннан кейин «Буйыртпашы» тәрепинен төлениўи зәрүр болған қарыздарлық бар болған жағдайда усы қарыздарлықты «Буйыртпашы»дан талап қылыў.
+        </p>
+        <p class="no-indent">
+            <b>2.2. «Хызмет көрсетиўши»ниң мәжбүриятлары:</b><br>
+            - «Буйыртпашы»ға «Пуллы хызмет»лерди усы шәртнаманың 1-бөлиминде көрсетилген тәртипте ҳәм мүддетте орынлаў мәжбүриятына ийе.
+        </p>
+
+        
+
+        <div class="section-title">III. «БУЙЫРТПАШЫ»НЫҢ ҲУҚЫҚ ҲӘМ МӘЖБҮРИЯТЛАРЫ</div>
+         <p class="no-indent">
+            <b>3.1. «Буйыртпашы»ның ҳуқықлары:</b><br>
+            - «Хызмет көрсетиўши»ден «Пуллы хызмет»лерди усы шәртнаманың 1-бөлиминде көрсетилген тәртипте ҳәм мүддетте ислеп бериўин талап етиў;<br>
+            - «Пуллы хызмет» тамамланғаннан кейин наразылықлар бар болған жағдайда 5 күн ишинде «Хызмет көрсетиўши»ге усы наразылықлар ҳаққында жазба түрде шағым етиў.
+        </p>
+        <p class="no-indent">
+            <b>3.2. «Буйыртпашы»ның мәжбүриятлары:</b><br>
+            - Усы шәртнамада белгиленген төлемлерди өз ўақытында ҳәм муғдарда төлеп барыў;<br>
+            - Буйыртпасы бойынша «Пуллы хызмети» тамамланғаннан кейин усы шәртнамаға муўапық қабыл етип алыў ҳәм дәлалатнамаға қол қойыў.
+        </p>
+
+        <div class="section-title">IV. ЕСАП-САНАҚ ШӘРТЛЕРИ</div>
+        <p>
+            4.1. Тәреплер усы шәртнаманы имзалаған күнниң өзинде «Буйыртпашы»ның қәлеўине көре, нақ, пластик карта ямаса пул өткериў жолы арқалы «Хызмет көрсетиўши»ниң есап бетине «Пуллы хызмет» ҳақысы <span class="placeholder">{{ total_price|floatformat:0 }}</span> сўмның <span class="placeholder">{{ prepayment_percentage }}</span> пайызы <span class="placeholder">{{ prepayment_amount|floatformat:0 }}</span> сўм муғдарында төлем әмелге асырады. Қалған <span class="placeholder">{{ prepayment_percentage }}</span> пайызы яғный <span class="placeholder">{{ remaining_amount|floatformat:0 }}</span> сўмды 3 ай даўамында ҳәр бир ай ушын <span class="placeholder">{{ payment_schedule.0.amount|floatformat:0 }}</span> сўмнан усы шәртнаманың 4.2-бәнтинде көрсетилген ўақытта ҳәм муғдарда төлеп барады.
+        </p>
+        <p class="no-indent">
+            <b>4.2. Төлем графиги:</b><br>
+            {% for payment in payment_schedule %}
+                - {{ payment.date|date:"Y-жыл, F" }} айы сәнесине шекем <span class="placeholder">{{ payment.amount|floatformat:0 }}</span> сўм;<br>
+            {% endfor %}
+        </p>
+
+        <div class="section-title">V. ШӘРТНАМАНЫҢ ӘМЕЛ ҚЫЛЫЎ МҮДДЕТИ</div>
+        <p>
+            5.1. Шәртнама тәреплер оны имзалағаннан күннен баслап күшке киреди ҳәм тәреплер мәбүриятларын толық орынлаған күнге шекем әмел қылынады.
+        </p>
+
+        <div class="section-title" style="page-break-before: always;">VIII. ТӘРЕПЛЕРДИҢ МӘНЗИЛИ, БАНК РЕКВИЗИТЛАРЫ ҲӘМ БАСҚА МАҒЛЫЎМАТЛАР</div>
+
+        <div class="table-container">
+            <div style="width: 48%;">
+                <h3 style="text-align: center;">«ХЫЗМЕТ КӨРСЕТИЎШИ»</h3>
+                <table>
+                    <tr><td class="label">Атамасы:</td><td class="value">«AYDIN AWLAD» ЖШЖ</td></tr>
+                    <tr><td class="label">Мәнзили:</td><td class="value">Қарақалпақстан Республикасы, Нөкис қаласы, Төрткүл гүзары, 48-жай</td></tr>
+                    <tr><td class="label">Есап бети:</td><td class="value">2020 8000 6047 3795 0001</td></tr>
+                    <tr><td class="label">СТИР (ИНН):</td><td class="value">300984334</td></tr>
+                    <tr><td class="label">МФО:</td><td class="value">00621</td></tr>
+                </table>
+            </div>
+            <div style="width: 48%;">
+                <h3 style="text-align: center;">«БУЙЫРТПАШЫ»</h3>
+                <table>
+                    <tr><td class="label">Атамасы:</td><td class="value">{{ customer.get_full_name }}</td></tr>
+                    <tr><td class="label">Мәнзили:</td><td class="value">{{ customer.address }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('download-pdf').addEventListener('click', function () {
+            const element = document.getElementById('contract-content');
+            const opt = {
+                margin: [10, 15, 10, 15], // [top, left, bottom, right] in mm
+                filename: 'shartnama-{{ order.order_number }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
+</body>
+</html>

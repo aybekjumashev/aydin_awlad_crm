@@ -18,6 +18,7 @@ urlpatterns = [
     path('<int:pk>/status/', views.order_status_update, name='status_update'),
     path('<int:pk>/assign-staff/', views.order_assign_staff, name='assign_staff'),
     path('<int:pk>/print/', views.order_print, name='print'),
+    path('<int:order_id>/contract/', views.generate_contract_view, name='generate_contract'),
     
     # To'lovlar
     path('<int:pk>/add-payment/', views.order_add_payment, name='add_payment'),

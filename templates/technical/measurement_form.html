@@ -21,8 +21,8 @@
 
     <div class="row">
         <!-- Buyurtma ma'lumotlari -->
-        <div class="col-md-4">
-            <div class="card mb-3">
+        <div class="col-md-4 mb-3">
+            <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
@@ -55,129 +55,96 @@
                     </div>
                     <div class="mb-0">
                         <span class="badge bg-info">{{ order.get_status_display }}</span>
+                        <!-- DEBUG: Ma'lumotlar ko'rsatish -->
+                        {% if existing_items_count > 0 %}
+                        <br><small class="text-muted mt-2 d-block">📋 {{ existing_items_count }} ta jalyuzi saqlangan</small>
+                        {% endif %}
                     </div>
-                </div>
-            </div>
-
-            <!-- O'rnatish vaqtini belgilash -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        O'rnatish vaqtini belgilash
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">O'rnatish vaqti</label>
-                        <input type="date" class="form-control" id="installation_scheduled_date" required>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- GPS Koordinatalar kartasi -->
-            <div class="card mb-3">
-                <div class="card-header bg-success text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-geo-alt-fill me-2"></i>
-                        GPS Joylashuv
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <!-- <p class="text-muted small mb-3">
-                        O'rnatish vaqtida oson topish uchun aniq joylashuvni belgilang
-                    </p>
-                     -->
-                    <div class="d-flex justify-content-between align-items-center gap-3">
-                        <div class="mb-3">
-                            <!-- <label class="form-label">Kenglik</label> -->
-                            <input type="hidden" id="latitude" name="latitude" 
-                                class="form-control" step="any" 
-                                placeholder="41.311081" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <!-- <label class="form-label">Uzunlik</label> -->
-                            <input type="hidden" id="longitude" name="longitude" 
-                                class="form-control" step="any" 
-                                placeholder="69.240562" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <!-- <label class="form-label">Aniqlik (metr)</label> -->
-                            <input type="hidden" id="location_accuracy" name="location_accuracy" 
-                                class="form-control" readonly>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="button" id="getLocationBtn" class="btn btn-success">
-                            <i class="bi bi-geo-alt-fill me-1"></i>
-                            Hozirgi joylashuvni olish
-                        </button>
-                        
-                        <button type="button" id="openMapBtn" class="btn btn-outline-primary" 
-                                style="display: none;">
-                            <i class="bi bi-map me-1"></i>
-                            Xaritada ko'rish
-                        </button>
-                    </div>
-                    
-                    <div id="locationStatus" class="mt-2"></div>
                 </div>
             </div>
         </div>
 
-        <!-- O'lchov formi -->
-        <div class="col-md-8">
-            <form method="post" class="needs-validation" novalidate id="measurement-form">
-                {% csrf_token %}
-                
-                <!-- GPS ma'lumotlari hidden fieldlar -->
-                <input type="hidden" name="measurement_latitude" id="measurement_latitude">
-                <input type="hidden" name="measurement_longitude" id="measurement_longitude">
-                <input type="hidden" name="measurement_location_accuracy" id="measurement_location_accuracy">
-                <input type="hidden" name="installation_scheduled_date" id="measurement_installation_scheduled_date">
-
-                
-                <div class="card mb-4">
+        <div class="col-md-4 p-0 m-0">
+            <!-- O'rnatish vaqtini belgilash -->
+            <div class="mb-3">
+                <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">
-                            <i class="bi bi-plus-circle me-2"></i>
-                            Jalyuzlar ro'yxati
+                            <i class="bi bi-clock-history me-2"></i>
+                            O'rnatish vaqtini belgilash
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div id="items-container">
-                            <!-- JavaScript orqali dinamik ravishda qo'shiladi -->
+                        <div class="mb-3">
+                            <label class="form-label">O'rnatish vaqti</label>
+                            <input type="date" class="form-control" id="installation_scheduled_date" 
+                                    required value="{{ existing_installation_date }}">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <input type="hidden" id="latitude" name="latitude" 
+                                class="form-control" step="any" 
+                                placeholder="41.311081" readonly 
+                                value="{{ existing_gps_lat|default:'' }}">
+                            
+                            <input type="hidden" id="longitude" name="longitude" 
+                                class="form-control" step="any" 
+                                placeholder="69.240562" readonly
+                                value="{{ existing_gps_lng|default:'' }}">
+                            
+                            <input type="hidden" id="location_accuracy" name="location_accuracy" 
+                                class="form-control" readonly
+                                value="{{ existing_gps_accuracy|default:'' }}">
                         </div>
                         
-                        <button type="button" id="add-item" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-plus me-1"></i>
-                            Yangi jalyuzi qo'shish
-                        </button>
+                        <div class="d-grid gap-2">
+                            <button type="button" id="getLocationBtn" class="btn btn-primary">
+                                <i class="bi bi-geo-alt-fill me-1"></i>
+                                {% if has_existing_gps %}Joylashuvni yangilash{% else %}Joylashuvni olish{% endif %}
+                            </button>
+                            
+                            <button type="button" id="openMapBtn" class="btn btn-outline-primary" 
+                                    {% if not has_existing_gps %}style="display: none;"{% endif %}>
+                                <i class="bi bi-map me-1"></i>
+                                Xaritada ko'rish
+                            </button>
+                        </div>
                         
-                        <input type="hidden" id="item-count" name="item_count" value="0">
+                        <div id="locationStatus" class="mt-2">
+                            {% if has_existing_gps %}
+                            <div class="alert alert-success small">
+                                <i class="bi bi-check-circle me-1"></i>
+                                GPS saqlangan: {{ existing_gps_lat|floatformat:6 }}, {{ existing_gps_lng|floatformat:6 }}
+                                {% if existing_gps_accuracy %}
+                                <br><small>Aniqlik: {{ existing_gps_accuracy }}m</small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- O'lchov izohlari -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="bi bi-chat-text me-2"></i>
-                            O'lchov izohlari
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <textarea name="measurement_notes" class="form-control" rows="3" 
-                                  placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar..."></textarea>
-                    </div>
+
+        </div>
+
+        <!-- O'lchov izohlari -->
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-chat-text me-2"></i>
+                        O'lchov izohlari
+                    </h6>
                 </div>
-
-                <!-- Avans to'lov -->
-                <div class="card mb-4">
+                <div class="card-body">
+                    <textarea name="measurement_notes" class="form-control mb-3" rows="3" 
+                                placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar...">{{ existing_measurement_notes }}</textarea>
+                </div>
+            </div>
+                        <!-- Avans to'lov -->
+            <div class="mt-3">
+                <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-cash-stack me-2"></i>
@@ -187,206 +154,312 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">To'lov summasi (so'm)</label>
+                                <label class="form-label">Summa</label>
                                 <input type="number" name="advance_payment" class="form-control" 
-                                       min="0" step="1000" placeholder="0">
+                                        min="0" step="1000" placeholder="0">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">To'lov usuli</label>
                                 <select name="payment_method" class="form-select">
                                     <option value="cash">Naqd pul</option>
                                     <option value="card">Karta</option>
-                                    <option value="transfer">Bank o'tkazmasi</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Tugmalar -->
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center gap-3">
-                            <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
-                                <i class="bi bi-arrow-left me-1"></i>
-                                Vazifalar ro'yxatiga qaytish
-                            </a>
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-check-circle me-1"></i>
-                                O'lchovni yakunlash - ishlab chiqarishga yuborish
-                            </button>
+    <!-- O'lchov formi -->
+    <div>
+        <form method="post" class="needs-validation" novalidate id="measurement-form">
+            {% csrf_token %}
+            
+            <!-- GPS ma'lumotlari hidden fieldlar -->
+            <input type="hidden" name="measurement_latitude" id="measurement_latitude">
+            <input type="hidden" name="measurement_longitude" id="measurement_longitude">
+            <input type="hidden" name="measurement_location_accuracy" id="measurement_location_accuracy">
+            <input type="hidden" name="installation_scheduled_date" id="measurement_installation_scheduled_date">
+
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Jalyuzlar ro'yxati
+                        {% if existing_items_count > 0 %}
+                        <span class="badge bg-info ms-2">{{ existing_items_count }} ta saqlangan</span>
+                        {% else %}
+                        <span class="badge bg-secondary ms-2">Mavjud emas</span>
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="items-container">
+                        <!-- JavaScript orqali dinamik ravishda qo'shiladi -->
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <button type="button" id="add-item" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus me-1"></i>
+                            Yangi jalyuzi qo'shish
+                        </button>
+                        <div class="d-flex flex-row align-items-center gap-2">
+                            <input type="checkbox" class="m-0" id="advance_payment_checkbox" name="advance_payment_checkbox">
+                            <label class="form-label m-0" for="advance_payment_checkbox" style="cursor: pointer;">Ishlab chiqarishga yuborish</label>
                         </div>
                     </div>
+                    
+                    <input type="hidden" id="item-count" name="item_count" value="0">
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Tugmalar -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Vazifalar ro'yxatiga qaytish
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Saqlash 
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- JavaScript -->
+
+<!-- JSON ma'lumotlarni xavfsiz o'tkazish -->
+{{ existing_items|json_script:"existing-items-data" }}
+{{ existing_gps_lat|json_script:"existing-gps-lat" }}
+{{ existing_gps_lng|json_script:"existing-gps-lng" }}
+{{ existing_gps_accuracy|json_script:"existing-gps-accuracy" }}
+{{ existing_items_count|json_script:"existing-items-count" }}
+
 <script>
-// ✅ Jalyuzi form logikasi
+// JSON ma'lumotlarni xavfsiz olish
+const existingItemsData = JSON.parse(document.getElementById('existing-items-data').textContent || '[]');
+const existingGpsLat = JSON.parse(document.getElementById('existing-gps-lat').textContent || 'null');
+const existingGpsLng = JSON.parse(document.getElementById('existing-gps-lng').textContent || 'null');
+const existingGpsAccuracy = JSON.parse(document.getElementById('existing-gps-accuracy').textContent || '""');
+const existingItemsCount = JSON.parse(document.getElementById('existing-items-count').textContent || '0');
+
+// Backend'dan kelgan mavjud ma'lumotlar
+const EXISTING_DATA = {
+    items: existingItemsData,
+    gps: { lat: existingGpsLat, lng: existingGpsLng, accuracy: existingGpsAccuracy },
+    debug: { itemsCount: existingItemsCount, orderStatus: "{{ order.status|escapejs }}", orderId: {{ order.id|default:0 }} }
+};
+
+console.log('🔧 DEBUG: Template\'dan JavaScript\'ga uzatilgan ma\'lumotlar:', EXISTING_DATA);
+</script>
+
+
+<!-- ================================================================== -->
+<!-- JAVASCRIPT - TUZATILGAN VA TOZALANGAN VERSIYA -->
+<!-- ================================================================== -->
+<script>
 let itemCount = 0;
 
-const blindTypes = [
-    'Gorizontal jalyuzi',
-    'Vertikal jalyuzi', 
-    'Rulon jalyuzi',
-    'Rimskiy jalyuzi',
-    'Zebra jalyuzi',
-    'Fotoshora',
-    'Boshqa'
-];
+// ----- GLOBAL CONSTANTS -----
+const blindTypeDisplayNames = { 'horizontal': 'Gorizontal jalyuzi', 'vertical': 'Vertikal jalyuzi', 'roller': 'Rollo parda', 'pleated': 'Plisse parda', 'bamboo': 'Bambuk jalyuzi', 'wooden': 'Yog\'och jalyuzi', 'fabric': 'Mato jalyuzi' };
+const materialDisplayNames = { 'aluminum': 'Alyuminiy', 'plastic': 'Plastik', 'wood': 'Yog\'och', 'fabric': 'Mato', 'bamboo': 'Bambuk', 'composite': 'Kompozit' };
+const installationTypes = { 'wall': 'Devorga o\'rnatish', 'ceiling': 'Shiftga o\'rnatish', 'window_frame': 'Deraza romiga o\'rnatish', 'niche': 'Ichki o\'rnatish' };
+const mechanismTypes = { 'cord': 'Ip bilan boshqarish', 'chain': 'Zanjir bilan boshqarish', 'wand': 'Tayoqcha bilan boshqarish', 'motorized': 'Elektr motor', 'remote': 'Masofadan boshqarish', 'smart': 'Aqlli boshqarish' };
 
-const materialTypes = [
-    'Alyuminiy',
-    'Plastik',
-    'Yog\'och',
-    'Mato',
-    'PVX',
-    'Boshqa'
-];
-
-function createItemForm(index) {
+// ----- FORM ITEM FUNCTIONS -----
+function createItemForm(index, existingData = null) {
     return `
-        <div class="item-form border rounded p-3 mb-3" data-index="${index}">
+        <div class="item-form border rounded p-3 mb-3" data-index="${index}" ${existingData ? 'style="border-left: 4px solid #28a745 !important;"' : ''}>
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0">Jalyuzi #${index + 1}</h6>
-                <button type="button" class="btn btn-danger btn-sm remove-item" onclick="removeItem(${index})">
+                <h6 class="mb-0">
+                    Jalyuzi #${index + 1}
+                    ${existingData ? '<span class="badge bg-success ms-2">Saqlangan</span>' : '<span class="badge bg-secondary ms-2">Yangi</span>'}
+                </h6>
+                <button type="button" class="btn btn-danger btn-sm remove-item" data-remove-index="${index}">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
-            
             <div class="row">
-                <div class="col-sm-6 mb-3">
-                    <label class="form-label">Jalyuzi turi *</label>
-                    <select name="blind_type_${index}" class="form-select" required>
-                        <option value="">Tanlang...</option>
-                        ${blindTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-sm-6 mb-3">
-                    <label class="form-label">Material turi</label>
-                    <select name="material_type_${index}" class="form-select">
-                        <option value="">Tanlang...</option>
-                        ${materialTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">Eni (sm) *</label>
-                    <input type="number" name="width_${index}" id="width_${index}" class="form-control" min="10" max="5000" required oninput=change_kv(${index})>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">Bo'yi (sm) *</label>
-                    <input type="number" name="height_${index}" id="height_${index}" class="form-control" min="10" max="5000" required oninput=change_kv(${index})>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">m<sup>2</sup></label>
-                    <input type="number" name="kv_${index}" id="kv_${index}" disabled class="form-control" min="100" max="5000" required>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">Birlik narxi *</label>
-                    <input type="number" name="unit_price_${index}" id="unit_price_${index}" class="form-control" min="0" step="1000" required oninput=change_kv_price(${index})>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">m<sup>2</sup> narxi *</label>
-                    <input type="number" name="kv_price_${index}" id="kv_price_${index}" class="form-control" oninput=change_unit_price(${index})>
-                </div>
-                <div class="col-sm-2 mb-3">
-                    <label class="form-label">Donasi</label>
-                    <input type="number" name="quantity_${index}" class="form-control" min="1" value="1">
-                </div>
-                <div class="col-sm-6 mb-3">
-                    <label class="form-label">O'rnatish turi</label>
-                    <select name="installation_type_${index}" class="form-select">
-                        <option value="">Tanlang...</option>
-                        <option value="Devorga">Devorga</option>
-                        <option value="Shiftga">Shiftga</option>
-                        <option value="Oynaga">Oynaga</option>
-                    </select>
-                </div>
-                <div class="col-sm-6 mb-3">
-                    <label class="form-label">Mexanizm turi</label>
-                    <select name="mechanism_type_${index}" class="form-select">
-                        <option value="">Tanlang...</option>
-                        <option value="Qo'lda">Qo'lda</option>
-                        <option value="Elektrik">Elektrik</option>
-                        <option value="Avtomatik">Avtomatik</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <label class="form-label">Qo'shimcha izoh</label>
-                    <textarea name="notes_${index}" class="form-control" rows="2" 
-                              placeholder="Ushbu jalyuzi haqida qo'shimcha ma'lumotlar..."></textarea>
-                </div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Xona *</label><input type="text" name="area_${index}" class="form-control" required value="${existingData?.room_name || ''}"></div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Jalyuzi turi *</label><select name="blind_type_${index}" class="form-select" required>${Object.entries(blindTypeDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.blind_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Material turi</label><select name="material_type_${index}" class="form-select">${Object.entries(materialDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.material_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Eni (sm) *</label><input type="number" name="width_${index}" data-calc="width" class="form-control" min="10" required value="${existingData?.width || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Bo'yi (sm) *</label><input type="number" name="height_${index}" data-calc="height" class="form-control" min="10" required value="${existingData?.height || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">m²</label><input type="number" name="kv_${index}" class="form-control" disabled step="0.01"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Birlik narxi *</label><input type="number" name="unit_price_${index}" data-calc="unit_price" class="form-control" min="0" step="1000" required value="${existingData?.unit_price || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">m² narxi</label><input type="number" name="kv_price_${index}" data-calc="kv_price" class="form-control" step="1000"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Donasi</label><input type="number" name="quantity_${index}" class="form-control" min="1" value="${existingData?.quantity || 1}"></div>
+                <div class="col-sm-6 mb-3"><label class="form-label">O'rnatish turi</label><select name="installation_type_${index}" class="form-select">${Object.entries(installationTypes).map(([v,d]) => `<option value="${v}" ${existingData?.installation_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-6 mb-3"><label class="form-label">Mexanizm turi</label><select name="mechanism_type_${index}" class="form-select">${Object.entries(mechanismTypes).map(([v,d]) => `<option value="${v}" ${existingData?.mechanism_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-12 mb-3"><label class="form-label">Qo'shimcha izoh</label><textarea name="notes_${index}" class="form-control" rows="2">${existingData?.notes || ''}</textarea></div>
+                <div class="col-12"><input type="checkbox" name="is_measured_${index}" id="is_measured_${index}" class="form-check-input" ${existingData?.is_measured ? 'checked' : ''}> <label class="form-label" for="is_measured_${index}">O'lchash tugatildi</label></div>
             </div>
         </div>
     `;
 }
 
-function change_unit_price(index) {
-    const w = document.getElementById(`width_${index}`).value;
-    const h = document.getElementById(`height_${index}`).value;
-    document.getElementById(`unit_price_${index}`).value = document.getElementById(`kv_price_${index}`).value * w * h/10000;
-}
+function updatePriceCalculations(index, source) {
+    const itemForm = document.querySelector(`.item-form[data-index="${index}"]`);
+    if (!itemForm) return;
 
-function change_kv_price(index) {
-    const w = document.getElementById(`width_${index}`).value;
-    const h = document.getElementById(`height_${index}`).value;
-    document.getElementById(`kv_price_${index}`).value = Math.round(document.getElementById(`unit_price_${index}`).value/(w * h/10000));
-}
+    const widthInput = itemForm.querySelector('[data-calc="width"]');
+    const heightInput = itemForm.querySelector('[data-calc="height"]');
+    const unitPriceInput = itemForm.querySelector('[data-calc="unit_price"]');
+    const kvPriceInput = itemForm.querySelector('[data-calc="kv_price"]');
+    const kvInput = itemForm.querySelector('[name^="kv_"]');
 
-function change_kv(index) {
-    const w = document.getElementById(`width_${index}`).value;
-    const h = document.getElementById(`height_${index}`).value;
-    document.getElementById(`kv_${index}`).value = w * h/10000;
-}
+    const width = parseFloat(widthInput.value) || 0;
+    const height = parseFloat(heightInput.value) || 0;
+    const unitPrice = parseFloat(unitPriceInput.value) || 0;
+    const kvPrice = parseFloat(kvPriceInput.value) || 0;
 
-function addItem() {
-    const container = document.getElementById('items-container');
-    container.insertAdjacentHTML('beforeend', createItemForm(itemCount));
-    itemCount++;
-    updateItemCount();
-}
+    const area = (width > 0 && height > 0) ? (width * height / 10000) : 0;
+    kvInput.value = area.toFixed(2);
 
-function removeItem(index) {
-    const item = document.querySelector(`[data-index="${index}"]`);
-    if (item) {
-        item.remove();
-        updateItemNumbers();
+    if (source === 'kv_price') {
+        if (area > 0) {
+            unitPriceInput.value = Math.round(kvPrice * area);
+        }
+    } else {
+        if (area > 0) {
+            kvPriceInput.value = Math.round(unitPrice / area);
+        } else {
+            kvPriceInput.value = '';
+        }
     }
 }
 
+function addItem(existingData = null) {
+    const container = document.getElementById('items-container');
+    container.insertAdjacentHTML('beforeend', createItemForm(itemCount, existingData));
+    
+    if (existingData) {
+        setTimeout(() => {
+            updatePriceCalculations(itemCount, 'unit_price');
+            itemCount++;
+            updateItemCount();
+        }, 100);
+    } else {
+        itemCount++;
+        updateItemCount();
+    }
+}
+
+function removeItem(index) {
+    document.querySelector(`[data-index="${index}"]`)?.remove();
+    updateItemNumbers();
+}
+
 function updateItemCount() {
-    const actualCount = document.querySelectorAll('.item-form').length;
-    document.getElementById('item-count').value = actualCount;
+    document.getElementById('item-count').value = document.querySelectorAll('.item-form').length;
 }
 
 function updateItemNumbers() {
-    const items = document.querySelectorAll('.item-form');
-    items.forEach((item, index) => {
-        const title = item.querySelector('h6');
-        title.textContent = `Jalyuzi #${index + 1}`;
-        item.setAttribute('data-index', index);
+    document.querySelectorAll('.item-form').forEach((item, index) => {
+        item.dataset.index = index;
+        const h6 = item.querySelector('h6');
+        const badge = h6.querySelector('.badge');
+        h6.innerHTML = `Jalyuzi #${index + 1} ${badge.outerHTML}`;
+        item.querySelector('.remove-item').dataset.removeIndex = index;
         
-        const inputs = item.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            const name = input.getAttribute('name');
-            if (name && name.includes('_')) {
-                const [prefix, oldIndex] = name.split('_');
-                input.setAttribute('name', `${prefix}_${index}`);
-            }
+        item.querySelectorAll('input, select, textarea').forEach(input => {
+            if (input.name) input.name = input.name.replace(/_\d+$/, `_${index}`);
+            if (input.id) input.id = input.id.replace(/_\d+$/, `_${index}`);
+            const label = item.querySelector(`label[for="${input.id}"]`);
+            if (label) label.htmlFor = input.id;
         });
-        
-        const removeBtn = item.querySelector('.remove-item');
-        if (removeBtn) {
-            removeBtn.setAttribute('onclick', `removeItem(${index})`);
-        }
     });
     updateItemCount();
 }
 
-// ✅ GPS Geolocation logikasi
+// ----- MAP & GPS FUNCTIONS -----
+function addMapStyles() {
+    if (document.getElementById('custom-map-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'custom-map-styles';
+    style.textContent = `
+        .map-loading { display: flex; align-items: center; justify-content: center; height: 100%; text-align: center; flex-direction: column; background: #f8f9fa; }
+        .map-loading .spinner-border { width: 3rem; height: 3rem; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); border-radius: 8px; }
+        .leaflet-container a.leaflet-popup-close-button { color: #555; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
+}
+
+function showSimpleMap(lat, lng, mapDiv) {
+    mapDiv.innerHTML = `
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center bg-light">
+            <h5><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Xarita yuklanmadi</h5>
+            <p class="text-muted">Interaktiv xaritani yuklashda muammo yuzaga keldi.</p>
+            <p><strong>Koordinatalar:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+            <div>
+                <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-sm btn-primary">Google Maps</a>
+                <a href="https://yandex.uz/maps/?ll=${lng},${lat}&z=18" target="_blank" class="btn btn-sm btn-secondary">Yandex Maps</a>
+            </div>
+        </div>`;
+}
+
+function createInteractiveMap(lat, lng, mapDiv) {
+    mapDiv.innerHTML = ''; // Clear loading indicator
+    const map = L.map(mapDiv).setView([lat, lng], 16);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const marker = L.marker([lat, lng]).addTo(map);
+    const accuracy = parseFloat(document.getElementById('location_accuracy')?.value) || 10;
+    L.circle([lat, lng], { radius: accuracy, weight: 1 }).addTo(map);
+    
+    marker.bindPopup(`<b>Buyurtma joylashuvi</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}`).openPopup();
+    
+    // Refresh map size after it's rendered in the modal
+    setTimeout(() => map.invalidateSize(), 100);
+}
+
+function loadLeafletAndInitializeMap(lat, lng, mapDiv) {
+    mapDiv.innerHTML = `<div class="map-loading"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Xarita yuklanmoqda...</p></div>`;
+    addMapStyles();
+
+    if (document.querySelector('script[src*="leaflet"]')) {
+         // If script tag already exists but L is not defined, it might be loading. Wait a bit.
+        setTimeout(() => createInteractiveMap(lat, lng, mapDiv), 500);
+        return;
+    }
+
+    const leafletCSS = document.createElement('link');
+    leafletCSS.rel = 'stylesheet';
+    leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(leafletCSS);
+
+    const leafletJS = document.createElement('script');
+    leafletJS.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    leafletJS.onload = () => createInteractiveMap(lat, lng, mapDiv);
+    leafletJS.onerror = () => showSimpleMap(lat, lng, mapDiv);
+    document.head.appendChild(leafletJS);
+}
+
+function initializeMap(lat, lng) {
+    const mapDiv = document.getElementById('map');
+    if (!mapDiv) return;
+
+    if (typeof L === 'undefined') {
+        loadLeafletAndInitializeMap(lat, lng, mapDiv);
+    } else {
+        createInteractiveMap(lat, lng, mapDiv);
+    }
+}
+
 function initializeGPS() {
     const getLocationBtn = document.getElementById('getLocationBtn');
     const openMapBtn = document.getElementById('openMapBtn');
@@ -394,149 +467,155 @@ function initializeGPS() {
     const lngInput = document.getElementById('longitude');
     const accuracyInput = document.getElementById('location_accuracy');
     const statusDiv = document.getElementById('locationStatus');
+
+    if (!getLocationBtn) return;
     
-    // Hidden form fieldlar
-    const hiddenLatInput = document.getElementById('measurement_latitude');
-    const hiddenLngInput = document.getElementById('measurement_longitude');
-    const hiddenAccuracyInput = document.getElementById('measurement_location_accuracy');
-    
-    getLocationBtn.addEventListener('click', function() {
+    const setHiddenGpsValues = (lat, lng, acc) => {
+        document.getElementById('measurement_latitude').value = lat;
+        document.getElementById('measurement_longitude').value = lng;
+        document.getElementById('measurement_location_accuracy').value = acc;
+    };
+
+    if (EXISTING_DATA.gps.lat && EXISTING_DATA.gps.lng) {
+        setHiddenGpsValues(EXISTING_DATA.gps.lat, EXISTING_DATA.gps.lng, EXISTING_DATA.gps.accuracy);
+    }
+
+    getLocationBtn.addEventListener('click', () => {
+        const originalText = getLocationBtn.innerHTML;
+        getLocationBtn.disabled = true;
+        getLocationBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Aniqlanmoqda...';
+        statusDiv.innerHTML = '<div class="alert alert-info small"><i class="bi bi-hourglass-split me-1"></i>GPS signali kutilmoqda...</div>';
+
         if (!navigator.geolocation) {
-            statusDiv.innerHTML = '<div class="alert alert-danger">Brauzeringiz GPS ni qo\'llab-quvvatlamaydi!</div>';
+            statusDiv.innerHTML = '<div class="alert alert-danger small">GPS funksiyasi qo\'llab-quvvatlanmaydi</div>';
+            getLocationBtn.disabled = false;
+            getLocationBtn.innerHTML = originalText;
             return;
         }
-        
-        // Loading holatiga o'tkazish
-        getLocationBtn.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i> Joylashuv aniqlanmoqda...';
-        getLocationBtn.disabled = true;
-        statusDiv.innerHTML = '<div class="alert alert-info">GPS signal kutilmoqda...</div>';
-        
+
         navigator.geolocation.getCurrentPosition(
-            function(position) {
-                // Muvaffaqiyatli joylashuv olindi
-                const lat = position.coords.latitude.toFixed(6);
-                const lng = position.coords.longitude.toFixed(6);
-                const accuracy = Math.round(position.coords.accuracy);
-                
-                // Ko'rinadigan inputlarni to'ldirish
-                latInput.value = lat;
-                lngInput.value = lng;
-                accuracyInput.value = accuracy;
-                
-                // Hidden form inputlarni to'ldirish
-                hiddenLatInput.value = lat;
-                hiddenLngInput.value = lng;
-                hiddenAccuracyInput.value = accuracy;
-                
-                // Muvaffaqiyat xabari
-                statusDiv.innerHTML = `
-                    <div class="alert alert-success">
-                        <i class="bi bi-check-circle me-1"></i>
-                        Joylashuv muvaffaqiyatli aniqlandi! 
-                        <br><small>Aniqlik: ${accuracy} metr</small>
-                    </div>
-                `;
-                
-                // Tugmalarni yangilash
-                getLocationBtn.innerHTML = '<i class="bi bi-check me-1"></i> Joylashuv saqlandi';
-                getLocationBtn.classList.remove('btn-success');
-                getLocationBtn.classList.add('btn-outline-success');
-                getLocationBtn.disabled = false;
-                
-                // Xarita tugmasini ko'rsatish
+            (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                latInput.value = latitude.toFixed(6);
+                lngInput.value = longitude.toFixed(6);
+                accuracyInput.value = Math.round(accuracy);
+                setHiddenGpsValues(latitude.toFixed(6), longitude.toFixed(6), Math.round(accuracy));
+
+                statusDiv.innerHTML = `<div class="alert alert-success small"><i class="bi bi-check-circle me-1"></i>Joylashuv saqlandi! <br><small>Aniqlik: ${Math.round(accuracy)}m</small></div>`;
                 openMapBtn.style.display = 'block';
-                
-                // 3 soniyadan keyin asl holatga qaytarish
-                setTimeout(() => {
-                    getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Joylashuvni yangilash';
-                    getLocationBtn.classList.remove('btn-outline-success');
-                    getLocationBtn.classList.add('btn-success');
-                }, 3000);
-            },
-            function(error) {
-                // Xatolik yuz berdi
-                let errorMessage = 'Joylashuvni aniqlab bo\'lmadi';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = 'GPS ruxsati berilmagan. Brauzer sozlamalarida ruxsat bering.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = 'GPS signal topilmadi. Internetni tekshiring.';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = 'GPS signal kutish vaqti tugadi. Qayta urinib ko\'ring.';
-                        break;
-                }
-                
-                statusDiv.innerHTML = `<div class="alert alert-warning">${errorMessage}</div>`;
-                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Qayta urinish';
                 getLocationBtn.disabled = false;
+                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Joylashuvni yangilash';
             },
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 60000
-            }
+            (error) => {
+                let msg = 'Noma\'lum xatolik.';
+                if (error.code === 1) msg = 'GPS ruxsati rad etildi.';
+                if (error.code === 2) msg = 'GPS signali topilmadi.';
+                if (error.code === 3) msg = 'Vaqt tugadi.';
+                statusDiv.innerHTML = `<div class="alert alert-danger small"><i class="bi bi-exclamation-triangle me-1"></i>${msg}</div>`;
+                getLocationBtn.disabled = false;
+                getLocationBtn.innerHTML = originalText;
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
     });
-    
-    // Xaritada ko'rish tugmasi
-    openMapBtn.addEventListener('click', function() {
+
+    openMapBtn.addEventListener('click', () => {
         const lat = latInput.value;
         const lng = lngInput.value;
+        if (!lat || !lng) { alert('Avval joylashuvni oling!'); return; }
+
+        let modalEl = document.getElementById('mapModal');
+        if (modalEl) modalEl.remove();
+
+        const modalHtml = `
+            <div class="modal fade" id="mapModal" tabindex="-1">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">Joylashuv xaritada</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body p-0"><div id="map" style="height: 100%; width: 100%;"></div></div>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
         
-        if (lat && lng) {
-            // Google Maps da ochish
-            const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=18`;
-            window.open(mapsUrl, '_blank');
-        }
+        modalEl = document.getElementById('mapModal');
+        const mapModal = new bootstrap.Modal(modalEl);
+
+        modalEl.addEventListener('shown.bs.modal', () => initializeMap(parseFloat(lat), parseFloat(lng)));
+        mapModal.show();
     });
 }
 
-// Sahifa yuklanganda
-document.addEventListener('DOMContentLoaded', function() {
-    // GPS funksiyalarini ishga tushirish
-    initializeGPS();
-    
-    // Birinchi jalyuzi qo'shish
-    addItem();
-    
-    // Add item tugmasi
-    document.getElementById('add-item').addEventListener('click', addItem);
-    
-    // Form submit validation
-    document.getElementById('measurement-form').addEventListener('submit', function(e) {
-        // GPS ma'lumotlarni hidden fieldlarga nusxa ko'chirish
-        const lat = document.getElementById('latitude').value;
-        const lng = document.getElementById('longitude').value;
-        const accuracy = document.getElementById('location_accuracy').value;
-        const installation_scheduled_date = document.getElementById('installation_scheduled_date').value;
+function loadExistingData() {
+    const container = document.getElementById('items-container');
+    if (!container) return;
+    container.innerHTML = '';
+    itemCount = 0;
 
-        
-        if (lat && lng) {
-            document.getElementById('measurement_latitude').value = lat;
-            document.getElementById('measurement_longitude').value = lng;
-            document.getElementById('measurement_location_accuracy').value = accuracy || '';
-            document.getElementById('measurement_installation_scheduled_date').value = installation_scheduled_date || '';
+    if (EXISTING_DATA?.items?.length > 0) {
+        EXISTING_DATA.items.forEach(item => addItem(item));
+    } else {
+        addItem();
+    }
+}
+
+// ----- DOMContentLoaded (INITIALIZATION) -----
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Sahifa yuklandi, tuzatilgan funksiyalar ishga tushirilmoqda...');
+    
+    initializeGPS();
+    loadExistingData();
+
+    document.getElementById('add-item')?.addEventListener('click', () => addItem());
+
+    const itemsContainer = document.getElementById('items-container');
+    itemsContainer.addEventListener('input', (e) => {
+        const calcSource = e.target.dataset.calc;
+        if (calcSource) {
+            const itemForm = e.target.closest('.item-form');
+            if (itemForm) {
+                updatePriceCalculations(parseInt(itemForm.dataset.index, 10), calcSource);
+            }
         }
-        
-        // Form validation
+    });
+
+    itemsContainer.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-item');
+        if (removeBtn) {
+            removeItem(parseInt(removeBtn.dataset.removeIndex, 10));
+        }
+    });
+
+    document.getElementById('measurement-form')?.addEventListener('submit', function(e) {
+        document.getElementById('measurement_installation_scheduled_date').value = document.getElementById('installation_scheduled_date')?.value || '';
+
         if (!this.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
         }
         this.classList.add('was-validated');
     });
+    
+    console.log('🎉 Barcha funksiyalar muvaffaqiyatli ishga tushdi.');
 });
 </script>
 
 <style>
 .item-form {
     background-color: #f8f9fa;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6 !important;
 }
 .item-form:hover {
     background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.item-form[style*="border-left: 4px solid #28a745"] {
+    background-color: #f0fff2;
+}
+.item-form[style*="border-left: 4px solid #28a745"]:hover {
+    background-color: #e6ffe8;
 }
 .form-label {
     font-weight: 600;
@@ -544,24 +623,22 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .remove-item {
     opacity: 0.7;
+    transition: opacity 0.2s;
 }
 .remove-item:hover {
     opacity: 1;
 }
-
-/* GPS animatsiya */
-.spin {
-    animation: spin 1s linear infinite;
+.badge {
+    font-size: 0.75em;
 }
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
 .alert {
     border-radius: 8px;
     font-size: 0.9rem;
+    animation: slideDown 0.5s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 {% endblock %}

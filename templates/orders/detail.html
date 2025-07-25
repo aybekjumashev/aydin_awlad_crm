@@ -28,9 +28,9 @@
                 Tahrirlash
             </a>
             {% endif %}
-            <a href="{% url 'orders:print' order.pk %}" class="btn btn-sm btn-secondary" target="_blank">
+            <a href="{% url 'orders:generate_contract' order.pk %}" class="btn btn-sm btn-secondary" target="_blank">
                 <i class="bi bi-printer me-1"></i>
-                Chop etish
+                Shartnama
             </a>
         </div>
     </div>
@@ -108,9 +108,6 @@
             </div>
         </div>
 
-
-
-
         <!-- To'lov ma'lumotlari -->
         <div class="card mt-3">
             <div class="card-header">
@@ -144,6 +141,89 @@
                 </div>
             </div>
         </div>
+
+
+        <!-- Jarayon va Xodimlar -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Jarayon va Xodimlar
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <!-- O'lchov oluvchi -->
+                    <li class="mb-2 pb-2 border-bottom">
+                        <strong>O'lchov oluvchi:</strong>
+                        {% if order.assigned_measurer %}
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span>{{ order.assigned_measurer.get_full_name }}</span>
+                                {% if order.measurement_completed_date %}
+                                    <small class="text-success" title="O'lchov yakunlangan sana">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        {{ order.measurement_completed_date|date:"d.m.y H:i" }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Tayinlanmagan</span>
+                        {% endif %}
+                    </li>
+
+                    <!-- Ishlab chiqaruvchi -->
+                    <li class="mb-2 pb-2 border-bottom">
+                        <strong>Ishlab chiqaruvchi:</strong>
+                        {% if order.assigned_manufacturer %}
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span>{{ order.assigned_manufacturer.get_full_name }}</span>
+                                {% if order.production_completed_date %}
+                                    <small class="text-success" title="Ishlab chiqarish yakunlangan sana">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        {{ order.production_completed_date|date:"d.m.y H:i" }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Tayinlanmagan</span>
+                        {% endif %}
+                    </li>
+
+                    <!-- O'rnatuvchi -->
+                    <li class="mb-2">
+                        <strong>O'rnatuvchi:</strong>
+                        {% if order.assigned_installer %}
+                             <div class="d-flex justify-content-between align-items-start">
+                                <span>{{ order.assigned_installer.get_full_name }}</span>
+                                {% if order.installation_completed_date %}
+                                    <small class="text-success" title="O'rnatish yakunlangan sana">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        {{ order.installation_completed_date|date:"d.m.y H:i" }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Tayinlanmagan</span>
+                        {% endif %}
+                    </li>
+
+                    <!-- Bekor qilingan -->
+                    {% if order.status == 'cancelled' and order.cancelled_date %}
+                    <li class="mt-2 pt-2 border-top">
+                        <strong>Bekor qilindi:</strong>
+                         <div class="d-flex justify-content-between align-items-start">
+                            <span>-</span>
+                            <small class="text-danger" title="Bekor qilingan sana">
+                                <i class="bi bi-x-circle me-1"></i>
+                                {{ order.cancelled_date|date:"d.m.y H:i" }}
+                            </small>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        
     </div>
 
     <!-- Jalyuzilar ro'yxati -->

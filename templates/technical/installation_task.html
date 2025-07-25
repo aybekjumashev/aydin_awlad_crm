@@ -156,6 +156,7 @@
                                     <th>Jalyuzi turi</th>
                                     <th>O'lcham</th>
                                     <th>Material</th>
+                                    <th>Xona</th>
                                     <th>Donasi</th>
                                     <th>Narxi</th>
                                 </tr>
@@ -177,6 +178,9 @@
                                     </td>
                                     <td>
                                         {{ item.material|default:"—" }}
+                                    </td>
+                                    <td>
+                                        {{ item.room_name|default:"—" }}
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary">{{ item.quantity }} dona</span>

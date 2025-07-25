@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Mijozlar ro'yxati - AYDIN AWLAD CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        AYDIN AWLAD
+    </h1>
+    <!-- User info -->
+    <nav>
+        <ul class="nav align-items-center">
+            {% url 'technical:customers_for_tech_url' as customers_for_tech_url %}
+            <li class="nav-item">
+                <a href="{{ customers_for_tech_url }}" class="nav-link {% if request.path == customers_for_tech_url %}border-bottom border-primary{% endif %}">Mijozlar</a>
+            </li>
+            {% url 'technical:my_tasks' as my_tasks_url %}
+            <li class="nav-item">
+                <a href="{{ my_tasks_url }}" class="nav-link {% if request.path == my_tasks_url %}border-bottom border-primary{% endif %}">Buyurtmalar</a>
+            </li>
+            <li class="dropdown dropup ms-3">
+                <a class="dropdown-toggle d-flex align-items-center justify-content-center text-decoration-none" href="#" id="userDropdown" role="button" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle me-2 fs-5"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">{{ user.username }}</div>
+                    </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-right me-2"></i>Chiqish
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Page Title and Action Button -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4">{{ page_title|default:'Mijozlar' }}</h2>
+    <div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <i class="bi bi-plus-circle me-1"></i> Yangi mijoz yaratish
+        </button>
+    </div>
+</div>
+
+<!-- Customer List Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">To'liq ism</th>
+                        <th scope="col">Telefon raqam</th>
+                        <th scope="col">Manzil</th>
+                        <th scope="col">Qo'shilgan sana</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:customers.start_index }}</td>
+                        <td>
+                            {{ customer.get_full_name }}
+                        </td>
+                        <td>{{ customer.phone }}</td>
+                        <td>{{ customer.address|truncatewords:7 }}</td>
+                        <td>{{ customer.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="mb-0 text-muted">Mijozlar topilmadi.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if customers.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+        {% if customers.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ customers.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for i in customers.paginator.page_range %}
+            {% if customers.number == i %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if customers.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ customers.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="addCustomerForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomerModalLabel">Yangi mijoz qo'shish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="form-errors" class="alert alert-danger d-none"></div>
+                    {# Bu yerda biz CustomerForm'dagi maydonlarni qo'lda chiqaramiz #}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_first_name" class="form-label">Ism <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" class="form-control" id="id_first_name" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_last_name" class="form-label">Familiya <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" class="form-control" id="id_last_name" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_fathers_name" class="form-label">Otasining ismi</label>
+                            <input type="text" name="fathers_name" class="form-control" id="id_fathers_name">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_phone" class="form-label">Asosiy telefon raqam <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control" id="id_phone" placeholder="+998901234567" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                         <div class="col-md-4 mb-3">
+                            <label for="id_birth_date" class="form-label">Tug'ilgan kun</label>
+                            <input type="date" name="birth_date" class="form-control" id="id_birth_date">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_passport" class="form-label">Passport raqami</label>
+                            <input type="text" name="passport" class="form-control" id="id_passport" placeholder="AA1234567">
+                             <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">Manzil <span class="text-danger">*</span></label>
+                        <textarea name="address" class="form-control" id="id_address" rows="2" required></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">Izoh</label>
+                        <textarea name="notes" class="form-control" id="id_notes" rows="3"></textarea>
+                         <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="saveCustomerBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Saqlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

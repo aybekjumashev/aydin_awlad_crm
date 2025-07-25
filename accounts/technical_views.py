@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.utils import timezone
 from django.core.paginator import Paginator
-from orders.models import Order, OrderItem
+from orders.models import Order, OrderItem, Customer
 from payments.models import Payment
 from decimal import Decimal
 import logging
@@ -24,6 +24,23 @@ def my_tasks(request):
     
     user = request.user
     current_time = timezone.now()
+
+    if request.method == 'POST':
+        customer_id = request.POST.get('customer_id')
+        address = request.POST.get('address')
+        notes = request.POST.get('notes')
+        if customer_id:
+            try:
+                customer = Customer.objects.get(id=customer_id)
+                Order.objects.create(customer=customer, address=address, notes=notes)
+                messages.success(request, "Buyurtma muvaffaqiyatli yaratildi.")
+            except Customer.DoesNotExist:
+                messages.error(request, "Mijoz topilmadi.")
+        else:
+            messages.error(request, "Mijoz tanlanmadi.")
+        
+        return redirect('technical:my_tasks')
+
     
     # Filtrlash parametrlari
     status_filter = request.GET.get('status', 'active')
@@ -132,6 +149,42 @@ def my_tasks(request):
     return render(request, 'technical/my_tasks.html', context)
 
 @login_required
+def customer_list(request):
+    """Mijozlar ro'yxati"""
+    if not request.user.is_technical:
+        messages.error(request, "Sizda mijozlar ro'yxati huquqi yo'q.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        Customer.objects.create(
+            first_name=request.POST.get('first_name'),
+            last_name=request.POST.get('last_name'),
+            fathers_name=request.POST.get('fathers_name'),
+            passport=request.POST.get('passport'),
+            phone=request.POST.get('phone'),
+            address=request.POST.get('address'),
+            notes=request.POST.get('notes'),
+            birth_date=request.POST.get('birth_date'),
+        )
+        messages.success(request, "Mijoz muvaffaqiyatli qo'shildi.")
+        return redirect('technical:customers_for_tech_url')
+    
+    customers = Customer.objects.all()
+    paginator = Paginator(customers, 
+                          per_page=20)  
+    
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'customers': page_obj,
+        'page_title': 'Mijozlar ro\'yxati'
+    }
+    
+    return render(request, 'technical/customer_list.html', context)
+
+
+@login_required
 def take_task(request, order_id, task_type):
     """Vazifani o'ziga olish (Pool dan)"""
     if not request.user.is_technical:
@@ -188,6 +241,7 @@ def take_task(request, order_id, task_type):
     messages.error(request, "Noma'lum vazifa turi.")
     return redirect('technical:my_tasks')
 
+
 @login_required
 def measurement_form(request, order_id):
     """O'lchov olish formi - GPS koordinatalar bilan"""
@@ -198,11 +252,6 @@ def measurement_form(request, order_id):
     order = get_object_or_404(Order, id=order_id, status='measuring')
     
 
-    # Agar hali tayinlanmagan bo'lsa, o'ziga tayinlash
-    if not order.assigned_measurer:
-        order.assigned_measurer = request.user
-        order.save()
-        messages.info(request, "Vazifa sizga tayinlandi.")
     
     if request.method == 'POST':
         try:
@@ -225,13 +274,14 @@ def measurement_form(request, order_id):
                 messages.error(request, "Kamida bitta jalyuzi qo'shishingiz kerak.")
                 return render(request, 'technical/measurement_form.html', {'order': order})
             
-            # Mavjud itemlarni tozalash
+            # Mavjud itemlarni tozalash - FAQAT formani submit qilinganda
             order.items.all().delete()
             
             total_amount = Decimal('0')
             created_items = []
             
             for i in range(item_count):
+                xona = request.POST.get(f'area_{i}')
                 width = request.POST.get(f'width_{i}')
                 height = request.POST.get(f'height_{i}')
                 blind_type = request.POST.get(f'blind_type_{i}')
@@ -242,6 +292,7 @@ def measurement_form(request, order_id):
                 unit_price = request.POST.get(f'unit_price_{i}')
                 quantity = request.POST.get(f'quantity_{i}', 1)
                 notes = request.POST.get(f'notes_{i}', '')
+                is_measured = request.POST.get(f'is_measured_{i}', 'off') == 'on'
 
                 
                 if not width or not height or not blind_type or not unit_price:
@@ -256,20 +307,70 @@ def measurement_form(request, order_id):
                     if width_int <= 0 or height_int <= 0 or unit_price_decimal < 0:
                         continue
                     
+                    # Display value'larni model choice value'larga mapping
+                    # BLIND_TYPE_CHOICES mapping
+                    blind_type_mapping = {
+                        'Gorizontal jalyuzi': 'horizontal',
+                        'Vertikal jalyuzi': 'vertical',
+                        'Rollo parda': 'roller',
+                        'Plisse parda': 'pleated',
+                        'Bambuk jalyuzi': 'bamboo',
+                        'Yog\'och jalyuzi': 'wooden',
+                        'Mato jalyuzi': 'fabric'
+                    }
+                    
+                    # MATERIAL_CHOICES mapping
+                    material_mapping = {
+                        'Alyuminiy': 'aluminum',
+                        'Plastik': 'plastic',
+                        'Yog\'och': 'wood',
+                        'Mato': 'fabric',
+                        'Bambuk': 'bamboo',
+                        'Kompozit': 'composite'
+                    }
+                    
+                    # INSTALLATION_TYPE_CHOICES mapping
+                    installation_mapping = {
+                        'Devorga o\'rnatish': 'wall',
+                        'Shiftga o\'rnatish': 'ceiling',
+                        'Deraza romiga o\'rnatish': 'window_frame',
+                        'Ichki o\'rnatish': 'niche'
+                    }
+                    
+                    # MECHANISM_CHOICES mapping
+                    mechanism_mapping = {
+                        'Ip bilan boshqarish': 'cord',
+                        'Zanjir bilan boshqarish': 'chain',
+                        'Tayoqcha bilan boshqarish': 'wand',
+                        'Elektr motor': 'motorized',
+                        'Masofadan boshqarish': 'remote',
+                        'Aqlli boshqarish': 'smart'
+                    }
+                            
+                    
+                    print(f"DEBUG: Creating item {i} with data:")
+                    print(f"  - blind_type: {blind_type} -> {blind_type_mapping.get(blind_type, 'horizontal')}")
+                    print(f"  - material: {material_type} -> {material_mapping.get(material_type, 'plastic')}")
+                    print(f"  - installation: {installation_type} -> {installation_mapping.get(installation_type, 'wall')}")
+                    print(f"  - mechanism: {mechanism_type} -> {mechanism_mapping.get(mechanism_type, 'cord')}")
+                    
                     item = OrderItem.objects.create(
                         order=order,
-                        blind_type=blind_type,
+                        blind_type=blind_type_mapping.get(blind_type, 'horizontal'),
                         width=width_int,
                         height=height_int,
-                        material=material_type or '',
-                        installation_type=installation_type or '',
-                        mechanism=mechanism_type or '',
-                        cornice_type=cornice_type or '',
+                        material=material_mapping.get(material_type, 'plastic'),
+                        installation_type=installation_mapping.get(installation_type, 'wall'),
+                        mechanism=mechanism_mapping.get(mechanism_type, 'cord'),
+                        cornice_type='standard',  # Default qiymat
                         unit_price=unit_price_decimal,
                         quantity=quantity_int,
-                        notes=notes
+                        notes=notes,
+                        room_name=xona,
+                        is_measured=is_measured
                     )
                     
+                    print(f"DEBUG: Item created with ID: {item.id}")
                     created_items.append(item)
                     total_amount += item.total_price
                     
@@ -286,7 +387,7 @@ def measurement_form(request, order_id):
                 try:
                     payment = Payment.objects.create(
                         order=order,
-                        amount=Decimal(advance_payment),
+                        amount=Decimal(str(advance_payment)),
                         payment_method=request.POST.get('payment_method', 'cash'),
                         payment_type='prepayment',
                         payment_date=timezone.now(),
@@ -294,7 +395,7 @@ def measurement_form(request, order_id):
                         notes='O\'lchov paytida qabul qilingan avans to\'lov',
                         status='confirmed'
                     )
-                    order.paid_amount = Decimal(advance_payment)
+                    order.paid_amount = Decimal(str(advance_payment))
                 except Exception as e:
                     messages.warning(request, "Avans to'lov saqlanmadi, lekin o'lchov yakunlandi.")
             
@@ -313,7 +414,6 @@ def measurement_form(request, order_id):
                     order.measurement_location_accuracy = accuracy
                     
                     gps_info = f"\nGPS koordinatlar: {lat:.6f}, {lng:.6f} (Aniqlik: {accuracy}m)"
-                    messages.success(request, "GPS joylashuv ma'lumotlari saqlandi.")
                     
                 except (ValueError, TypeError):
                     messages.warning(request, "GPS koordinatlar noto'g'ri formatda. Saqlanmadi.")
@@ -328,21 +428,105 @@ def measurement_form(request, order_id):
             current_notes = order.notes or ''
             measurement_info = f"{measurement_notes}{gps_info}"
             order.notes = f"{current_notes}\n[O'lchash yakunlandi] {measurement_info}".strip()
-
-            order.status = 'processing'
-            order.measurement_completed_date = timezone.now()
+            
+            # Checkbox bo'yicha statusni o'zgartirish yoki saqlash
+            if request.POST.get('advance_payment_checkbox'):
+                order.status = 'processing'
+                order.measurement_completed_date = timezone.now()
+                status_message = "O'lchov yakunlandi va ishlab chiqarishga yuborildi!"
+            else:
+                # Status o'zgartirilmasdan saqlanadi
+                status_message = "O'lchov ma'lumotlari vaqtinchalik saqlandi. Keyinroq to'ldirishingiz mumkin."
+            
             order.update_payment_status()
             order.save()
             
-            messages.success(request, f"O'lchov ma'lumotlari muvaffaqiyatli saqlandi! {len(created_items)} ta jalyuzi qo'shildi.")
             return redirect('technical:my_tasks')
             
         except Exception as e:
             messages.error(request, f"Xatolik yuz berdi: {str(e)}")
     
+    # ✅ CONTEXT'GA MAVJUD MA'LUMOTLARNI QO'SHISH
+    # Mavjud order item'larni olish va JavaScript uchun tayyorlash
+    print(f"DEBUG: Order {order.id} uchun itemlar soni: {order.items.count()}")
+    
+    # Display value mapping'lar (JavaScript bilan moslash uchun)
+    blind_type_display = {
+        'horizontal': 'Gorizontal jalyuzi',
+        'vertical': 'Vertikal jalyuzi',
+        'roller': 'Rollo parda',
+        'pleated': 'Plisse parda',
+        'bamboo': 'Bambuk jalyuzi',
+        'wooden': 'Yog\'och jalyuzi',
+        'fabric': 'Mato jalyuzi'
+    }
+    
+    material_display = {
+        'aluminum': 'Alyuminiy',
+        'plastic': 'Plastik',
+        'wood': 'Yog\'och',
+        'fabric': 'Mato',
+        'bamboo': 'Bambuk',
+        'composite': 'Kompozit'
+    }
+    
+    installation_display = {
+        'wall': 'Devorga o\'rnatish',
+        'ceiling': 'Shiftga o\'rnatish',
+        'window_frame': 'Deraza romiga o\'rnatish',
+        'niche': 'Ichki o\'rnatish'
+    }
+    
+    mechanism_display = {
+        'cord': 'Ip bilan boshqarish',
+        'chain': 'Zanjir bilan boshqarish',
+        'wand': 'Tayoqcha bilan boshqarish',
+        'motorized': 'Elektr motor',
+        'remote': 'Masofadan boshqarish',
+        'smart': 'Aqlli boshqarish'
+    }
+    
+    existing_items_data = []
+    for item in order.items.all():
+        print(f"DEBUG: Item {item.id} - {item.blind_type} - {item.width}x{item.height}")
+        
+        # Display name'larni JavaScript uchun tayyorlash
+        item_data = {
+            'blind_type_raw': item.blind_type,  # Raw model value
+            'blind_type': blind_type_display.get(item.blind_type, item.blind_type),  # Display value
+            'width': item.width,
+            'height': item.height,
+            'material_raw': item.material,  # Raw model value
+            'material': material_display.get(item.material, item.material),  # Display value
+            'installation_type_raw': item.installation_type,  # Raw model value
+            'installation_type': installation_display.get(item.installation_type, item.installation_type),  # Display value
+            'mechanism_raw': item.mechanism,  # Raw model value
+            'mechanism': mechanism_display.get(item.mechanism, item.mechanism),  # Display value
+            'cornice_type': item.cornice_type,
+            'unit_price': float(item.unit_price),
+            'quantity': item.quantity,
+            'notes': item.notes or '',
+            'room_name': item.room_name or '',
+            'is_measured': item.is_measured
+        }
+        existing_items_data.append(item_data)
+        print(f"DEBUG: Item data: {item_data}")
+    
+    print(f"DEBUG: existing_items_data: {existing_items_data}")
+    
     context = {
         'order': order,
         'page_title': 'O\'lchov olish',
+        'existing_items': existing_items_data,  # JavaScript uchun tayyor ma'lumotlar
+        'existing_items_raw': list(order.items.all()),  # Template uchun raw QuerySet
+        'existing_items_count': len(existing_items_data),  # Debug uchun
+        'has_existing_gps': order.has_gps_location,  # GPS mavjudligi
+        'existing_gps_lat': float(order.measurement_latitude) if order.measurement_latitude else None,
+        'existing_gps_lng': float(order.measurement_longitude) if order.measurement_longitude else None,
+        'existing_gps_accuracy': order.measurement_location_accuracy or '',
+        'existing_installation_date': order.installation_scheduled_date.strftime('%Y-%m-%d') if order.installation_scheduled_date else '',
+        'existing_measurement_notes': order.measurement_notes or '',
+        'debug': True,  # Debug rejimini yoqish
     }
     
     return render(request, 'technical/measurement_form.html', context)
@@ -411,7 +595,7 @@ def installation_task(request, order_id):
                 try:
                     payment = Payment.objects.create(
                         order=order,
-                        amount=Decimal(remaining_payment),
+                        amount=Decimal(str(remaining_payment)),
                         payment_method=request.POST.get('payment_method', 'cash'),
                         payment_type='final',
                         payment_date=timezone.now(),
@@ -419,7 +603,7 @@ def installation_task(request, order_id):
                         notes='O\'rnatish paytida qabul qilingan to\'lov',
                         status='confirmed'
                     )
-                    order.paid_amount += Decimal(remaining_payment)
+                    order.paid_amount += Decimal(str(remaining_payment))
                 except Exception as e:
                     messages.warning(request, "To'lov saqlanmadi, lekin o'rnatish yakunlandi.")
             
@@ -484,3 +668,35 @@ def technical_dashboard(request):
     }
     
     return render(request, 'technical/dashboard.html', context)
+
+
+
+
+# Avto-taklif ro‘yxati
+def search_customers(request):
+    query = request.GET.get('customer_number', '')[:10]
+    customers = Customer.objects.filter(phone__icontains=query)[:5]
+    results = [{'number': c.phone, 'name': c.get_full_name()} for c in customers]
+    return JsonResponse({'results': results})
+
+# Tanlangan mijoz haqida to‘liq info
+def get_customer_info(request):
+    number = request.GET.get('customer_number')
+    try:
+        customer = Customer.objects.get(phone=number)
+        return JsonResponse({
+            'id': customer.pk,
+            'name': customer.get_full_name(),
+            'address': customer.address
+        })
+    except Customer.DoesNotExist:
+        return JsonResponse({'error': 'Not found'}, status=404)
+
+
+
+
+
+
+
+
+

@@ -80,7 +80,7 @@ class Order(models.Model):
     
     # Narx va to'lov
     total_amount = models.DecimalField(
-        max_digits=12,
+        max_digits=30,
         decimal_places=2,
         default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))],
@@ -88,7 +88,7 @@ class Order(models.Model):
     )
     
     paid_amount = models.DecimalField(
-        max_digits=12,
+        max_digits=30,
         decimal_places=2,
         default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))],
@@ -403,7 +403,7 @@ class OrderItem(models.Model):
     )
     
     unit_price = models.DecimalField(
-        max_digits=10,
+        max_digits=30,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0'))],
         verbose_name='Birlik narxi'
@@ -419,6 +419,11 @@ class OrderItem(models.Model):
     def total_price(self):
         """Umumiy narx"""
         return self.unit_price * self.quantity
+
+    is_measured = models.BooleanField(
+        default=True,
+        verbose_name='Faol'
+    )      
     
     # Qo'shimcha ma'lumotlar
     room_name = models.CharField(

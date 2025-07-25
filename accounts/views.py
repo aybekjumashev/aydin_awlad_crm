@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count, Sum, F
 from django.utils import timezone
 from django.http import JsonResponse
 from datetime import date, timedelta
@@ -144,14 +144,31 @@ def manager_dashboard(request):
         'customers': Customer.objects.filter(created_at__gte=current_month).count(),
     }
     
+    # ✅ YANGI QO'SHILDI: Qarzdorlar ro'yxati (to'lov qoldig'i borlar)
+    debtor_orders = Order.objects.filter(
+        total_amount__gt=F('paid_amount'),
+        status__in=['measuring', 'processing', 'installing', 'installed'] # Bekor qilinganlar kerak emas
+    ).select_related('customer').order_by('created_at')
+
+    # ✅ YANGI QO'SHILDI: O'rnatish muddati o'tgan buyurtmalar
+    overdue_installations = Order.objects.filter(
+        installation_scheduled_date__isnull=False,
+        installation_scheduled_date__lt=timezone.now()
+    ).exclude(
+        status__in=['installed', 'cancelled']
+    ).select_related('customer').order_by('installation_scheduled_date')
+    
     context = {
         'recent_orders': recent_orders,
         'stats': stats,
         'month_stats': month_stats,
+        'debtor_orders': debtor_orders,  # ✅ Kontekstga qo'shildi
+        'overdue_installations': overdue_installations, # ✅ Kontekstga qo'shildi
         'page_title': 'Dashboard'
     }
     
     return render(request, 'dashboard.html', context)
+
 
 def login_view(request):
     """Login sahifasi"""
@@ -181,47 +198,6 @@ def login_view(request):
             messages.error(request, 'Foydalanuvchi nomi va parolni kiriting!')
     
     return render(request, 'accounts/login.html')
-
-
-def manager_dashboard(request):
-    """Admin va menejer uchun dashboard"""
-    
-    # So'nggi buyurtmalar
-    recent_orders = Order.objects.select_related('customer').order_by('-created_at')[:10]
-    
-    # Statistikalar
-    stats = {
-        'total_orders': Order.objects.count(),
-        'measuring_orders': Order.objects.filter(status='measuring').count(),
-        'processing_orders': Order.objects.filter(status='processing').count(),
-        'installing_orders': Order.objects.filter(status='installing').count(),
-        'completed_orders': Order.objects.filter(status='installed').count(),
-        'cancelled_orders': Order.objects.filter(status='cancelled').count(),
-        'total_customers': Customer.objects.count(),
-        'total_revenue': Payment.objects.filter(
-            status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-    }
-    
-    # Bu oyning statistikasi
-    current_month = timezone.now().replace(day=1)
-    month_stats = {
-        'orders': Order.objects.filter(created_at__gte=current_month).count(),
-        'revenue': Payment.objects.filter(
-            created_at__gte=current_month,
-            status='confirmed'
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-        'customers': Customer.objects.filter(created_at__gte=current_month).count(),
-    }
-    
-    context = {
-        'recent_orders': recent_orders,
-        'stats': stats,
-        'month_stats': month_stats,
-        'page_title': 'Dashboard'
-    }
-    
-    return render(request, 'dashboard.html', context)
 
 
 @login_required

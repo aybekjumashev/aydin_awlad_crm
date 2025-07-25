@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Vazifalar
     path('my-tasks/', technical_views.my_tasks, name='my_tasks'),
+    path('customers/', technical_views.customer_list, name='customers_for_tech_url'),
     
     # O'lchov olish
     path('measurement/<int:order_id>/', technical_views.measurement_form, name='measurement'),
@@ -19,4 +20,7 @@ urlpatterns = [
     
     # O'rnatish
     path('installation/<int:order_id>/', technical_views.installation_task, name='installation'),
+
+    path('search-customers/', technical_views.search_customers, name='search_customers'),
+    path('get-customer-info/', technical_views.get_customer_info, name='get_customer_info'),
 ]

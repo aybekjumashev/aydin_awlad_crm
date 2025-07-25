@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from django.forms import modelformset_factory
 
 from .models import Order, OrderItem
+from customers.models import Customer
 from .forms import (
     SimpleOrderForm, 
     OrderUpdateForm, 
@@ -24,6 +25,8 @@ from payments.models import Payment
 import json
 from decimal import Decimal
 import decimal
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 @login_required
 def order_list(request):
@@ -42,7 +45,8 @@ def order_list(request):
         # Statistika ("new" status olib tashlandi)
     stats = {
         'total': orders.count(),
-        'measuring': orders.filter(status='measuring').count(),
+        'measuring': orders.filter(status='measuring').annotate(item_count=Count('items')).filter(item_count=0).count(),
+        'not_comp_measuring': orders.filter(status='measuring').annotate(item_count=Count('items')).filter(item_count__gt=0).count(),
         'processing': orders.filter(status='processing').count(),
         'installing': orders.filter(status='installing').count(),
         'installed': orders.filter(status='installed').count(),
@@ -69,7 +73,12 @@ def order_list(request):
             )
         
         if status:
-            orders = orders.filter(status=status)
+            if status == 'not_comp_measuring':
+                orders = orders.filter(status='measuring').annotate(item_count=Count('items')).filter(item_count__gt=0)
+            elif status == 'measuring':
+                orders = orders.filter(status='measuring').annotate(item_count=Count('items')).filter(item_count=0)
+            else:
+                orders = orders.filter(status=status)
         
         if customer:
             orders = orders.filter(customer=customer)
@@ -121,10 +130,13 @@ def order_create(request):
             return redirect('orders:detail', pk=order.pk)
     else:
         form = SimpleOrderForm()
+        customer_id = request.GET.get('customer')
+        customer = get_object_or_404(Customer, pk=customer_id)
     
     context = {
         'form': form,
-        'title': 'Yangi buyurtma yaratish'
+        'title': 'Yangi buyurtma yaratish',
+        'customer': customer
     }
     
     return render(request, 'orders/create.html', context)
@@ -136,7 +148,6 @@ def order_detail(request, pk):
     
     order = get_object_or_404(Order, pk=pk)
 
-    
     # Buyurtma elementlari
     items = order.items.all()
     
@@ -249,7 +260,7 @@ def order_measurement(request, pk):
             advance_amount = request.POST.get('advance_payment')
             if advance_amount:
                 try:
-                    advance_amount = Decimal(advance_amount)
+                    advance_amount = Decimal(str(advance_amount))
                     if advance_amount > 0:
                         Payment.objects.create(
                             order=order,
@@ -272,6 +283,7 @@ def order_measurement(request, pk):
             
             # Faqat measuring holatida bo'lsa keyingi bosqichga o'tkazish
             if order.status == 'measuring':
+                # print(request.POST.get('advance_payment_checkbox'))
                 order.status = 'processing'
                 order.assigned_measurer = request.user
             
@@ -419,7 +431,6 @@ def my_tasks(request):
     return render(request, 'technical/my_tasks.html', context)
 
 
-@login_required
 def order_print(request, pk):
     """Buyurtmani chop etish"""
     
@@ -432,6 +443,61 @@ def order_print(request, pk):
     }
     
     return render(request, 'orders/print.html', context)
+
+
+
+@login_required
+def generate_contract_view(request, order_id):
+    """
+    Buyurtma asosida shartnomani generatsiya qiladi va ko'rsatadi.
+    """
+    order = get_object_or_404(Order.objects.select_related('customer'), pk=order_id)
+    customer = order.customer
+    
+    # Shartnoma uchun hisob-kitoblar
+    total_price = order.total_price()
+    
+    # 1-variant: 50% oldindan to'lov
+    prepayment_percentage = 50
+    prepayment_amount = (total_price * Decimal(str(prepayment_percentage))) / 100
+    
+    # 2-variant: Qolgan summa va to'lov jadvali (masalan, 3 oyga bo'lib to'lash)
+    remaining_amount = total_price - prepayment_amount
+    months_for_payment = 3
+    monthly_payment = remaining_amount / months_for_payment if months_for_payment > 0 else 0
+    
+    # ----- TO'G'RILASH BOSHLANDI -----
+    # Qoldiq foizni view'da hisoblaymiz
+    remaining_percentage = 100 - prepayment_percentage
+    # ----- TO'G'RILASH TUGADI -----
+
+    payment_schedule = []
+    today = date.today()
+    for i in range(1, months_for_payment + 1):
+        payment_date = today + relativedelta(months=i)
+        payment_schedule.append({
+            'date': payment_date,
+            'amount': monthly_payment
+        })
+        
+    # Jami maydon (kv. metr)
+    total_area_sqm = sum(item.area for item in order.items.all())
+    
+    context = {
+        'order': order,
+        'customer': customer,
+        'total_price': total_price,
+        'prepayment_percentage': prepayment_percentage,
+        'prepayment_amount': prepayment_amount,
+        'remaining_amount': remaining_amount,
+        'payment_schedule': payment_schedule,
+        'total_area_sqm': total_area_sqm,
+        'today': today,
+        'remaining_percentage': remaining_percentage, # YANGI: Tayyor natijani contextga qo'shamiz
+    }
+    
+    return render(request, 'orders/contract.html', context)
+
 
 @login_required
 def order_add_payment(request, pk):

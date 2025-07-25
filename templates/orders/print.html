@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buyurtma #{{ order.order_number }} - AYDIN AWLAD</title>
     
+    <!-- html2pdf.js kutubxonasini CDN orqali qo'shish -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -17,9 +20,15 @@
             font-size: 14px;
             line-height: 1.4;
             color: #333;
+            background-color: #f1f1f1; /* Orqa fonni biroz ajratish uchun */
+        }
+
+        #pdf-content {
             max-width: 210mm;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         
         .header {
@@ -84,11 +93,12 @@
             color: white;
         }
         
-        .status-new { background-color: #007bff; }
-        .status-measuring { background-color: #17a2b8; }
-        .status-processing { background-color: #ffc107; color: #333; }
-        .status-installed { background-color: #28a745; }
-        .status-cancelled { background-color: #dc3545; }
+        /* Modeldagi statuslarga mos ranglar */
+        .status-measuring { background-color: #17a2b8; }     /* O'lchovda */
+        .status-processing { background-color: #ffc107; color: #333; } /* Ishlanmoqda */
+        .status-installing { background-color: #fd7e14; }    /* O'rnatilmoqda */
+        .status-installed { background-color: #28a745; }    /* O'rnatildi */
+        .status-cancelled { background-color: #dc3545; }    /* Bekor qilindi */
         
         table {
             width: 100%;
@@ -158,10 +168,16 @@
             height: 40px;
         }
         
-        .print-btn {
+        .controls {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .control-btn {
             background: #007bff;
             color: white;
             border: none;
@@ -169,227 +185,230 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-btn.download-btn {
+            background-color: #28a745;
         }
         
-        .print-btn:hover {
-            background: #0056b3;
+        .control-btn:hover {
+            opacity: 0.8;
+        }
+
+        .control-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <!-- Print tugmasi -->
-    <button onclick="window.print()" class="print-btn no-print">
-        <i class="bi bi-printer"></i> Chop etish
-    </button>
-    
-    <!-- Header -->
-    <div class="header">
-        <div class="company-name">AYDIN AWLAD</div>
-        <div class="company-info">Jalyuzi o'rnatish xizmatlari</div>
+    <!-- Boshqaruv tugmalari -->
+    <div class="controls no-print">
+        <button onclick="window.print()" class="control-btn print-btn">
+            Chop etish
+        </button>
+        <button id="download-btn" onclick="downloadPDF()" class="control-btn download-btn">
+            PDF Yuklash
+        </button>
     </div>
     
-    <!-- Buyurtma ma'lumotlari -->
-    <div class="order-info">
-        <div class="info-section">
-            <div class="section-title">Buyurtma ma'lumotlari</div>
-            <div class="info-row">
-                <span class="info-label">Raqam:</span>
-                #{{ order.order_number }}
-            </div>
-            <div class="info-row">
-                <span class="info-label">Holat:</span>
-                <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Yaratilgan:</span>
-                {{ order.created_at|date:"d.m.Y H:i" }}
-            </div>
-            {% if order.measurement_date %}
-            <div class="info-row">
-                <span class="info-label">O'lchov sanasi:</span>
-                {{ order.measurement_date|date:"d.m.Y" }}
-            </div>
-            {% endif %}
-            {% if order.installation_date %}
-            <div class="info-row">
-                <span class="info-label">O'rnatish sanasi:</span>
-                {{ order.installation_date|date:"d.m.Y" }}
-            </div>
-            {% endif %}
+    <!-- Bu div PDF ga aylantiriladigan asosiy kontentni o'rab turadi -->
+    <div id="pdf-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-name">AYDIN AWLAD</div>
+            <div class="company-info">Jalyuzi o'rnatish xizmatlari</div>
         </div>
         
-        <div class="info-section">
-            <div class="section-title">Mijoz ma'lumotlari</div>
-            <div class="info-row">
-                <span class="info-label">Ism:</span>
-                {{ order.customer.get_full_name }}
-            </div>
-            <div class="info-row">
-                <span class="info-label">Telefon:</span>
-                {{ order.customer.phone }}
-            </div>
-            <div class="info-row">
-                <span class="info-label">Manzil:</span>
-                {{ order.customer.address }}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Mas'ullar -->
-    <div class="info-section" style="margin-bottom: 30px;">
-        <div class="section-title">Mas'ul xodimlar</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-            <div>
-                <strong>Qabul qilgan:</strong><br>
-                {% if order.created_by %}
-                    {{ order.created_by.get_full_name|default:order.created_by.username|default:"-" }}
-                {% else %}
-                    -
+        <!-- Buyurtma ma'lumotlari -->
+        <div class="order-info">
+            <div class="info-section">
+                <div class="section-title">Buyurtma ma'lumotlari</div>
+                <div class="info-row">
+                    <span class="info-label">Raqam:</span>
+                    #{{ order.order_number }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Holat:</span>
+                    <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Yaratilgan:</span>
+                    {{ order.created_at|date:"d.m.Y H:i" }}
+                </div>
+                {% if order.measurement_date %}
+                <div class="info-row">
+                    <span class="info-label">O'lchov sanasi:</span>
+                    {{ order.measurement_date|date:"d.m.Y" }}
+                </div>
+                {% endif %}
+                {% if order.installation_scheduled_date %}
+                <div class="info-row">
+                    <span class="info-label">O'rnatish sanasi:</span>
+                    {{ order.installation_scheduled_date|date:"d.m.Y" }}
+                </div>
                 {% endif %}
             </div>
-            <div>
-                <strong>O'lchov olgan:</strong><br>
-                {% if order.measured_by %}
-                    {{ order.measured_by.get_full_name|default:order.measured_by.username|default:"Tayinlanmagan" }}
-                {% else %}
-                    Tayinlanmagan
-                {% endif %}
-            </div>
-            <div>
-                <strong>Ishlab chiqargan:</strong><br>
-                {% if order.processed_by %}
-                    {{ order.processed_by.get_full_name|default:order.processed_by.username|default:"Tayinlanmagan" }}
-                {% else %}
-                    Tayinlanmagan
-                {% endif %}
-            </div>
-        </div>
-        <div style="margin-top: 10px;">
-            <strong>O'rnatgan:</strong>
-            {% if order.installed_by %}
-                {{ order.installed_by.get_full_name|default:order.installed_by.username|default:"Tayinlanmagan" }}
-            {% else %}
-                Tayinlanmagan
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Items Table -->
-    <div class="section-title">Buyurtma tarkibi</div>
-    <table>
-        <thead>
-            <tr>
-                <th>№</th>
-                <th>Jalyuzi turi</th>
-                <th>O'lcham (sm)</th>
-                <th>Material</th>
-                <th>Xona</th>
-                <th>Dona</th>
-                <th>Birlik narxi</th>
-                <th>Jami narx</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in order.items.all %}
-            <tr>
-                <td class="text-center">{{ forloop.counter }}</td>
-                <td>
-                    <strong>{{ item.get_blind_type_display }}</strong>
-                    {% if item.installation_type %}
-                        <br><small>{{ item.get_installation_type_display }}</small>
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    {{ item.width|floatformat:0 }} × {{ item.height|floatformat:0 }}
-                    <br><small>({{ item.total_area_sqm|floatformat:2 }} m²)</small>
-                </td>
-                <td>{{ item.get_material_display|default:"-" }}</td>
-                <td>{{ item.room_name|default:"-" }}</td>
-                <td class="text-center">{{ item.quantity }}</td>
-                <td class="text-right">{{ item.unit_price|floatformat:0 }} so'm</td>
-                <td class="text-right">{{ item.total_price|floatformat:0 }} so'm</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8" class="text-center">
-                    Hozircha jalyuzilar qo'shilmagan
-                </td>
-            </tr>
-            {% endfor %}
             
-            {% if order.items.all %}
-            <tr class="total-row">
-                <td colspan="7" class="text-right"><strong>Jami:</strong></td>
-                <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
-            </tr>
-            {% endif %}
-        </tbody>
-    </table>
-    
-    <!-- Moliyaviy ma'lumotlar -->
-    {% if order.total_price > 0 %}
-    <div class="summary">
-        <div class="section-title">Moliyaviy ma'lumotlar</div>
-        <div class="summary-grid">
-            <div>
+            <div class="info-section">
+                <div class="section-title">Mijoz ma'lumotlari</div>
                 <div class="info-row">
-                    <span class="info-label">Umumiy narx:</span>
-                    {{ order.total_price|floatformat:0 }} so'm
+                    <span class="info-label">Ism:</span>
+                    {{ order.customer.get_full_name }}
                 </div>
                 <div class="info-row">
-                    <span class="info-label">To'langan:</span>
-                    {{ order.total_paid|floatformat:0 }} so'm
+                    <span class="info-label">Telefon:</span>
+                    {{ order.customer.phone }}
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Qolgan:</span>
-                    {{ order.remaining_balance|floatformat:0 }} so'm
+                    <span class="info-label">Manzil:</span>
+                    {{ order.address }}
                 </div>
             </div>
-            <div>
-                <div class="info-row">
-                    <span class="info-label">To'lov holati:</span>
-                    {% if order.is_fully_paid %}
-                        <span style="color: green; font-weight: bold;">To'liq to'langan</span>
-                    {% elif order.total_paid > 0 %}
-                        <span style="color: orange; font-weight: bold;">Qisman to'langan</span>
-                    {% else %}
-                        <span style="color: red; font-weight: bold;">To'lanmagan</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Qo'shimcha izohlar -->
-    {% if order.notes %}
-    <div class="info-section" style="margin-top: 30px;">
-        <div class="section-title">Qo'shimcha izohlar</div>
-        <p>{{ order.notes|linebreaksbr }}</p>
-    </div>
-    {% endif %}
-    
-    <!-- Imzolar -->
-    <div class="signatures">
-        <div class="signature">
-            <div class="signature-line"></div>
-            <div>Mijoz imzosi</div>
-            <small>{{ order.customer.get_full_name }}</small>
         </div>
         
-        <div class="signature">
-            <div class="signature-line"></div>
-            <div>Kompaniya vakilining imzosi</div>
-            <small>AYDIN AWLAD</small>
+        <!-- Mas'ullar (models.py dagi yangi nomlarga moslandi) -->
+        <div class="info-section" style="margin-bottom: 30px;">
+            <div class="section-title">Mas'ul xodimlar</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <strong>O'lchov oluvchi:</strong><br>
+                    {{ order.assigned_measurer.get_full_name|default:"Tayinlanmagan" }}
+                </div>
+                <div>
+                    <strong>Ishlab chiqaruvchi:</strong><br>
+                    {{ order.assigned_manufacturer.get_full_name|default:"Tayinlanmagan" }}
+                </div>
+                <div>
+                    <strong>O'rnatuvchi:</strong><br>
+                    {{ order.assigned_installer.get_full_name|default:"Tayinlanmagan" }}
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Footer -->
-    <div class="footer">
-        <div style="text-align: center;">
-            <strong>AYDIN AWLAD</strong> - Professional jalyuzi xizmatlari<br>
-            Chop etilgan sana: {{ "now"|date:"d.m.Y H:i" }}
+        
+        <!-- Items Table -->
+        <div class="section-title">Buyurtma tarkibi</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Jalyuzi turi</th>
+                    <th>O'lcham (sm)</th>
+                    <th>Maydon (m²)</th>
+                    <th>Dona</th>
+                    <th>Birlik narxi</th>
+                    <th>Jami narx</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ item.get_blind_type_display }}</strong>
+                        <br><small>{{ item.get_installation_type_display }} / {{ item.get_material_display }}</small>
+                    </td>
+                    <td class="text-center">{{ item.width|floatformat:0 }} × {{ item.height|floatformat:0 }}</td>
+                    <td class="text-center">{{ item.area|floatformat:2 }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:0 }} so'm</td>
+                    <td class="text-right">{{ item.total_price|floatformat:0 }} so'm</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">Hozircha jalyuzilar qo'shilmagan</td>
+                </tr>
+                {% endfor %}
+                
+                {% if order.items.all %}
+                <tr class="total-row">
+                    <td colspan="6" class="text-right"><strong>Jami:</strong></td>
+                    <td class="text-right"><strong>{{ order.total_price|floatformat:0 }} so'm</strong></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <!-- Moliyaviy ma'lumotlar -->
+        {% if order.total_amount > 0 %}
+        <div class="summary">
+            <div class="section-title">Moliyaviy ma'lumotlar</div>
+            <div class="summary-grid">
+                <div>
+                    <div class="info-row"><span class="info-label">Umumiy narx:</span> {{ order.total_amount|floatformat:0 }} so'm</div>
+                    <div class="info-row"><span class="info-label">To'langan:</span> {{ order.paid_amount|floatformat:0 }} so'm</div>
+                    <div class="info-row"><span class="info-label">Qoldiq:</span> {{ order.remaining_amount|floatformat:0 }} so'm</div>
+                </div>
+                <div>
+                    <div class="info-row">
+                        <span class="info-label">To'lov holati:</span>
+                        <span style="font-weight: bold;">{{ order.get_payment_status_display }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+        {% endif %}
+        
+        <!-- Qo'shimcha izohlar -->
+        {% if order.notes %}
+        <div class="info-section" style="margin-top: 30px;">
+            <div class="section-title">Qo'shimcha izohlar</div>
+            <p>{{ order.notes|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Imzolar -->
+        <div class="signatures page-break">
+            <div class="signature">
+                <div class="signature-line"></div>
+                <div>Mijoz imzosi</div>
+                <small>{{ order.customer.get_full_name }}</small>
+            </div>
+            <div class="signature">
+                <div class="signature-line"></div>
+                <div>Kompaniya vakilining imzosi</div>
+                <small>AYDIN AWLAD</small>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div style="text-align: center;">
+                <strong>AYDIN AWLAD</strong> - Professional jalyuzi xizmatlari<br>
+                Chop etilgan sana: {{ "now"|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+    </div> <!-- #pdf-content div tugashi -->
+
+    <script>
+        function downloadPDF() {
+            const downloadBtn = document.getElementById('download-btn');
+            // PDF generatsiya qilinayotganda tugmani nofaol qilish va matnni o'zgartirish
+            downloadBtn.disabled = true;
+            downloadBtn.innerText = 'Yuklanmoqda...';
+
+            // PDF ga aylantiriladigan elementni tanlash
+            const element = document.getElementById('pdf-content');
+
+            // html2pdf.js uchun sozlamalar
+            const opt = {
+                margin:       [5, 5, 10, 5], // [top, left, bottom, right] mm
+                filename:     'buyurtma-{{ order.order_number }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, // Sifatni oshirish uchun
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // PDF generatsiyasini ishga tushirish va faylni saqlash
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Jarayon tugagach tugmani yana faol holatga qaytarish
+                downloadBtn.disabled = false;
+                downloadBtn.innerText = 'PDF Yuklash';
+            });
+        }
+    </script>
 </body>
-</html>
+</html> 

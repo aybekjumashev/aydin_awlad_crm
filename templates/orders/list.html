@@ -107,8 +107,13 @@
                 </a>
                 <a href="{% url 'orders:list' %}?status=measuring" class="btn btn-sm me-2 {% if request.GET.status == 'measuring' %}btn-info{% else %}btn-outline-info{% endif %}">
                     <i class="bi bi-rulers me-1"></i>
-                    O'lchovda
+                    Yangi
                     <span>({{ stats.measuring }})</span>
+                </a>
+                <a href="{% url 'orders:list' %}?status=not_comp_measuring" class="btn btn-sm me-2 {% if request.GET.status == 'not_comp_measuring' %}btn-info{% else %}btn-outline-info{% endif %}">
+                    <i class="bi bi-rulers me-1"></i>
+                    O'lchovda
+                    <span>({{ stats.not_comp_measuring }})</span>
                 </a>
                 <a href="{% url 'orders:list' %}?status=processing" class="btn btn-sm me-2 {% if request.GET.status == 'processing' %}btn-warning{% else %}btn-outline-warning{% endif %}">
                     <i class="bi bi-gear me-1"></i>

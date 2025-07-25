@@ -107,8 +107,8 @@ class SimpleOrderForm(forms.ModelForm):
         model = Order
         fields = ['customer', 'address', 'notes']
         widgets = {
-            'customer': forms.Select(attrs={
-                'class': 'form-select',
+            'customer': forms.HiddenInput(attrs={
+                'class': 'form-control',
                 'required': True
             }),
             'address': forms.Textarea(attrs={
@@ -126,8 +126,8 @@ class SimpleOrderForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['customer'].queryset = Customer.objects.exclude(category='inactive')
-        self.fields['customer'].empty_label = "Mijozni tanlang"
+        # self.fields['customer'].queryset = Customer.objects.exclude(category='inactive')
+        # self.fields['customer'].empty_label = "Mijozni tanlang"
 
 
 class MeasurementForm(forms.ModelForm):
@@ -235,7 +235,7 @@ class OrderFilterForm(forms.Form):
     )
     
     status = forms.ChoiceField(
-        choices=[('', 'Barcha holatlar')] + Order.STATUS_CHOICES,
+        choices=[('', 'Barcha holatlar')] + Order.STATUS_CHOICES + [('not_comp_measuring', 'not_comp_measuring')],
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'})
     )

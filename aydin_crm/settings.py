@@ -167,7 +167,8 @@ AUTH_USER_MODEL = 'accounts.User'
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')
 
 # Base URL for webhooks (your domain)
-TELEGRAM_WEBHOOK_BASE_URL = 'https://18fa-45-153-61-36.ngrok-free.app'
+TELEGRAM_WEBHOOK_BASE_URL = os.environ.get('TELEGRAM_WEBHOOK_BASE_URL')
+
 
 # Telegram Bot Username (without @)
 TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME', 'aydinawlad_bot')
