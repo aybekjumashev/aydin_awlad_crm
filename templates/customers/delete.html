@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ customer.get_full_name }}ni o'chirish - Mijozlar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}Удаление {{ customer.get_full_name }} - Клиенты - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2 text-danger">
         <i class="bi bi-exclamation-triangle me-2"></i>
-        Mijozni o'chirish
+        Удаление клиента
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
         </div>
     </div>
@@ -24,26 +24,26 @@
             <div class="card-header bg-danger text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    Xavfli harakat!
+                    Опасное действие!
                 </h5>
             </div>
             <div class="card-body">
                 <div class="alert alert-danger">
-                    <h6 class="alert-heading">Diqqat!</h6>
+                    <h6 class="alert-heading">Внимание!</h6>
                     <p class="mb-0">
-                        Siz <strong>{{ customer.get_full_name }}</strong> mijozini butunlay o'chirmoqchisiz. 
-                        Bu harakat bekor qilib bo'lmaydi!
+                        Вы собираетесь полностью удалить клиента <strong>{{ customer.get_full_name }}</strong>.
+                        Это действие необратимо!
                     </p>
                 </div>
                 
                 <div class="mb-4">
-                    <h6>Mijoz ma'lumotlari:</h6>
+                    <h6>Данные клиента:</h6>
                     <ul class="list-unstyled">
-                        <li><strong>Ism:</strong> {{ customer.get_full_name }}</li>
-                        <li><strong>Telefon:</strong> {{ customer.phone }}</li>
-                        <li><strong>Manzil:</strong> {{ customer.address }}</li>
-                        <li><strong>Qo'shilgan:</strong> {{ customer.created_at|date:"d.m.Y H:i" }}</li>
-                        <li><strong>Buyurtmalar soni:</strong> {{ customer.total_orders }}</li>
+                        <li><strong>Имя:</strong> {{ customer.get_full_name }}</li>
+                        <li><strong>Телефон:</strong> {{ customer.phone }}</li>
+                        <li><strong>Адрес:</strong> {{ customer.address }}</li>
+                        <li><strong>Добавлен:</strong> {{ customer.created_at|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Количество заказов:</strong> {{ customer.total_orders }}</li>
                     </ul>
                 </div>
                 
@@ -51,22 +51,22 @@
                 <div class="alert alert-warning">
                     <h6 class="alert-heading">
                         <i class="bi bi-exclamation-circle me-2"></i>
-                        O'chirish mumkin emas!
+                        Удаление невозможно!
                     </h6>
                     <p class="mb-0">
-                        Bu mijozning {{ customer.total_orders }} ta buyurtmasi mavjud. 
-                        Avval barcha buyurtmalarni o'chiring yoki boshqa mijozga o'tkazing.
+                        У этого клиента есть {{ customer.total_orders }} заказ(ов).
+                        Сначала удалите все заказы или перенесите их на другого клиента.
                     </p>
                 </div>
                 
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left me-2"></i>
-                        Orqaga qaytish
+                        Вернуться назад
                     </a>
                     <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-primary">
                         <i class="bi bi-eye me-2"></i>
-                        Buyurtmalarni ko'rish
+                        Посмотреть заказы
                     </a>
                 </div>
                 
@@ -75,22 +75,22 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">Tasdiqlash uchun mijoz ismini kiriting:</label>
+                        <label class="form-label">Для подтверждения введите имя клиента:</label>
                         <input type="text" class="form-control" id="confirmName" 
                                placeholder="{{ customer.get_full_name }}" required>
                         <div class="form-text">
-                            Xavfsizlik uchun to'liq ismni kiriting
+                            Для безопасности введите полное имя
                         </div>
                     </div>
                     
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'customers:detail' customer.pk %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
                             <i class="bi bi-trash me-2"></i>
-                            Mijozni o'chirish
+                            Удалить клиента
                         </button>
                     </div>
                 </form>
@@ -99,18 +99,18 @@
             </div>
         </div>
         
-        <!-- Yordam ma'lumotlari -->
+        <!-- Справочная информация -->
         <div class="card mt-4">
             <div class="card-body">
                 <h6 class="card-title">
                     <i class="bi bi-info-circle me-2"></i>
-                    Ma'lumot
+                    Информация
                 </h6>
                 <ul class="list-unstyled mb-0 small text-muted">
-                    <li><i class="bi bi-check me-1"></i> Faqat admin mijozlarni o'chira oladi</li>
-                    <li><i class="bi bi-check me-1"></i> Buyurtmalari bo'lgan mijozlarni o'chirish mumkin emas</li>
-                    <li><i class="bi bi-check me-1"></i> O'chirilgan ma'lumotlarni qayta tiklash mumkin emas</li>
-                    <li><i class="bi bi-check me-1"></i> Barcha bog'liq ma'lumotlar ham o'chadi</li>
+                    <li><i class="bi bi-check me-1"></i> Только администратор может удалять клиентов</li>
+                    <li><i class="bi bi-check me-1"></i> Нельзя удалять клиентов, у которых есть заказы</li>
+                    <li><i class="bi bi-check me-1"></i> Удаленные данные восстановить невозможно</li>
+                    <li><i class="bi bi-check me-1"></i> Все связанные данные также будут удалены</li>
                 </ul>
             </div>
         </div>
@@ -139,11 +139,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Form submit confirmation
+        // Подтверждение отправки формы
         const form = document.querySelector('form');
         if (form) {
             form.addEventListener('submit', function(e) {
-                if (!confirm('Haqiqatan ham bu mijozni o\'chirmoqchimisiz? Bu harakat bekor qilib bo\'lmaydi!')) {
+                if (!confirm('Вы действительно хотите удалить этого клиента? Это действие необратимо!')) {
                     e.preventDefault();
                 }
             });

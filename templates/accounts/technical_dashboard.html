@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Texnik xodim paneli{% endblock %}
+{% block title %}Панель технического сотрудника{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Salomlashish -->
+    <!-- Приветствие -->
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="mb-1">
                 <i class="bi bi-person-gear me-2"></i>
-                Salom, {{ user.get_full_name|default:user.username }}!
+                Здравствуйте, {{ user.get_full_name|default:user.username }}!
             </h2>
             <p class="text-muted mb-0">
-                Bugun {{ today_tasks|length }} ta vazifangiz bor
+                Сегодня у вас {{ today_tasks|length }} задач(и)
             </p>
         </div>
     </div>
 
-    <!-- Statistika kartochkalari -->
+    <!-- Карточки статистики -->
     <div class="row mb-4">
         {% if user.can_measure %}
         <div class="col-lg-3 col-md-6 mb-3">
@@ -26,7 +26,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="text-info mb-0">{{ measuring_orders }}</h4>
-                            <p class="mb-0">O'lchov olish</p>
+                            <p class="mb-0">Снятие замеров</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-rulers text-info" style="font-size: 2rem; opacity: 0.8;"></i>
@@ -44,7 +44,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="text-warning mb-0">{{ manufacturing_orders }}</h4>
-                            <p class="mb-0">Ishlab chiqarish</p>
+                            <p class="mb-0">Производство</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-tools text-warning" style="font-size: 2rem; opacity: 0.8;"></i>
@@ -62,7 +62,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="text-success mb-0">{{ installation_orders }}</h4>
-                            <p class="mb-0">O'rnatish</p>
+                            <p class="mb-0">Установка</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-house-gear text-success" style="font-size: 2rem; opacity: 0.8;"></i>
@@ -79,7 +79,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="text-primary mb-0">{{ completed_orders }}</h4>
-                            <p class="mb-0">Yakunlangan</p>
+                            <p class="mb-0">Завершенные</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-check-circle text-primary" style="font-size: 2rem; opacity: 0.8;"></i>
@@ -90,14 +90,14 @@
         </div>
     </div>
 
-    <!-- Bugungi vazifalar -->
+    <!-- Задачи на сегодня -->
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="bi bi-list-task me-2"></i>
-                        Bugungi vazifalar
+                        Задачи на сегодня
                     </h5>
                 </div>
                 <div class="card-body">
@@ -111,7 +111,7 @@
                                         <h6 class="mb-0">{{ task.task_name }}</h6>
                                     </div>
                                     <p class="mb-1">
-                                        <strong>Buyurtma:</strong> 
+                                        <strong>Заказ:</strong> 
                                         <a href="{% url 'orders:detail' task.order.pk %}" class="text-decoration-none">
                                             #{{ task.order.order_number }}
                                         </a>
@@ -127,17 +127,17 @@
                                     {% if task.task_type == 'measure' %}
                                         <a href="{% url 'technical:measurement' task.order.id %}" class="btn btn-info btn-sm">
                                             <i class="bi bi-rulers me-1"></i>
-                                            O'lchov
+                                            Замер
                                         </a>
                                     {% elif task.task_type == 'manufacture' %}
                                         <a href="{% url 'technical:manufacturing' task.order.id %}" class="btn btn-warning btn-sm">
                                             <i class="bi bi-tools me-1"></i>
-                                            Ishlab chiqarish
+                                            Производство
                                         </a>
                                     {% elif task.task_type == 'install' %}
                                         <a href="{% url 'technical:installation' task.order.id %}" class="btn btn-success btn-sm">
                                             <i class="bi bi-house-gear me-1"></i>
-                                            O'rnatish
+                                            Установка
                                         </a>
                                     {% endif %}
                                 </div>
@@ -148,28 +148,28 @@
                         <div class="text-center mt-3">
                             <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-primary">
                                 <i class="bi bi-list-task me-1"></i>
-                                Barcha vazifalarni ko'rish
+                                Просмотреть все задачи
                             </a>
                         </div>
                     {% else %}
                         <div class="text-center py-4">
                             <i class="bi bi-calendar-check display-4 text-muted"></i>
-                            <h5 class="mt-3 text-muted">Bugun vazifa yo'q</h5>
-                            <p class="text-muted">Barcha vazifalar bajarilgan yoki yangi vazifa tayinlanmagan.</p>
+                            <h5 class="mt-3 text-muted">Сегодня задач нет</h5>
+                            <p class="text-muted">Все задачи выполнены или новых задач не назначено.</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Боковая панель -->
         <div class="col-lg-4">
-            <!-- Tezkor amallar -->
+            <!-- Быстрые действия -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-lightning me-2"></i>
-                        Tezkor amallar
+                        Быстрые действия
                     </h6>
                 </div>
                 <div class="card-body">
@@ -177,64 +177,64 @@
                         {% if user.can_create_order %}
                         <a href="{% url 'orders:create' %}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-plus-circle me-1"></i>
-                            Yangi buyurtma
+                            Новый заказ
                         </a>
                         {% endif %}
                         
                         <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-list-task me-1"></i>
-                            Mening vazifalarim
+                            Мои задачи
                         </a>
                         
                         {% if user.can_manage_payments %}
                         <a href="{% url 'payments:list' %}" class="btn btn-outline-success btn-sm">
                             <i class="bi bi-cash-stack me-1"></i>
-                            To'lovlar
+                            Платежи
                         </a>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Profil ma'lumotlari -->
+            <!-- Информация о профиле -->
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-person me-2"></i>
-                        Mening ma'lumotlarim
+                        Мои данные
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Ism:</strong><br>
+                        <strong>Имя:</strong><br>
                         {{ user.get_full_name|default:user.username }}
                     </div>
                     
                     <div class="mb-3">
-                        <strong>Mutaxassis turi:</strong><br>
-                        <span class="badge bg-secondary">{{ user.get_specialist_type_display|default:"Universal" }}</span>
+                        <strong>Тип специалиста:</strong><br>
+                        <span class="badge bg-secondary">{{ user.get_specialist_type_display|default:"Универсал" }}</span>
                     </div>
                     
                     <div class="mb-3">
-                        <strong>Huquqlarim:</strong><br>
+                        <strong>Мои права:</strong><br>
                         {% if user.can_measure %}
-                            <span class="badge bg-info me-1">O'lchov</span>
+                            <span class="badge bg-info me-1">Замер</span>
                         {% endif %}
                         {% if user.can_manufacture %}
-                            <span class="badge bg-warning me-1">Ishlab chiqarish</span>
+                            <span class="badge bg-warning me-1">Производство</span>
                         {% endif %}
                         {% if user.can_install %}
-                            <span class="badge bg-success me-1">O'rnatish</span>
+                            <span class="badge bg-success me-1">Установка</span>
                         {% endif %}
                         {% if user.can_create_order %}
-                            <span class="badge bg-primary me-1">Buyurtma yaratish</span>
+                            <span class="badge bg-primary me-1">Создание заказа</span>
                         {% endif %}
                     </div>
                     
                     <div class="d-grid">
                         <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-gear me-1"></i>
-                            Profilni tahrirlash
+                            Редактировать профиль
                         </a>
                     </div>
                 </div>

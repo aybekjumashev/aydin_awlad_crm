@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Ishlab chiqarish - {{ order.order_number }}{% endblock %}
+{% block title %}Производство - {{ order.order_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,29 +9,29 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
                     <i class="bi bi-tools me-2"></i>
-                    Ishlab chiqarish - #{{ order.order_number }}
+                    Производство - #{{ order.order_number }}
                 </h2>
                 <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>
-                    Vazifalar
+                    Задачи
                 </a>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Buyurtma ma'lumotlari -->
+        <!-- Информация о заказе -->
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
-                        Buyurtma ma'lumotlari
+                        Информация о заказе
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Mijoz:</strong><br>
+                        <strong>Клиент:</strong><br>
                         {{ order.customer.get_full_name }}<br>
                         <small class="text-muted">{{ order.customer.phone }}</small>
                         {% for phone in order.customer.additional_phones.all %}
@@ -46,12 +46,12 @@
                         {% endfor %}
                     </div>
                     <div class="mb-3">
-                        <strong>Yaratilgan:</strong><br>
+                        <strong>Создан:</strong><br>
                         <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
                     </div>
                     <div class="mb-3">
-                        <strong>O'lchov tugallangan:</strong><br>
-                        <small>{{ order.measurement_completed_date|date:"d.m.Y H:i"|default:"Ma'lumot yo'q" }}</small>
+                        <strong>Замер завершен:</strong><br>
+                        <small>{{ order.measurement_completed_date|date:"d.m.Y H:i"|default:"Нет данных" }}</small>
                     </div>
                     <div class="mb-0">
                         <span class="badge bg-warning">{{ order.get_status_display }}</span>
@@ -61,14 +61,14 @@
 
         </div>
 
-        <!-- Mahsulotlar ro'yxati va ishlab chiqarish formi -->
+        <!-- Список товаров и форма производства -->
         <div class="col-md-8">
-            <!-- Mahsulotlar ro'yxati -->
+            <!-- Список товаров -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-list-ul me-2"></i>
-                        Ishlab chiqarilishi kerak bo'lgan mahsulotlar
+                        Товары для производства
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -76,12 +76,12 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Jalyuzi turi</th>
-                                    <th>O'lcham</th>
-                                    <th>Material</th>
-                                    <th>Xona</th>
-                                    <th>Donasi</th>
-                                    <th>Narxi</th>
+                                    <th>Тип жалюзи</th>
+                                    <th>Размер</th>
+                                    <th>Материал</th>
+                                    <th>Комната</th>
+                                    <th>Кол-во</th>
+                                    <th>Цена</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -95,7 +95,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
+                                            <span class="badge bg-info">{{ item.width }}x{{ item.height }} мм</span>
                                             {% if item.mechanism_type %}
                                             <br><small class="text-muted">{{ item.mechanism_type }}</small>
                                             {% endif %}
@@ -107,10 +107,10 @@
                                             {{ item.room_name|default:"—" }}
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">{{ item.quantity }} dona</span>
+                                            <span class="badge bg-secondary">{{ item.quantity }} шт.</span>
                                         </td>
                                         <td>
-                                            <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
+                                            <strong>{{ item.total_price|floatformat:0 }} сум</strong>
                                         </td>
                                     </tr>
                                     {% if item.notes %}
@@ -126,7 +126,7 @@
                                     {% empty %}
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            Mahsulot ma'lumotlari mavjud emas
+                                            Данные о товарах отсутствуют
                                         </td>
                                     </tr>
                                 {% endif %}
@@ -137,7 +137,7 @@
                 </div>
             </div>
 
-            <!-- Ishlab chiqarish formi -->
+            <!-- Форма производства -->
             <form method="post">
                 {% csrf_token %}
                 
@@ -145,39 +145,39 @@
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-gear me-2"></i>
-                            Ishlab chiqarish jarayoni
+                            Процесс производства
                         </h6>
                     </div>
                     <div class="card-body">
                         {% if order.notes %}
                         <div class="mb-3">
-                            <label class="form-label">Avvalgi izohlar</label>
+                            <label class="form-label">Предыдущие примечания</label>
                             <div class="border rounded p-3 bg-light">
                                 <small>{{ order.notes|linebreaks }}</small>
                             </div>
                         </div>
                         {% endif %}
                         <div class="mb-3">
-                            <label class="form-label">Ishlab chiqarish izohlari</label>
-                            <textarea name="manufacturing_notes" class="form-control" rows="4" placeholder="Ishlab chiqarish jarayoni, qiynchiliklar, qo'shimcha ma'lumotlar..."></textarea>
+                            <label class="form-label">Примечания к производству</label>
+                            <textarea name="manufacturing_notes" class="form-control" rows="4" placeholder="Процесс производства, трудности, дополнительная информация..."></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tugmalar -->
+                <!-- Кнопки -->
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
                                     <i class="bi bi-arrow-left me-1"></i>
-                                    Vazifalar ro'yxatiga qaytish
+                                    Вернуться к списку задач
                                 </a>
                             </div>
                             <div class="col-md-6">
-                                <button type="submit" name="complete_manufacturing" class="btn btn-success btn-lg w-100" onclick="return confirm('Ishlab chiqarish yakunlandimi? Bu buyurtma o\'rnatishga yuboriladi.')">
+                                <button type="submit" name="complete_manufacturing" class="btn btn-success btn-lg w-100" onclick="return confirm('Производство завершено? Этот заказ будет отправлен на установку.')">
                                     <i class="bi bi-check-circle me-1"></i>
-                                    Tayyor! O'rnatishga yuborish
+                                    Готово! Отправить на установку
                                 </button>
                             </div>
                         </div>

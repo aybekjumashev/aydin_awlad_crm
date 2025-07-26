@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}O'rnatish - {{ order.order_number }}{% endblock %}
+{% block title %}Установка - {{ order.order_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,30 +9,30 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
                     <i class="bi bi-tools me-2"></i>
-                    O'rnatish - #{{ order.order_number }}
+                    Установка - #{{ order.order_number }}
                 </h2>
                 <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>
-                    Vazifalar
+                    Задачи
                 </a>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Buyurtma va GPS ma'lumotlari -->
+        <!-- Информация о заказе и GPS -->
         <div class="col-md-4">
-            <!-- Buyurtma ma'lumotlari -->
+            <!-- Информация о заказе -->
             <div class="card mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
-                        Buyurtma ma'lumotlari
+                        Информация о заказе
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Mijoz:</strong><br>
+                        <strong>Клиент:</strong><br>
                         {{ order.customer.get_full_name }}<br>
                         <small class="text-muted">{{ order.customer.phone }}</small>
                         {% for phone in order.customer.additional_phones.all %}
@@ -45,45 +45,45 @@
                         {% endfor %}
                     </div>
                     <div class="mb-3">
-                        <strong>Manzil:</strong><br>
+                        <strong>Адрес:</strong><br>
                         <small>{{ order.address }}</small>
                     </div>
                     <div class="mb-3">
-                        <strong>Umumiy narx:</strong><br>
-                        <span class="h5 text-success">{{ order.total_amount|floatformat:0 }} so'm</span>
+                        <strong>Общая стоимость:</strong><br>
+                        <span class="h5 text-success">{{ order.total_amount|floatformat:0 }} сум</span>
                     </div>
                     <div class="mb-3">
-                        <strong>To'langan:</strong><br>
-                        <span class="h6 text-info">{{ order.paid_amount|floatformat:0 }} so'm</span>
+                        <strong>Оплачено:</strong><br>
+                        <span class="h6 text-info">{{ order.paid_amount|floatformat:0 }} сум</span>
                     </div>
                     {% if remaining_amount > 0 %}
                     <div class="mb-0">
-                        <strong>Qolgan summa:</strong><br>
-                        <span class="h5 text-warning">{{ remaining_amount|floatformat:0 }} so'm</span>
+                        <strong>Остаток суммы:</strong><br>
+                        <span class="h5 text-warning">{{ remaining_amount|floatformat:0 }} сум</span>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- GPS Joylashuv ma'lumotlari -->
+            <!-- GPS Местоположение -->
             {% if order.has_gps_location %}
             <div class="card mb-3">
                 <div class="card-header bg-success text-white">
                     <h6 class="mb-0">
                         <i class="bi bi-geo-alt-fill me-2"></i>
-                        GPS Joylashuv
+                        GPS Местоположение
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Koordinatlar:</strong><br>
+                        <strong>Координаты:</strong><br>
                         <small class="font-monospace">{{ order.get_location_display }}</small>
                     </div>
                     
                     {% if order.measurement_location_accuracy %}
                     <div class="mb-3">
-                        <strong>Aniqlik:</strong><br>
-                        <small>{{ order.measurement_location_accuracy }} metr</small>
+                        <strong>Точность:</strong><br>
+                        <small>{{ order.measurement_location_accuracy }} метров</small>
                     </div>
                     {% endif %}
                     
@@ -91,30 +91,30 @@
                         {% if order.google_maps_url %}
                         <a href="{{ order.google_maps_url }}" target="_blank" class="btn btn-primary btn-sm">
                             <i class="bi bi-map me-1"></i>
-                            Google Maps da ochish
+                            Открыть в Google Maps
                         </a>
                         {% endif %}
                         
                         {% if order.yandex_maps_url %}
                         <a href="{{ order.yandex_maps_url }}" target="_blank" class="btn btn-warning btn-sm">
                             <i class="bi bi-compass me-1"></i>
-                            Yandex Maps da ochish
+                            Открыть в Яндекс Картах
                         </a>
                         {% endif %}
                         
                         <button type="button" class="btn btn-outline-info btn-sm" onclick="copyCoordinates()">
                             <i class="bi bi-clipboard me-1"></i>
-                            Koordinatalarni nusxa olish
+                            Скопировать координаты
                         </button>
                         
                         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showOnMap()">
                             <i class="bi bi-geo me-1"></i>
-                            Mening joylashuvim bilan solishtirib ko'rish
+                            Сравнить с моим местоположением
                         </button>
                     </div>
                     
                     <div id="locationComparison" class="mt-3" style="display: none;">
-                        <!-- JavaScript orqali to'ldiriladi -->
+                        <!-- Заполняется через JavaScript -->
                     </div>
                 </div>
             </div>
@@ -123,13 +123,13 @@
                 <div class="card-header bg-warning text-dark">
                     <h6 class="mb-0">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        GPS Ma'lumot Yo'q
+                        Нет данных GPS
                     </h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-0 text-muted">
-                        O'lchov vaqtida GPS koordinatlar saqlanmagan. 
-                        Mijoz bilan bog'lanib aniq manzilni aniqlang.
+                        GPS-координаты не были сохранены во время замера.
+                        Уточните точный адрес у клиента.
                     </p>
                 </div>
             </div>
@@ -137,15 +137,15 @@
 
         </div>
 
-        <!-- O'rnatish formi -->
+        <!-- Форма установки -->
         <div class="col-md-8">
             
-            <!-- Mahsulotlar ro'yxati -->
+            <!-- Список продукции -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-list-ul me-2"></i>
-                        Ishlab chiqarilishi kerak bo'lgan mahsulotlar
+                        Товары для установки
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -153,12 +153,12 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Jalyuzi turi</th>
-                                    <th>O'lcham</th>
-                                    <th>Material</th>
-                                    <th>Xona</th>
-                                    <th>Donasi</th>
-                                    <th>Narxi</th>
+                                    <th>Тип жалюзи</th>
+                                    <th>Размер</th>
+                                    <th>Материал</th>
+                                    <th>Комната</th>
+                                    <th>Кол-во</th>
+                                    <th>Цена</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -172,7 +172,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ item.width }}x{{ item.height }} mm</span>
+                                            <span class="badge bg-info">{{ item.width }}x{{ item.height }} мм</span>
                                             {% if item.mechanism_type %}
                                             <br><small class="text-muted">{{ item.mechanism_type }}</small>
                                             {% endif %}
@@ -184,10 +184,10 @@
                                             {{ item.room_name|default:"—" }}
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">{{ item.quantity }} dona</span>
+                                            <span class="badge bg-secondary">{{ item.quantity }} шт.</span>
                                         </td>
                                         <td>
-                                            <strong>{{ item.total_price|floatformat:0 }} so'm</strong>
+                                            <strong>{{ item.total_price|floatformat:0 }} сум</strong>
                                         </td>
                                     </tr>
                                     {% if item.notes %}
@@ -203,7 +203,7 @@
                                     {% empty %}
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            Mahsulot ma'lumotlari mavjud emas
+                                            Данные о товарах отсутствуют
                                         </td>
                                     </tr>
                                 {% endif %}
@@ -218,18 +218,18 @@
             <form method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
                 
-                <!-- O'rnatish ma'lumotlari -->
+                <!-- Информация об установке -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-gear me-2"></i>
-                            O'rnatish ma'lumotlari
+                            Информация об установке
                         </h6>
                     </div>
                     <div class="card-body">                        
                         {% if order.notes %}
                         <div class="mb-3">
-                            <label class="form-label">Avvalgi izohlar</label>
+                            <label class="form-label">Предыдущие примечания</label>
                             <div class="border rounded p-3 bg-light">
                                 <small>{{ order.notes|linebreaks }}</small>
                             </div>
@@ -238,52 +238,52 @@
                         
                         <div class="mb-0">
                             <label for="installation_notes" class="form-label">
-                                O'rnatish jarayoni haqida izohlar
+                                Примечания к процессу установки
                             </label>
                             <textarea name="installation_notes" id="installation_notes" 
                                       class="form-control" rows="3" 
-                                      placeholder="O'rnatish jarayoni, qiyinchiliklar, qo'shimcha ishlar va boshqa izohlar..."></textarea>
+                                      placeholder="Процесс установки, трудности, доп. работы и другие примечания..."></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- To'lov ma'lumotlari -->
+                <!-- Платежная информация -->
                 {% if remaining_amount > 0 %}
                 <div class="card mb-4">
                     <div class="card-header bg-warning text-dark">
                         <h6 class="mb-0">
                             <i class="bi bi-cash-stack me-2"></i>
-                            Qolgan to'lov ({{ remaining_amount|floatformat:0 }} so'm)
+                            Оставшийся платеж ({{ remaining_amount|floatformat:0 }} сум)
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="remaining_payment" class="form-label">
-                                    Qabul qilingan summa (so'm)
+                                    Полученная сумма (сум)
                                 </label>
                                 <input type="number" name="remaining_payment" id="remaining_payment" 
                                        class="form-control" min="0" step="1000" 
                                        placeholder="0" max="{{ remaining_amount }}">
                                 <div class="form-text">
-                                    Maksimal: {{ remaining_amount|floatformat:0 }} so'm
+                                    Максимум: {{ remaining_amount|floatformat:0 }} сум
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="payment_method" class="form-label">
-                                    To'lov usuli
+                                    Способ оплаты
                                 </label>
                                 <select name="payment_method" id="payment_method" class="form-select">
-                                    <option value="cash">Naqd pul</option>
-                                    <option value="card">Karta</option>
-                                    <option value="transfer">Bank o'tkazmasi</option>
+                                    <option value="cash">Наличные</option>
+                                    <option value="card">Карта</option>
+                                    <option value="transfer">Банковский перевод</option>
                                 </select>
                             </div>
                         </div>
                         
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-1"></i>
-                            <strong>Eslatma:</strong> Agar to'lov keyinroq amalga oshirilsa, bu maydonni bo'sh qoldiring.
+                            <strong>Примечание:</strong> Если оплата будет произведена позже, оставьте это поле пустым.
                         </div>
                     </div>
                 </div>
@@ -292,29 +292,29 @@
                     <div class="card-header bg-success text-white">
                         <h6 class="mb-0">
                             <i class="bi bi-check-circle me-2"></i>
-                            To'lov holati
+                            Статус оплаты
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="alert alert-success mb-0">
                             <i class="bi bi-check-circle me-1"></i>
-                            Buyurtma to'liq to'langan. Qo'shimcha to'lov talab qilinmaydi.
+                            Заказ полностью оплачен. Дополнительная оплата не требуется.
                         </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Tugmalar -->
+                <!-- Кнопки -->
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center gap-3">
                             <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
                                 <i class="bi bi-arrow-left me-1"></i>
-                                Vazifalar ro'yxatiga qaytish
+                                Вернуться к списку задач
                             </a>
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle me-1"></i>
-                                O'rnatishni yakunlash
+                                Завершить установку
                             </button>
                         </div>
                     </div>
@@ -324,7 +324,7 @@
     </div>
 </div>
 
-<!-- Hidden GPS ma'lumotlar JavaScript uchun -->
+<!-- Скрытые GPS данные для JavaScript -->
 {% if order.has_gps_location %}
 <script>
 const TARGET_COORDINATES = {
@@ -336,7 +336,7 @@ const TARGET_COORDINATES = {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation
+    // Валидация формы
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // To'lov summasi validatsiyasi
+    // Валидация суммы платежа
     const remainingPaymentInput = document.getElementById('remaining_payment');
     if (remainingPaymentInput) {
         const maxAmount = {{ remaining_amount|default:0 }};
@@ -362,14 +362,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// GPS funksiyalar
+// GPS функции
 {% if order.has_gps_location %}
 function copyCoordinates() {
     const coordinates = `{{ order.measurement_latitude }},{{ order.measurement_longitude }}`;
     
     if (navigator.clipboard) {
         navigator.clipboard.writeText(coordinates).then(function() {
-            showToast('Koordinatalar nusxa olindi!', 'success');
+            showToast('Координаты скопированы!', 'success');
         }).catch(function() {
             fallbackCopy(coordinates);
         });
@@ -390,9 +390,9 @@ function fallbackCopy(text) {
     
     try {
         document.execCommand('copy');
-        showToast('Koordinatalar nusxa olindi!', 'success');
+        showToast('Координаты скопированы!', 'success');
     } catch (err) {
-        showToast('Nusxa olishda xatolik!', 'error');
+        showToast('Ошибка при копировании!', 'error');
     }
     
     document.body.removeChild(textArea);
@@ -400,7 +400,7 @@ function fallbackCopy(text) {
 
 function showOnMap() {
     if (!navigator.geolocation) {
-        showToast('Brauzeringiz GPS ni qo\'llab-quvvatlamaydi!', 'error');
+        showToast('Ваш браузер не поддерживает GPS!', 'error');
         return;
     }
     
@@ -409,7 +409,7 @@ function showOnMap() {
     comparisonDiv.innerHTML = `
         <div class="alert alert-info">
             <i class="bi bi-arrow-repeat spin me-1"></i>
-            Sizning joylashuvingiz aniqlanmoqda...
+            Определение вашего местоположения...
         </div>
     `;
     
@@ -419,34 +419,34 @@ function showOnMap() {
             const myLng = position.coords.longitude;
             const accuracy = Math.round(position.coords.accuracy);
             
-            // Masofa hisoblash (Haversine formula)
+            // Расчет расстояния (формула Гаверсинуса)
             const distance = calculateDistance(myLat, myLng, TARGET_COORDINATES.lat, TARGET_COORDINATES.lng);
             
             let distanceText, alertClass;
             if (distance < 0.1) {
-                distanceText = `${Math.round(distance * 1000)} metr`;
+                distanceText = `${Math.round(distance * 1000)} метров`;
                 alertClass = 'alert-success';
             } else if (distance < 1) {
-                distanceText = `${Math.round(distance * 1000)} metr`;
+                distanceText = `${Math.round(distance * 1000)} метров`;
                 alertClass = 'alert-warning';
             } else {
-                distanceText = `${distance.toFixed(1)} km`;
+                distanceText = `${distance.toFixed(1)} км`;
                 alertClass = 'alert-danger';
             }
             
             comparisonDiv.innerHTML = `
                 <div class="alert ${alertClass}">
-                    <h6><i class="bi bi-geo me-1"></i> Masofa tahlili:</h6>
-                    <p class="mb-1"><strong>Maqsad:</strong> O'rnatish joyi</p>
-                    <p class="mb-1"><strong>Siz:</strong> Hozirgi joylashuv</p>
-                    <p class="mb-2"><strong>Masofa:</strong> ${distanceText}</p>
-                    <small class="text-muted">Aniqlik: ${accuracy}m</small>
+                    <h6><i class="bi bi-geo me-1"></i> Анализ расстояния:</h6>
+                    <p class="mb-1"><strong>Цель:</strong> Место установки</p>
+                    <p class="mb-1"><strong>Вы:</strong> Текущее местоположение</p>
+                    <p class="mb-2"><strong>Расстояние:</strong> ${distanceText}</p>
+                    <small class="text-muted">Точность: ${accuracy}м</small>
                 </div>
                 <div class="d-grid">
                     <a href="https://www.google.com/maps/dir/${myLat},${myLng}/${TARGET_COORDINATES.lat},${TARGET_COORDINATES.lng}" 
                        target="_blank" class="btn btn-primary btn-sm">
                         <i class="bi bi-arrow-right me-1"></i>
-                        Yo'nalish olish (Google Maps)
+                        Проложить маршрут (Google Maps)
                     </a>
                 </div>
             `;
@@ -455,7 +455,7 @@ function showOnMap() {
             comparisonDiv.innerHTML = `
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    Sizning joylashuvingizni aniqlab bo'lmadi. GPS ruxsatini tekshiring.
+                    Не удалось определить ваше местоположение. Проверьте разрешение на доступ к GPS.
                 </div>
             `;
         },
@@ -467,9 +467,9 @@ function showOnMap() {
     );
 }
 
-// Masofa hisoblash funksiyasi (Haversine formula)
+// Функция расчета расстояния (формула Гаверсинуса)
 function calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371; // Yer radiusi (km)
+    const R = 6371; // Радиус Земли (км)
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -480,9 +480,9 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 }
 {% endif %}
 
-// Toast notification funksiyasi
+// Функция для toast-уведомлений
 function showToast(message, type = 'info') {
-    // Oddiy alert (keyinroq toast library bilan almashtirishingiz mumkin)
+    // Простой alert (позже можно заменить на библиотеку toast)
     if (type === 'success') {
         alert('✅ ' + message);
     } else if (type === 'error') {
@@ -492,7 +492,7 @@ function showToast(message, type = 'info') {
     }
 }
 
-// CSS animatsiya
+// CSS-анимация
 const style = document.createElement('style');
 style.textContent = `
     .spin {

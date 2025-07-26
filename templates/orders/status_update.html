@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Status yangilash - #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
+{% block title %}Обновление статуса - #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-arrow-repeat me-2"></i>
-        Status yangilash
+        Обновление статуса
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
         </div>
     </div>
@@ -20,23 +20,23 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <!-- Hozirgi buyurtma ma'lumotlari -->
+        <!-- Информация о текущем заказе -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Buyurtma ma'lumotlari
+                    Информация о заказе
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Buyurtma raqami:</strong> #{{ order.order_number }}</p>
-                        <p><strong>Mijoz:</strong> {{ order.customer.get_full_name }}</p>
-                        <p><strong>Yaratilgan:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                        <p><strong>Номер заказа:</strong> #{{ order.order_number }}</p>
+                        <p><strong>Клиент:</strong> {{ order.customer.get_full_name }}</p>
+                        <p><strong>Создан:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Hozirgi status:</strong> 
+                        <p><strong>Текущий статус:</strong> 
                             {% if order.status == 'new' %}
                                 <span class="badge bg-primary">{{ order.get_status_display }}</span>
                             {% elif order.status == 'measuring' %}
@@ -49,19 +49,19 @@
                                 <span class="badge bg-danger">{{ order.get_status_display }}</span>
                             {% endif %}
                         </p>
-                        <p><strong>Jalyuzilar:</strong> {{ order.total_items }} ta</p>
-                        <p><strong>Umumiy narx:</strong> {{ order.total_price|floatformat:0 }} so'm</p>
+                        <p><strong>Жалюзи:</strong> {{ order.total_items }} шт.</p>
+                        <p><strong>Общая стоимость:</strong> {{ order.total_price|floatformat:0 }} сум</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Status yangilash formasi -->
+        <!-- Форма обновления статуса -->
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-arrow-repeat me-2"></i>
-                    Yangi status
+                    Новый статус
                 </h5>
             </div>
             <div class="card-body">
@@ -70,95 +70,95 @@
                     
                     <div class="mb-4">
                         <label for="status" class="form-label">
-                            Yangi status <span class="text-danger">*</span>
+                            Новый статус <span class="text-danger">*</span>
                         </label>
                         <select name="status" id="status" class="form-select" required>
-                            <option value="">Status tanlang...</option>
+                            <option value="">Выберите статус...</option>
                             {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if value == order.status %}disabled{% endif %}>
                                     {{ label }}
-                                    {% if value == order.status %} (hozirgi){% endif %}
+                                    {% if value == order.status %} (текущий){% endif %}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
                     
                     <div class="mb-4">
-                        <label for="notes" class="form-label">Izoh</label>
+                        <label for="notes" class="form-label">Примечание</label>
                         <textarea name="notes" id="notes" class="form-control" rows="3" 
-                                  placeholder="Status o'zgartirish sababi yoki qo'shimcha ma'lumotlar..."></textarea>
+                                  placeholder="Причина изменения статуса или дополнительная информация..."></textarea>
                         <div class="form-text">
-                            Bu izoh buyurtma tarixiga qo'shiladi
+                            Это примечание будет добавлено в историю заказа
                         </div>
                     </div>
                     
-                    <!-- Status-specific warnings -->
+                    <!-- Предупреждения для статусов -->
                     <div id="statusWarnings"></div>
                     
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         
                         <button type="submit" class="btn btn-primary" id="submitBtn">
                             <i class="bi bi-check-circle me-2"></i>
-                            Status yangilash
+                            Обновить статус
                         </button>
                     </div>
                 </form>
             </div>
         </div>
         
-        <!-- Status workflow ma'lumotlari -->
+        <!-- Информация о рабочем процессе статусов -->
         <div class="card mt-4">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-diagram-3 me-2"></i>
-                    Status workflow
+                    Рабочий процесс статусов
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Oddiy jarayon:</h6>
+                        <h6>Обычный процесс:</h6>
                         <ol class="list-unstyled">
                             <li class="mb-2">
                                 <span class="badge bg-primary me-2">1</span>
-                                <strong>Yangi</strong> - Buyurtma qabul qilindi
+                                <strong>Новый</strong> - Заказ принят
                             </li>
                             <li class="mb-2">
                                 <span class="badge bg-info me-2">2</span>
-                                <strong>O'lchovda</strong> - Mijoz uyiga borib o'lchov olish
+                                <strong>На замере</strong> - Выезд к клиенту для снятия замеров
                             </li>
                             <li class="mb-2">
                                 <span class="badge bg-warning me-2">3</span>
-                                <strong>Ishlanmoqda</strong> - Jalyuzilar ishlab chiqarilmoqda
+                                <strong>В обработке</strong> - Жалюзи изготавливаются
                             </li>
                             <li class="mb-2">
                                 <span class="badge bg-success me-2">4</span>
-                                <strong>O'rnatildi</strong> - Jalyuzilar o'rnatildi
+                                <strong>Установлен</strong> - Жалюзи установлены
                             </li>
                         </ol>
                     </div>
                     <div class="col-md-6">
-                        <h6>Muhim eslatmalar:</h6>
+                        <h6>Важные примечания:</h6>
                         <ul class="list-unstyled">
                             <li class="mb-2">
                                 <i class="bi bi-info-circle text-info me-2"></i>
-                                <strong>O'lchovda</strong> statusiga o'tkazish uchun texnik xodimni tayinlang
+                                <strong>На замере</strong>: для перехода в этот статус назначьте технического сотрудника
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                                <strong>Ishlanmoqda</strong> uchun avans to'lov olish tavsiya etiladi
+                                <strong>В обработке</strong>: рекомендуется получить предоплату
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check-circle text-success me-2"></i>
-                                <strong>O'rnatildi</strong> statusiga faqat to'liq to'lov olingandan keyin o'ting
+                                <strong>Установлен</strong>: переходите в этот статус только после полной оплаты
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-x-circle text-danger me-2"></i>
-                                <strong>Bekor qilindi</strong> status qaytarib bo'lmaydi
+                                <strong>Отменен</strong>: этот статус является необратимым
                             </li>
                         </ul>
                     </div>
@@ -187,43 +187,43 @@ document.addEventListener('DOMContentLoaded', function() {
         let warnings = [];
         let canProceed = true;
         
-        // Status-specific validations
+        // Валидация для конкретных статусов
         if (selectedStatus === 'measuring') {
             if (currentStatus !== 'new') {
                 warnings.push({
                     type: 'warning',
-                    text: 'Odatda faqat "Yangi" statusdan "O\'lchovda" ga o\'tiladi.'
+                    text: 'Обычно переход в статус "На замере" осуществляется только из статуса "Новый".'
                 });
             }
         } else if (selectedStatus === 'processing') {
             if (!hasAdvance && totalPaid === 0) {
                 warnings.push({
                     type: 'danger',
-                    text: 'Ishlab chiqarishni boshlash uchun avans to\'lov olish tavsiya etiladi!'
+                    text: 'Для начала производства рекомендуется получить авансовый платеж!'
                 });
             }
             if (currentStatus === 'new') {
                 warnings.push({
                     type: 'warning',
-                    text: 'O\'lchov olinganini tasdiqlang!'
+                    text: 'Подтвердите, что замер был произведен!'
                 });
             }
         } else if (selectedStatus === 'installed') {
             if (totalPaid < totalPrice) {
                 warnings.push({
                     type: 'danger',
-                    text: `To'liq to'lov olinmagan! Qolgan: ${(totalPrice - totalPaid).toLocaleString()} so'm`
+                    text: `Полная оплата не получена! Остаток: ${(totalPrice - totalPaid).toLocaleString()} сум`
                 });
                 canProceed = false;
             }
         } else if (selectedStatus === 'cancelled') {
             warnings.push({
                 type: 'danger',
-                text: 'Diqqat! Bekor qilingan buyurtmalarni qayta tiklash mumkin emas!'
+                text: 'Внимание! Отмененные заказы восстановить невозможно!'
             });
         }
         
-        // Display warnings
+        // Отображение предупреждений
         if (warnings.length > 0) {
             let warningHtml = '';
             warnings.forEach(function(warning) {
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             warningsDiv.innerHTML = '';
         }
         
-        // Enable/disable submit button
+        // Включение/отключение кнопки отправки
         submitBtn.disabled = !canProceed;
         if (!canProceed) {
             submitBtn.classList.remove('btn-primary');
@@ -251,17 +251,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Form submission confirmation
+    // Подтверждение отправки формы
     document.querySelector('form').addEventListener('submit', function(e) {
         const selectedStatus = statusSelect.value;
         const statusText = statusSelect.options[statusSelect.selectedIndex].text;
         
         if (selectedStatus === 'cancelled') {
-            if (!confirm(`Haqiqatan ham bu buyurtmani bekor qilmoqchimisiz?\n\nBu harakat qaytarib bo'lmaydi!`)) {
+            if (!confirm(`Вы действительно хотите отменить этот заказ?\n\nЭто действие необратимо!`)) {
                 e.preventDefault();
             }
         } else {
-            if (!confirm(`Buyurtma statusini "${statusText}" ga o'zgartirmoqchimisiz?`)) {
+            if (!confirm(`Вы уверены, что хотите изменить статус заказа на "${statusText.trim()}"?`)) {
                 e.preventDefault();
             }
         }

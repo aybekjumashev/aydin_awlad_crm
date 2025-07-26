@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - AYDIN AWLAD CRM{% endblock %}
+{% block title %}Панель управления - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-speedometer2 me-2"></i>
-        Dashboard
+        Панель управления
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
@@ -16,23 +16,23 @@
     </div>
 </div>
 
-<!-- Xush kelibsiz xabari -->
+<!-- Сообщение приветствия -->
 <div class="alert alert-primary alert-dismissible fade show" role="alert">
     <i class="bi bi-person-circle me-2"></i>
-    <strong>Xush kelibsiz, {{ user.get_full_name|default:user.username }}!</strong>
+    <strong>Добро пожаловать, {{ user.get_full_name|default:user.username }}!</strong>
     {% if user.is_admin %}
-        Siz admin huquqlariga egasiz.
+        Вы обладаете правами администратора.
     {% elif user.is_manager %}
-        Siz menejer sifatida tizimga kirdingiz.
+        Вы вошли в систему как менеджер.
     {% elif user.is_technical %}
-        Siz {{ user.get_specialist_type_display|default:"texnik xodim" }} sifatida tizimga kirdingiz.
+        Вы вошли в систему как {{ user.get_specialist_type_display|default:"технический сотрудник" }}.
     {% endif %}
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
-<!-- Statistika kartalari -->
+<!-- Карточки статистики -->
 <div class="row mb-4">
-    <!-- Umumiy statistika -->
+    <!-- Общая статистика -->
     {% if user.is_manager or user.is_admin %}
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
@@ -40,7 +40,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Umumiy buyurtmalar
+                            Всего заказов
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ stats.total_orders|default:0 }}
@@ -60,10 +60,10 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Oylik daromad
+                            Месячный доход
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.monthly_revenue|floatformat:0|default:0 }} so'm
+                            {{ stats.monthly_revenue|floatformat:0|default:0 }} сум
                         </div>
                     </div>
                     <div class="col-auto">
@@ -80,7 +80,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Faol buyurtmalar
+                            Активные заказы
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ stats.active_orders|default:0 }}
@@ -100,7 +100,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Jami mijozlar
+                            Всего клиентов
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ stats.total_customers|default:0 }}
@@ -117,22 +117,22 @@
 </div>
 
 <div class="row">
-    <!-- So'nggi buyurtmalar -->
+    <!-- Последние заказы -->
     <div class="col-lg-{% if user.is_technical %}12{% else %}8{% endif %} mb-4">
         <div class="card shadow">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history me-2"></i>
-                    {% if user.is_technical %}Mening vazifalarim{% else %}So'nggi buyurtmalar{% endif %}
+                    {% if user.is_technical %}Мои задачи{% else %}Последние заказы{% endif %}
                 </h5>
                 <div>
                     {% if user.is_technical %}
                         <a href="{% url 'orders:my_tasks' %}" class="btn btn-sm btn-outline-primary">
-                            Barchasi
+                            Посмотреть все
                         </a>
                     {% else %}
                         <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">
-                            Barchasi
+                            Посмотреть все
                         </a>
                     {% endif %}
                 </div>
@@ -142,13 +142,13 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Buyurtma</th>
-                                <th>Mijoz</th>
-                                <th>Holat</th>
+                                <th>Заказ</th>
+                                <th>Клиент</th>
+                                <th>Статус</th>
                                 {% if not user.is_technical %}
-                                <th>Summa</th>
+                                <th>Сумма</th>
                                 {% endif %}
-                                <th>Sana</th>
+                                <th>Дата</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -185,7 +185,7 @@
                                 {% if not user.is_technical %}
                                 <td>
                                     {% if order.total_amount > 0 %}
-                                        {{ order.total_amount|floatformat:0 }} so'm
+                                        {{ order.total_amount|floatformat:0 }} сум
                                     {% else %}
                                         <span class="text-muted">-</span>
                                     {% endif %}
@@ -196,7 +196,7 @@
                                 </td>
                                 <td>
                                     <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-primary">
-                                        Ko'rish
+                                        Просмотр
                                     </a>
                                 </td>
                             </tr>
@@ -204,9 +204,9 @@
                             <tr>
                                 <td colspan="{% if user.is_technical %}5{% else %}6{% endif %}" class="text-center py-4 text-muted">
                                     {% if user.is_technical %}
-                                        Sizga hozircha vazifa tayinlanmagan
+                                        Вам пока не назначено ни одной задачи
                                     {% else %}
-                                        Buyurtmalar yo'q
+                                        Заказов нет
                                     {% endif %}
                                 </td>
                             </tr>
@@ -218,45 +218,45 @@
         </div>
     </div>
 
-    <!-- Statistika va tezkor amallar -->
+    <!-- Статистика и быстрые действия -->
     {% if not user.is_technical %}
     <div class="col-lg-4 mb-4">
-        <!-- Buyurtmalar holati -->
+        <!-- Статус заказов -->
         <div class="card shadow mb-4">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-pie-chart me-2"></i>
-                    Buyurtmalar holati
+                    Статус заказов
                 </h6>
             </div>
             <div class="card-body">
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-primary">Yangi</span>
+                        <span class="text-primary">Новые</span>
                         <span class="badge bg-primary">{{ stats.new_orders|default:0 }}</span>
                     </div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-info">O'lchovda</span>
+                        <span class="text-info">На замере</span>
                         <span class="badge bg-info">{{ stats.measuring_orders|default:0 }}</span>
                     </div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-warning">Ishlanmoqda</span>
+                        <span class="text-warning">В обработке</span>
                         <span class="badge bg-warning text-dark">{{ stats.processing_orders|default:0 }}</span>
                     </div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-secondary">O'rnatilmoqda</span>
+                        <span class="text-secondary">В установке</span>
                         <span class="badge bg-secondary">{{ stats.installing_orders|default:0 }}</span>
                     </div>
                 </div>
                 <div class="mb-0">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-success">Yakunlangan</span>
+                        <span class="text-success">Завершенные</span>
                         <span class="badge bg-success">{{ stats.completed_orders|default:0 }}</span>
                     </div>
                 </div>
@@ -264,12 +264,12 @@
         </div>
 
 
-        <!-- ✅ YANGI BLOK: Muddati o'tgan o'rnatishlar -->
+        <!-- ✅ НОВЫЙ БЛОК: Просроченные установки -->
         <div class="card shadow mb-4">
             <div class="card-header bg-danger text-white">
                 <h6 class="mb-0">
                     <i class="bi bi-calendar-x me-2"></i>
-                    Muddati o'tgan o'rnatishlar
+                    Просроченные установки
                 </h6>
             </div>
             <div class="card-body p-0">
@@ -285,19 +285,19 @@
                     {% empty %}
                     <li class="list-group-item text-muted text-center">
                         <i class="bi bi-check2-circle me-1"></i>
-                        Bunday buyurtmalar yo'q
+                        Таких заказов нет
                     </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
 
-        <!-- ✅ YANGI BLOK: Qarzdorlar -->
+        <!-- ✅ НОВЫЙ БЛОК: Должники -->
         <div class="card shadow mb-4">
             <div class="card-header bg-warning text-dark">
                 <h6 class="mb-0">
                     <i class="bi bi-currency-exchange me-2"></i>
-                    Qarzdorlar ro'yxati
+                    Список должников
                 </h6>
             </div>
             <div class="card-body p-0">
@@ -308,46 +308,46 @@
                              <a href="{% url 'orders:detail' order.pk %}" class="text-decoration-none fw-bold">#{{ order.order_number }}</a>
                             <small class="d-block text-muted">{{ order.customer.get_full_name }}</small>
                         </div>
-                        <span class="badge bg-warning text-dark rounded-pill">{{ order.remaining_amount|floatformat:0 }} so'm</span>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ order.remaining_amount|floatformat:0 }} сум</span>
                     </li>
                     {% empty %}
                     <li class="list-group-item text-muted text-center">
                         <i class="bi bi-emoji-smile me-1"></i>
-                        Qarzdorlar yo'q
+                        Должников нет
                     </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
 
-        <!-- Tezkor amallar -->
+        <!-- Быстрые действия -->
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-lightning me-2"></i>
-                    Tezkor amallar
+                    Быстрые действия
                 </h6>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="{% url 'orders:create' %}" class="btn btn-primary">
                         <i class="bi bi-plus-lg me-2"></i>
-                        Yangi buyurtma
+                        Новый заказ
                     </a>
                     <a href="{% url 'customers:add' %}" class="btn btn-outline-primary">
                         <i class="bi bi-person-plus me-2"></i>
-                        Yangi mijoz
+                        Новый клиент
                     </a>
                     {% if user.is_manager or user.is_admin %}
                     <a href="{% url 'payments:list' %}" class="btn btn-outline-success">
                         <i class="bi bi-cash-stack me-2"></i>
-                        To'lovlar
+                        Платежи
                     </a>
                     {% comment %}
                     {% if user.is_manager or user.is_admin %}
                     <a href="#" class="btn btn-outline-info">
                         <i class="bi bi-graph-up me-2"></i>
-                        Hisobotlar
+                        Отчёты
                     </a>
                     {% endif %}
                     {% endcomment %}
@@ -359,7 +359,7 @@
     {% endif %}
 </div>
 
-<!-- Eslatmalar va bildirishnomalar -->
+<!-- Примечания и уведомления -->
 {% if notifications %}
 <div class="row mt-4">
     <div class="col-12">
@@ -367,7 +367,7 @@
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-bell me-2"></i>
-                    Bildirishnomalar
+                    Уведомления
                 </h6>
             </div>
             <div class="card-body">
@@ -410,18 +410,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Dashboard ma'lumotlarini yangilash
+    // Обновление данных на панели управления
     function updateDashboard() {
         fetch('{% url "orders:api_stats" %}')
             .then(response => response.json())
             .then(data => {
-                // Statistikalarni yangilash
+                // Обновление статистики
                 console.log('Dashboard updated:', data);
             })
             .catch(error => console.error('Error updating dashboard:', error));
     }
     
-    // Har 60 sekundda yangilash
+    // Обновлять каждые 60 секунд
     setInterval(updateDashboard, 60000);
 });
 </script>

@@ -1,36 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}O'lchov olish - #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
+{% block title %}Снятие замеров - #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-ruler me-2"></i>
-        O'lchov olish - #{{ order.order_number }}
+        Снятие замеров - #{{ order.order_number }}
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Buyurtma ma'lumotlari -->
+    <!-- Информация о заказе -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Buyurtma ma'lumotlari
+                    Информация о заказе
                 </h5>
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label text-muted">Mijoz</label>
+                    <label class="form-label text-muted">Клиент</label>
                     <p class="fw-bold">{{ order.customer.get_full_name }}</p>
                     <p class="text-muted mb-0">
                         <i class="bi bi-telephone me-1"></i>
@@ -39,7 +39,7 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label text-muted">O'lchov manzili</label>
+                    <label class="form-label text-muted">Адрес замера</label>
                     <p>
                         <i class="bi bi-geo-alt me-1"></i>
                         {{ order.address }}
@@ -48,70 +48,70 @@
                 
                 {% if order.notes %}
                 <div class="mb-0">
-                    <label class="form-label text-muted">Buyurtma izohlar</label>
+                    <label class="form-label text-muted">Примечания к заказу</label>
                     <p class="text-muted">{{ order.notes }}</p>
                 </div>
                 {% endif %}
             </div>
         </div>
         
-        <!-- Ko'rsatmalar -->
+        <!-- Инструкции -->
         <div class="card mt-4">
             <div class="card-header bg-warning text-dark">
                 <h6 class="mb-0">
                     <i class="bi bi-lightbulb me-2"></i>
-                    Eslatma
+                    Памятка
                 </h6>
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0 small">
-                    <li class="mb-1">✅ Har bir deraza/xona uchun alohida jalyuzi</li>
-                    <li class="mb-1">✅ Aniq o'lchamlarni kiriting</li>
-                    <li class="mb-1">✅ Xona nomlarini yozing</li>
-                    <li class="mb-0">✅ Narxlarni mijoz bilan kelishing</li>
+                    <li class="mb-1">✅ Отдельные жалюзи для каждого окна/комнаты</li>
+                    <li class="mb-1">✅ Вводите точные размеры</li>
+                    <li class="mb-1">✅ Указывайте названия комнат</li>
+                    <li class="mb-0">✅ Согласуйте цены с клиентом</li>
                 </ul>
             </div>
         </div>
         
-        <!-- Jami hisob -->
+        <!-- Итоговый расчет -->
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
                 <h6 class="mb-0">
                     <i class="bi bi-calculator me-2"></i>
-                    Jami hisob
+                    Итоговый расчет
                 </h6>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <span>Jalyuzilar soni:</span>
+                    <span>Количество жалюзи:</span>
                     <strong id="total-items">0</strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span>Jami narx:</span>
-                    <strong id="total-price" class="text-success">0 so'm</strong>
+                    <span>Итоговая цена:</span>
+                    <strong id="total-price" class="text-success">0 сум</strong>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Jalyuzilar formasi -->
+    <!-- Форма жалюзи -->
     <div class="col-md-8 mb-4">
         <form method="post" novalidate>
             {% csrf_token %}
             
-            <!-- O'lchov ma'lumotlari -->
+            <!-- Данные замера -->
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-calendar me-2"></i>
-                        O'lchov ma'lumotlari
+                        Данные замера
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="measurement_date" class="form-label">
-                                O'lchov sanasi <span class="text-danger">*</span>
+                                Дата замера <span class="text-danger">*</span>
                             </label>
                             <input type="date" class="form-control" id="measurement_date" 
                                    name="measurement_date" value="{{ today|date:'Y-m-d' }}" required>
@@ -119,23 +119,23 @@
                     </div>
                     
                     <div class="mb-0">
-                        <label for="measurement_notes" class="form-label">Umumiy izohlar</label>
+                        <label for="measurement_notes" class="form-label">Общие примечания</label>
                         <textarea class="form-control" id="measurement_notes" name="measurement_notes" 
-                                  rows="3" placeholder="Avans miqdori, qo'shimcha talablar, va boshqalar..."></textarea>
+                                  rows="3" placeholder="Сумма аванса, доп. требования, и т.д...."></textarea>
                     </div>
                 </div>
             </div>
             
-            <!-- Jalyuzilar -->
+            <!-- Жалюзи -->
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="bi bi-window me-2"></i>
-                        Jalyuzilar ro'yxati
+                        Список жалюзи
                     </h5>
                     <button type="button" class="btn btn-light btn-sm" id="add-item-btn">
                         <i class="bi bi-plus me-1"></i>
-                        Jalyuzi qo'shish
+                        Добавить жалюзи
                     </button>
                 </div>
                 <div class="card-body">
@@ -147,7 +147,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0 text-primary">
                                     <i class="bi bi-window me-1"></i>
-                                    <span class="item-title">Jalyuzi #<span class="item-number">{{ forloop.counter }}</span></span>
+                                    <span class="item-title">Жалюзи #<span class="item-number">{{ forloop.counter }}</span></span>
                                 </h6>
                                 <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
                                         style="{% if forloop.first %}display: none;{% endif %}">
@@ -182,7 +182,7 @@
                                     <label class="form-label">{{ form.width.label }} <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         {{ form.width }}
-                                        <span class="input-group-text">sm</span>
+                                        <span class="input-group-text">см</span>
                                     </div>
                                     {% if form.width.errors %}
                                         <div class="text-danger small">{{ form.width.errors.0 }}</div>
@@ -192,7 +192,7 @@
                                     <label class="form-label">{{ form.height.label }} <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         {{ form.height }}
-                                        <span class="input-group-text">sm</span>
+                                        <span class="input-group-text">см</span>
                                     </div>
                                     {% if form.height.errors %}
                                         <div class="text-danger small">{{ form.height.errors.0 }}</div>
@@ -209,16 +209,16 @@
                                     <label class="form-label">{{ form.unit_price.label }} <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         {{ form.unit_price }}
-                                        <span class="input-group-text">so'm</span>
+                                        <span class="input-group-text">сум</span>
                                     </div>
                                     {% if form.unit_price.errors %}
                                         <div class="text-danger small">{{ form.unit_price.errors.0 }}</div>
                                     {% endif %}
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <label class="form-label">Hisoblangan narx</label>
+                                    <label class="form-label">Расчетная цена</label>
                                     <div class="form-control-plaintext fw-bold text-success item-total">
-                                        0 so'm
+                                        0 сум
                                     </div>
                                 </div>
                             </div>
@@ -229,9 +229,9 @@
                                     {{ form.room_name }}
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Maydon</label>
+                                    <label class="form-label">Площадь</label>
                                     <div class="form-control-plaintext text-info item-area">
-                                        0 m²
+                                        0 м²
                                     </div>
                                 </div>
                             </div>
@@ -249,23 +249,23 @@
                     <div class="alert alert-success">
                         <h6 class="alert-heading">
                             <i class="bi bi-check-circle me-2"></i>
-                            O'lchov yakunlanishi
+                            Завершение замера
                         </h6>
                         <p class="mb-0">
-                            Kamida bitta jalyuzining to'liq ma'lumotlarini kiriting. 
-                            Buyurtma avtomatik ravishda <strong>"Ishlanmoqda"</strong> statusiga o'tadi.
+                            Введите полные данные хотя бы для одних жалюзи. 
+                            Заказ автоматически перейдет в статус <strong>"В обработке"</strong>.
                         </p>
                     </div>
                     
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-2"></i>
-                            O'lchov yakunlash
+                            Завершить замер
                         </button>
                     </div>
                 </div>
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
     let formIndex = parseInt(totalFormsInput.value);
     
-    // Yangi form qo'shish
+    // Добавить новую форму
     addButton.addEventListener('click', function() {
         const emptyFormHtml = createNewFormHtml(formIndex);
         formsetContainer.insertAdjacentHTML('beforeend', emptyFormHtml);
@@ -294,19 +294,19 @@ document.addEventListener('DOMContentLoaded', function() {
         updateItemNumbers();
         updateCalculations();
         
-        // Yangi form uchun event listeners qo'shish
+        // Добавить слушатели событий для новой формы
         const newForm = formsetContainer.lastElementChild;
         addCalculationListeners(newForm);
     });
     
-    // Form yaratish funksiyasi
+    // Функция создания формы
     function createNewFormHtml(index) {
         return `
             <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="${index}">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0 text-primary">
                         <i class="bi bi-window me-1"></i>
-                        <span class="item-title">Jalyuzi #<span class="item-number">${index + 1}</span></span>
+                        <span class="item-title">Жалюзи #<span class="item-number">${index + 1}</span></span>
                     </h6>
                     <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn">
                         <i class="bi bi-trash"></i>
@@ -315,88 +315,88 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
+                        <label class="form-label">Тип жалюзи <span class="text-danger">*</span></label>
                         <select name="items-${index}-blind_type" class="form-select" id="id_items-${index}-blind_type">
                             <option value="">---------</option>
-                            <option value="horizontal">Gorizontal jalyuzi</option>
-                            <option value="vertical">Vertikal jalyuzi</option>
-                            <option value="roller">Rulon parda</option>
-                            <option value="roman">Rim parda</option>
-                            <option value="plisse">Plisse parda</option>
+                            <option value="horizontal">Горизонтальные</option>
+                            <option value="vertical">Вертикальные</option>
+                            <option value="roller">Роликовые шторы</option>
+                            <option value="roman">Римские шторы</option>
+                            <option value="plisse">Плиссе</option>
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Material turi <span class="text-danger">*</span></label>
+                        <label class="form-label">Тип материала <span class="text-danger">*</span></label>
                         <select name="items-${index}-material" class="form-select" id="id_items-${index}-material">
                             <option value="">---------</option>
-                            <option value="aluminum">Alyuminiy</option>
-                            <option value="pvc">PVC</option>
-                            <option value="wood">Yog'och</option>
-                            <option value="fabric">Mato</option>
-                            <option value="bamboo">Bambuk</option>
+                            <option value="aluminum">Алюминий</option>
+                            <option value="pvc">ПВХ</option>
+                            <option value="wood">Дерево</option>
+                            <option value="fabric">Ткань</option>
+                            <option value="bamboo">Бамбук</option>
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">O'rnatish turi</label>
+                        <label class="form-label">Тип установки</label>
                         <select name="items-${index}-installation_type" class="form-select" id="id_items-${index}-installation_type">
                             <option value="">---------</option>
-                            <option value="wall">Devorga o'rnatish</option>
-                            <option value="ceiling">Shiftga o'rnatish</option>
-                            <option value="window_frame">Deraza romiga o'rnatish</option>
+                            <option value="wall">Настенная</option>
+                            <option value="ceiling">Потолочная</option>
+                            <option value="window_frame">На раму окна</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Ширина (см) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="items-${index}-width" step="0.01" min="0" class="form-control" id="id_items-${index}-width">
-                            <span class="input-group-text">sm</span>
+                            <span class="input-group-text">см</span>
                         </div>
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Высота (см) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="items-${index}-height" step="0.01" min="0" class="form-control" id="id_items-${index}-height">
-                            <span class="input-group-text">sm</span>
+                            <span class="input-group-text">см</span>
                         </div>
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Donasi</label>
+                        <label class="form-label">Кол-во</label>
                         <input type="number" name="items-${index}-quantity" value="1" min="1" class="form-control" id="id_items-${index}-quantity">
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Цена за ед. (сум) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="items-${index}-unit_price" step="1000" min="0" class="form-control" id="id_items-${index}-unit_price">
-                            <span class="input-group-text">so'm</span>
+                            <span class="input-group-text">сум</span>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Hisoblangan narx</label>
+                        <label class="form-label">Расчетная цена</label>
                         <div class="form-control-plaintext fw-bold text-success item-total">
-                            0 so'm
+                            0 сум
                         </div>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Xona nomi</label>
-                        <input type="text" name="items-${index}-room_name" class="form-control" id="id_items-${index}-room_name" placeholder="Yotoq xona, Mehmonxona...">
+                        <label class="form-label">Название комнаты</label>
+                        <input type="text" name="items-${index}-room_name" class="form-control" id="id_items-${index}-room_name" placeholder="Спальня, Гостиная...">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Maydon</label>
+                        <label class="form-label">Площадь</label>
                         <div class="form-control-plaintext text-info item-area">
-                            0 m²
+                            0 м²
                         </div>
                     </div>
                 </div>
                 
                 <div class="mb-0">
-                    <label class="form-label">Izohlar</label>
-                    <textarea name="items-${index}-notes" rows="2" class="form-control" id="id_items-${index}-notes" placeholder="Qo'shimcha izohlar..."></textarea>
+                    <label class="form-label">Примечания</label>
+                    <textarea name="items-${index}-notes" rows="2" class="form-control" id="id_items-${index}-notes" placeholder="Дополнительные примечания..."></textarea>
                 </div>
                 
                 <input type="hidden" name="items-${index}-id" id="id_items-${index}-id">
@@ -404,10 +404,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
-    // Form o'chirish
+    // Удаление формы
     formsetContainer.addEventListener('click', function(e) {
         if (e.target.closest('.delete-item-btn')) {
-            if (confirm('Bu jalyuzini o\'chirmoqchimisiz?')) {
+            if (confirm('Вы уверены, что хотите удалить эти жалюзи?')) {
                 const formItem = e.target.closest('.formset-item');
                 formItem.remove();
                 formIndex--;
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Item raqamlarini yangilash
+    // Обновление номеров
     function updateItemNumbers() {
         const items = formsetContainer.querySelectorAll('.formset-item');
         items.forEach((item, index) => {
@@ -428,7 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Delete tugmalarini ko'rsatish/yashirish
         items.forEach((item, index) => {
             const deleteBtn = item.querySelector('.delete-item-btn');
             if (deleteBtn) {
@@ -437,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Hisob-kitoblarni yangilash
+    // Обновление расчетов
     function updateCalculations() {
         let totalItems = 0;
         let totalPrice = 0;
@@ -449,33 +448,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const quantity = parseInt(item.querySelector('input[name$="-quantity"]')?.value) || 1;
             const unitPrice = parseFloat(item.querySelector('input[name$="-unit_price"]')?.value) || 0;
             
-            // Maydonni hisoblash
-            const area = (width * height) / 10000; // sm² dan m² ga
+            const area = (width * height) / 10000; // из см² в м²
             const areaElement = item.querySelector('.item-area');
             if (areaElement) {
-                areaElement.textContent = area.toFixed(2) + ' m²';
+                areaElement.textContent = area.toFixed(2) + ' м²';
             }
             
-            // Narxni hisoblash
             const itemTotal = unitPrice * quantity;
             const totalElement = item.querySelector('.item-total');
             if (totalElement) {
-                totalElement.textContent = itemTotal.toLocaleString() + ' so\'m';
+                totalElement.textContent = itemTotal.toLocaleString() + ' сум';
             }
             
-            // Agar to'liq ma'lumot bo'lsa, umumiy hisobga qo'shish
             if (width && height && unitPrice) {
                 totalItems++;
                 totalPrice += itemTotal;
             }
         });
         
-        // Umumiy hisobni yangilash
         document.getElementById('total-items').textContent = totalItems;
-        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' so\'m';
+        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' сум';
     }
     
-    // Hisob-kitob event listenerlarini qo'shish
+    // Добавление слушателей
     function addCalculationListeners(container) {
         const inputs = container.querySelectorAll('input[type="number"]');
         inputs.forEach(function(input) {
@@ -483,14 +478,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Mavjud formlar uchun event listenerlar
     const existingItems = formsetContainer.querySelectorAll('.formset-item');
     existingItems.forEach(addCalculationListeners);
     
-    // Dastlabki hisoblar
     updateCalculations();
     
-    // Form validation
+    // Валидация формы
     document.querySelector('form').addEventListener('submit', function(e) {
         let hasValidForm = false;
         
@@ -508,11 +501,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!hasValidForm) {
             e.preventDefault();
-            alert('Kamida bitta jalyuzining to\'liq ma\'lumotlarini kiriting!\n\nKerakli maydonlar: Turi, En, Bo\'y, Narx');
+            alert('Введите полные данные хотя бы для одних жалюзи!\n\nОбязательные поля: Тип, Ширина, Высота, Цена');
             return;
         }
         
-        if (!confirm('O\'lchov yakunlanganini tasdiqlaysizmi?\n\nJalyuzilar ma\'lumotlari saqlanadi va buyurtma ishlab chiqarishga o\'tadi.')) {
+        if (!confirm('Вы подтверждаете завершение замера?\n\nДанные жалюзи будут сохранены, и заказ перейдет в производство.')) {
             e.preventDefault();
         }
     });

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ title }} - Заказы - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -12,7 +12,7 @@
         <div class="btn-group me-2">
             <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Buyurtmalar ro'yxati
+                Список заказов
             </a>
         </div>
     </div>
@@ -20,15 +20,15 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <!-- Ma'lumot -->
+        <!-- Информация -->
         <div class="alert alert-info">
             <h6 class="alert-heading">
                 <i class="bi bi-info-circle me-2"></i>
-                Buyurtma yaratish
+                Создание заказа
             </h6>
             <p class="mb-0">
-                Buyurtma yaratilgandan keyin avtomatik ravishda <strong>"O'lchovda"</strong> statusiga o'tadi. 
-                Jalyuzilar ro'yxatini keyinroq texnik xodimlar qo'shadi.
+                После создания заказ автоматически перейдет в статус <strong>"На замере"</strong>.
+                Список жалюзи будет добавлен позже техническими сотрудниками.
             </p>
         </div>
 
@@ -36,7 +36,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-person-badge me-2"></i>
-                    Buyurtma ma'lumotlari
+                    Данные заказа
                 </h5>
             </div>
             <div class="card-body">
@@ -54,7 +54,7 @@
                             </div>
                         {% endif %}
                         <div class="form-text">
-                            Buyurtma beruvchi mijozni tanlang
+                            Выберите клиента, оформляющего заказ
                         </div>
                     </div>
                     
@@ -69,7 +69,7 @@
                             </div>
                         {% endif %}
                         <div class="form-text">
-                            Jalyuzi o'rnatilishi va o'lchov olinishi kerak bo'lgan aniq manzil
+                            Точный адрес, где необходимо установить жалюзи и произвести замер
                         </div>
                     </div>
                     
@@ -84,38 +84,38 @@
                             </div>
                         {% endif %}
                         <div class="form-text">
-                            Qo'shimcha izohlar, mijozning talablari va boshqa muhim ma'lumotlar
+                            Дополнительные примечания, требования клиента и другая важная информация
                         </div>
                     </div>
                     
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'orders:list' %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-circle me-2"></i>
-                            Buyurtma yaratish
+                            Создать заказ
                         </button>
                     </div>
                 </form>
             </div>
         </div>
         
-        <!-- Keyingi qadamlar -->
+        <!-- Следующие шаги -->
         <div class="card mt-4">
             <div class="card-body">
                 <h6 class="card-title">
                     <i class="bi bi-list-check me-2"></i>
-                    Keyingi qadamlar
+                    Следующие шаги
                 </h6>
                 <ol class="mb-0">
-                    <li>Buyurtma <strong>"O'lchovda"</strong> statusida yaratiladi</li>
-                    <li>Texnik xodim mijoz uyiga borib o'lchov oladi</li>
-                    <li>O'lchov olingandan keyin jalyuzilar ro'yxati qo'shiladi</li>
-                    <li>Narx belgilanadi va avans to'lov olinadi</li>
-                    <li>Ishlab chiqarish boshlanganda status yangilanadi</li>
+                    <li>Заказ будет создан в статусе <strong>"На замере"</strong></li>
+                    <li>Технический сотрудник выедет к клиенту для снятия замеров</li>
+                    <li>После снятия замеров будет добавлен список жалюзи</li>
+                    <li>Будет определена цена и получена предоплата</li>
+                    <li>Статус будет обновлен при начале производства</li>
                 </ol>
             </div>
         </div>
@@ -130,11 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const customerSelect = document.querySelector('select[name="customer"]');
     const addressTextarea = document.querySelector('textarea[name="address"]');
     
-    // Mijoz o'zgarganda manzilni avtomatik to'ldirish
+    // Автоматическое заполнение адреса при смене клиента
     if (customerSelect && addressTextarea) {
         customerSelect.addEventListener('change', function() {
             if (this.value && !addressTextarea.value.trim()) {
-                // AJAX orqali mijoz ma'lumotlarini olish
+                // Получение данных клиента через AJAX
                 fetch(`/customers/${this.value}/`)
                     .then(response => response.json())
                     .then(data => {
@@ -144,13 +144,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        console.log('Mijoz ma\'lumotlarini olishda xato:', error);
+                        console.log('Ошибка при получении данных клиента:', error);
                     });
             }
         });
     }
     
-    // Form validation
+    // Валидация формы
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -159,14 +159,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!customer) {
                 e.preventDefault();
-                alert('Mijozni tanlang!');
+                alert('Выберите клиента!');
                 customerSelect.focus();
                 return;
             }
             
             if (!address) {
                 e.preventDefault();
-                alert('O\'lchov manzilini kiriting!');
+                alert('Введите адрес для замера!');
                 addressTextarea.focus();
                 return;
             }

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ staff_member.get_full_name|default:staff_member.username }} - Texnik xodimlar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ staff_member.get_full_name|default:staff_member.username }} - Сотрудники - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -8,49 +8,49 @@
         <i class="bi bi-person me-2"></i>
         {{ staff_member.get_full_name|default:staff_member.username }}
         {% if not staff_member.is_active %}
-            <span class="badge bg-secondary ms-2">Nofaol</span>
+            <span class="badge bg-secondary ms-2">Неактивен</span>
         {% else %}
-            <span class="badge bg-success ms-2">Faol</span>
+            <span class="badge bg-success ms-2">Активен</span>
         {% endif %}
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="{% url 'staff:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
             <a href="{% url 'staff:edit' staff_member.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
-                Tahrirlash
+                Редактировать
             </a>
             <a href="{% url 'staff:reset_password' staff_member.pk %}" class="btn btn-sm btn-info">
                 <i class="bi bi-key me-1"></i>
-                Parol yangilash
+                Обновить пароль
             </a>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Xodim ma'lumotlari -->
+    <!-- Информация о сотруднике -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-person-badge me-2"></i>
-                    Shaxsiy ma'lumotlar
+                    Личная информация
                 </h5>
             </div>
             <div class="card-body">
                 <div class="text-center mb-4">
                     <i class="bi bi-person-circle text-primary" style="font-size: 5rem;"></i>
                     <h4 class="mt-2">{{ staff_member.get_full_name|default:staff_member.username }}</h4>
-                    <span class="badge bg-info">Texnik xodim</span>
+                    <span class="badge bg-info">Технический сотрудник</span>
                 </div>
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">Login:</label>
+                        <label class="form-label text-muted">Логин:</label>
                     </div>
                     <div class="col-sm-7">
                         <p><code>{{ staff_member.username }}</code></p>
@@ -59,7 +59,7 @@
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">Ism:</label>
+                        <label class="form-label text-muted">Имя:</label>
                     </div>
                     <div class="col-sm-7">
                         <p>{{ staff_member.first_name|default:"-" }}</p>
@@ -68,7 +68,7 @@
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">Familiya:</label>
+                        <label class="form-label text-muted">Фамилия:</label>
                     </div>
                     <div class="col-sm-7">
                         <p>{{ staff_member.last_name|default:"-" }}</p>
@@ -77,7 +77,7 @@
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">Telefon:</label>
+                        <label class="form-label text-muted">Телефон:</label>
                     </div>
                     <div class="col-sm-7">
                         <p>
@@ -95,7 +95,7 @@
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">Qo'shilgan:</label>
+                        <label class="form-label text-muted">Добавлен:</label>
                     </div>
                     <div class="col-sm-7">
                         <p>{{ staff_member.created_at|date:"d.m.Y H:i" }}</p>
@@ -104,14 +104,14 @@
                 
                 <div class="row">
                     <div class="col-sm-5">
-                        <label class="form-label text-muted">So'ngi kirish:</label>
+                        <label class="form-label text-muted">Последний вход:</label>
                     </div>
                     <div class="col-sm-7">
                         <p>
                             {% if staff_member.last_login %}
                                 {{ staff_member.last_login|date:"d.m.Y H:i" }}
                             {% else %}
-                                Hech qachon kirmagan
+                                Никогда не входил
                             {% endif %}
                         </p>
                     </div>
@@ -120,13 +120,13 @@
         </div>
     </div>
     
-    <!-- Huquqlar -->
+    <!-- Права -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-shield-check me-2"></i>
-                    Ishchi huquqlari
+                    Права сотрудника
                 </h5>
             </div>
             <div class="card-body">
@@ -135,7 +135,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span>
                             <i class="bi bi-cart-plus text-primary me-2"></i>
-                            Buyurtma yaratish
+                            Создание заказа
                         </span>
                         <i class="bi bi-check-circle text-success"></i>
                     </div>
@@ -145,7 +145,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span>
                             <i class="bi bi-rulers text-info me-2"></i>
-                            O'lchov olish
+                            Снятие замеров
                         </span>
                         <i class="bi bi-check-circle text-success"></i>
                     </div>
@@ -155,7 +155,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span>
                             <i class="bi bi-tools text-warning me-2"></i>
-                            Ishlab chiqarish
+                            Производство
                         </span>
                         <i class="bi bi-check-circle text-success"></i>
                     </div>
@@ -165,7 +165,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span>
                             <i class="bi bi-hammer text-success me-2"></i>
-                            O'rnatish
+                            Установка
                         </span>
                         <i class="bi bi-check-circle text-success"></i>
                     </div>
@@ -175,7 +175,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span>
                             <i class="bi bi-x-circle text-danger me-2"></i>
-                            Bekor qilish
+                            Отмена заказа
                         </span>
                         <i class="bi bi-check-circle text-success"></i>
                     </div>
@@ -184,7 +184,7 @@
                     {% if not staff_member.can_create_order and not staff_member.can_measure and not staff_member.can_manufacture and not staff_member.can_install and not staff_member.can_cancel_order %}
                     <div class="text-muted text-center py-3">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        Hozircha maxsus huquqlar berilmagan
+                        Пока специальные права не предоставлены
                     </div>
                     {% endif %}
                 </div>
@@ -192,32 +192,32 @@
         </div>
     </div>
     
-    <!-- Statistika -->
+    <!-- Статистика -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-graph-up me-2"></i>
-                    Ish statistikasi
+                    Рабочая статистика
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-6 mb-3">
                         <h4 class="text-primary">{{ stats.created_orders }}</h4>
-                        <small class="text-muted">Barchasi</small>
+                        <small class="text-muted">Всего</small>
                     </div>
                     <div class="col-6 mb-3">
                         <h4 class="text-info">{{ stats.measured_orders }}</h4>
-                        <small class="text-muted">O'lchov olgan</small>
+                        <small class="text-muted">Снял замеров</small>
                     </div>
                     <div class="col-6 mb-3">
                         <h4 class="text-warning">{{ stats.processed_orders }}</h4>
-                        <small class="text-muted">Ishlab chiqargan</small>
+                        <small class="text-muted">Произвёл</small>
                     </div>
                     <div class="col-6 mb-3">
                         <h4 class="text-success">{{ stats.installed_orders }}</h4>
-                        <small class="text-muted">O'rnatgan</small>
+                        <small class="text-muted">Установил</small>
                     </div>
                 </div>
                 
@@ -226,11 +226,11 @@
                 <div class="row text-center">
                     <div class="col-6">
                         <h5 class="text-secondary">{{ stats.received_payments }}</h5>
-                        <small class="text-muted">Qabul qilgan to'lovlar</small>
+                        <small class="text-muted">Принятые платежи</small>
                     </div>
                     <div class="col-6">
                         <h5 class="text-secondary">{{ stats.total_received|floatformat:0 }}</h5>
-                        <small class="text-muted">Jami summa (so'm)</small>
+                        <small class="text-muted">Общая сумма (сум)</small>
                     </div>
                 </div>
             </div>
@@ -238,14 +238,14 @@
     </div>
 </div>
 
-<!-- So'nggi faoliyat -->
+<!-- Последняя активность -->
 <div class="row">
     <div class="col-md-8 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history me-2"></i>
-                    So'nggi buyurtmalar
+                    Последние заказы
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -253,11 +253,11 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Buyurtma</th>
-                                <th>Mijoz</th>
-                                <th>Status</th>
-                                <th>Rol</th>
-                                <th>Sana</th>
+                                <th>Заказ</th>
+                                <th>Клиент</th>
+                                <th>Статус</th>
+                                <th>Роль</th>
+                                <th>Дата</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -284,16 +284,16 @@
                                 </td>
                                 <td>
                                     {% if order.created_by == staff_member %}
-                                        <span class="badge bg-primary">Yaratgan</span>
+                                        <span class="badge bg-primary">Создал</span>
                                     {% endif %}
                                     {% if order.assigned_measurer == staff_member %}
-                                        <span class="badge bg-info">O'lchov olgan</span>
+                                        <span class="badge bg-info">Снял замер</span>
                                     {% endif %}
                                     {% if order.assigned_manufacturer == staff_member %}
-                                        <span class="badge bg-warning">Ishlab chiqargan</span>
+                                        <span class="badge bg-warning">Произвёл</span>
                                     {% endif %}
                                     {% if order.assigned_installer == staff_member %}
-                                        <span class="badge bg-success">O'rnatgan</span>
+                                        <span class="badge bg-success">Установил</span>
                                     {% endif %}
                                 </td>
                                 <td><small>{{ order.created_at|date:"d.m.Y H:i" }}</small></td>
@@ -301,7 +301,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="5" class="text-center py-4 text-muted">
-                                    Hozircha buyurtmalar yo'q
+                                    Пока заказов нет
                                 </td>
                             </tr>
                             {% endfor %}
@@ -317,7 +317,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-credit-card me-2"></i>
-                    So'nggi to'lovlar
+                    Последние платежи
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -340,7 +340,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="2" class="text-center text-muted py-3">
-                                    To'lovlar yo'q
+                                    Платежей нет
                                 </td>
                             </tr>
                             {% endfor %}

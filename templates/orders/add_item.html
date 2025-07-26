@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ title }} - Заказы - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -12,54 +12,54 @@
         <div class="btn-group me-2">
             <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
             {% if order.status == 'measuring' and user.can_measure or user.is_manager or user.is_admin %}
             <a href="{% url 'orders:measurement' order.pk %}" class="btn btn-sm btn-success">
                 <i class="bi bi-ruler me-1"></i>
-                O'lchov olish
+                Снять замеры
             </a>
             {% endif %}
             {% if user.is_manager or user.is_admin %}
             <a href="{% url 'orders:edit' order.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
-                Tahrirlash
+                Редактировать
             </a>
             <a href="{% url 'orders:status_update' order.pk %}" class="btn btn-sm btn-info">
                 <i class="bi bi-arrow-repeat me-1"></i>
-                Status
+                Статус
             </a>
             {% endif %}
             <a href="{% url 'orders:print' order.pk %}" class="btn btn-sm btn-secondary" target="_blank">
                 <i class="bi bi-printer me-1"></i>
-                Chop etish
+                Печать
             </a>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Buyurtma ma'lumotlari -->
+    <!-- Информация о заказе -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Buyurtma
+                    Заказ
                 </h5>
             </div>
             <div class="card-body">
                 <div class="mb-2">
-                    <strong>Raqam:</strong> #{{ order.order_number }}
+                    <strong>Номер:</strong> #{{ order.order_number }}
                 </div>
                 <div class="mb-2">
-                    <strong>Mijoz:</strong> {{ order.customer.get_full_name }}
+                    <strong>Клиент:</strong> {{ order.customer.get_full_name }}
                 </div>
                 <div class="mb-2">
-                    <strong>Manzil:</strong> {{ order.address }}
+                    <strong>Адрес:</strong> {{ order.address }}
                 </div>
                 <div class="mb-2">
-                    <strong>Status:</strong>
+                    <strong>Статус:</strong>
                     {% if order.status == 'measuring' %}
                         <span class="badge bg-info">{{ order.get_status_display }}</span>
                     {% elif order.status == 'processing' %}
@@ -71,16 +71,16 @@
                     {% endif %}
                 </div>
                 <div class="mb-0">
-                    <strong>Mavjud jalyuzilar:</strong> {{ order.total_items }} ta
+                    <strong>Имеющиеся жалюзи:</strong> {{ order.total_items }} шт.
                 </div>
             </div>
         </div>
         
-        <!-- Mavjud jalyuzilar -->
+        <!-- Имеющиеся жалюзи -->
         {% if order.items.exists %}
         <div class="card mt-4">
             <div class="card-header">
-                <h6 class="mb-0">Mavjud jalyuzilar</h6>
+                <h6 class="mb-0">Имеющиеся жалюзи</h6>
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
@@ -94,8 +94,8 @@
                                 {% endif %}
                             </div>
                             <div class="text-end">
-                                <small>{{ item.width }}×{{ item.height }} sm</small>
-                                <br><small class="text-muted">{{ item.quantity }} dona</small>
+                                <small>{{ item.width }}×{{ item.height }} см</small>
+                                <br><small class="text-muted">{{ item.quantity }} шт.</small>
                             </div>
                         </div>
                     </div>
@@ -106,13 +106,13 @@
         {% endif %}
     </div>
     
-    <!-- Jalyuzi qo'shish formasi -->
+    <!-- Форма добавления жалюзи -->
     <div class="col-md-8 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-window me-2"></i>
-                    Yangi jalyuzi ma'lumotlari
+                    Данные новых жалюзи
                 </h5>
             </div>
             <div class="card-body">
@@ -152,7 +152,7 @@
                             </label>
                             <div class="input-group">
                                 {{ form.width }}
-                                <span class="input-group-text">sm</span>
+                                <span class="input-group-text">см</span>
                             </div>
                             {% if form.width.errors %}
                                 <div class="invalid-feedback d-block">
@@ -167,7 +167,7 @@
                             </label>
                             <div class="input-group">
                                 {{ form.height }}
-                                <span class="input-group-text">sm</span>
+                                <span class="input-group-text">см</span>
                             </div>
                             {% if form.height.errors %}
                                 <div class="invalid-feedback d-block">
@@ -194,7 +194,7 @@
                             </label>
                             <div class="input-group">
                                 {{ form.unit_price }}
-                                <span class="input-group-text">so'm</span>
+                                <span class="input-group-text">сум</span>
                             </div>
                             {% if form.unit_price.errors %}
                                 <div class="invalid-feedback d-block">
@@ -218,14 +218,14 @@
                             </label>
                             {{ form.room_name }}
                             <div class="form-text">
-                                Masalan: Yotoq xona, Mehmonxona
+                                Например: Спальня, Гостиная
                             </div>
                         </div>
                         
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Maydon</label>
+                            <label class="form-label">Площадь</label>
                             <div class="form-control-plaintext" id="areaDisplay">
-                                0 m²
+                                0 м²
                             </div>
                         </div>
                     </div>
@@ -253,21 +253,21 @@
                         {{ form.notes }}
                     </div>
                     
-                    <!-- Hisoblangan narx -->
+                    <!-- Расчетная цена -->
                     <div class="alert alert-info">
-                        <h6 class="mb-2">Hisoblangan narx:</h6>
+                        <h6 class="mb-2">Расчетная цена:</h6>
                         <div class="row">
                             <div class="col-md-4">
-                                <small>Birlik narxi:</small><br>
-                                <strong id="unitPriceDisplay">0 so'm</strong>
+                                <small>Цена за единицу:</small><br>
+                                <strong id="unitPriceDisplay">0 сум</strong>
                             </div>
                             <div class="col-md-4">
-                                <small>Donasi:</small><br>
+                                <small>Количество:</small><br>
                                 <strong id="quantityDisplay">0</strong>
                             </div>
                             <div class="col-md-4">
-                                <small>Jami narx:</small><br>
-                                <strong id="totalPriceDisplay" class="text-primary">0 so'm</strong>
+                                <small>Итоговая цена:</small><br>
+                                <strong id="totalPriceDisplay" class="text-primary">0 сум</strong>
                             </div>
                         </div>
                     </div>
@@ -275,12 +275,12 @@
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'orders:detail' order.pk %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-2"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-circle me-2"></i>
-                            Jalyuzi qo'shish
+                            Добавить жалюзи
                         </button>
                     </div>
                 </form>
@@ -310,43 +310,43 @@ document.addEventListener('DOMContentLoaded', function() {
         const quantity = parseInt(quantityInput.value) || 0;
         const unitPrice = parseFloat(unitPriceInput.value) || 0;
         
-        // Maydonni hisoblash (sm² dan m² ga)
+        // Расчет площади (из см² в м²)
         const area = (width * height) / 10000;
-        areaDisplay.textContent = area.toFixed(2) + ' m²';
+        areaDisplay.textContent = area.toFixed(2) + ' м²';
         
-        // Narxlarni ko'rsatish
-        unitPriceDisplay.textContent = unitPrice.toLocaleString() + ' so\'m';
+        // Отображение цен
+        unitPriceDisplay.textContent = unitPrice.toLocaleString() + ' сум';
         quantityDisplay.textContent = quantity;
         
         const totalPrice = unitPrice * quantity;
-        totalPriceDisplay.textContent = totalPrice.toLocaleString() + ' so\'m';
+        totalPriceDisplay.textContent = totalPrice.toLocaleString() + ' сум';
     }
     
-    // Event listeners
+    // Слушатели событий
     [widthInput, heightInput, quantityInput, unitPriceInput].forEach(input => {
         if (input) {
             input.addEventListener('input', updateCalculations);
         }
     });
     
-    // Initial calculation
+    // Первоначальный расчет
     updateCalculations();
     
-    // Form validation
+    // Валидация формы
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
             const requiredFields = [
-                { input: widthInput, name: 'En' },
-                { input: heightInput, name: 'Bo\'y' },
-                { input: quantityInput, name: 'Donasi' },
-                { input: unitPriceInput, name: 'Birlik narxi' }
+                { input: widthInput, name: 'Ширина' },
+                { input: heightInput, name: 'Высота' },
+                { input: quantityInput, name: 'Количество' },
+                { input: unitPriceInput, name: 'Цена за единицу' }
             ];
             
             for (let field of requiredFields) {
                 if (!field.input.value || parseFloat(field.input.value) <= 0) {
                     e.preventDefault();
-                    alert(field.name + ' maydonini to\'g\'ri to\'ldiring!');
+                    alert('Поле ' + field.name + ' должно быть заполнено корректно!');
                     field.input.focus();
                     return;
                 }

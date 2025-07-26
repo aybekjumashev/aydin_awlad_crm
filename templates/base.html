@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -284,7 +284,7 @@
 </head>
 <body>
     {% if user.is_authenticated %}
-        <!-- Mobile navbar -->
+        <!-- Мобильная панель навигации -->
         <div class="mobile-navbar d-md-none">
             <div class="d-flex justify-content-between align-items-center">
                 <span class="text-white fw-bold">AYDIN AWLAD CRM</span>
@@ -294,78 +294,78 @@
             </div>
         </div>
         
-        <!-- Sidebar overlay for mobile -->
+        <!-- Оверлей для мобильного сайдбара -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
         
         
-        <!-- Sidebar -->
+        <!-- Сайдбар -->
         <nav class="sidebar" id="sidebar">
-            <!-- Sidebar header -->
+            <!-- Заголовок сайдбара -->
             <div class="sidebar-header">
                 <h5>AYDIN AWLAD</h5>
-                <small>CRM Tizimi</small>
+                <small>CRM Система</small>
             </div>
             
-            <!-- Navigation -->
+            <!-- Навигация -->
             <div class="flex-grow-1">
                 <ul class="nav flex-column">
                     
-                    <!-- ASOSIY BO'LIMLAR -->
+                    <!-- ОСНОВНЫЕ РАЗДЕЛЫ -->
                     <div class="nav-section">
-                        <!-- Dashboard -->
+                        <!-- Панель управления -->
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
                             href="{% url 'dashboard' %}">
                                 <i class="bi bi-speedometer2 me-2"></i>
-                                Dashboard
+                                Панель управления
                             </a>
                         </li>
                         
-                        <!-- Mijozlar -->
+                        <!-- Клиенты -->
                         <li class="nav-item">
                             <a class="nav-link {% if 'customers' in request.resolver_match.namespace %}active{% endif %}" 
                                href="{% url 'customers:list' %}">
                                 <i class="bi bi-people me-2"></i>
-                                Mijozlar
+                                Клиенты
                             </a>
                         </li>
             
                         
-                        <!-- Buyurtmalar -->
+                        <!-- Заказы -->
                         <li class="nav-item">
                             <a class="nav-link {% if 'orders' in request.resolver_match.namespace %}active{% endif %}" 
                                href="{% url 'orders:list' %}">
                                 <i class="bi bi-cart3 me-2"></i>
-                                Buyurtmalar
+                                Заказы
                             </a>
                         </li>
                         
                     
-                    <!-- XODIMLAR BOSHQARUVI -->
+                    <!-- УПРАВЛЕНИЕ ПЕРСОНАЛОМ -->
                     {% if user.is_manager or user.is_admin %}                        
-                        <!-- Texnik xodimlar -->
+                        <!-- Технические сотрудники -->
                         <li class="nav-item">
                             <a class="nav-link {% if 'staff' in request.resolver_match.namespace %}active{% endif %}" 
                                href="{% url 'staff:list' %}">
                                 <i class="bi bi-person-gear me-2"></i>
-                                Xodimlar ro'yxati
+                                Список сотрудников
                             </a>
                         </li>                        
                     {% endif %}
                         
                     </div>
                     
-                    <!-- TEXNIK XODIM UCHUN -->
+                    <!-- ДЛЯ ТЕХНИЧЕСКОГО СОТРУДНИКА -->
                     {% if user.is_technical %}
                     <div class="nav-section">
-                        <div class="nav-section-title">MENING VAZIFALARIM</div>
+                        <div class="nav-section-title">МОИ ЗАДАЧИ</div>
                         
-                        <!-- Mening vazifalari -->
+                        <!-- Мои задачи -->
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'orders:my_tasks' %}active{% endif %}" 
                                href="{% url 'technical:my_tasks' %}">
                                 <i class="bi bi-clipboard-check me-2"></i>
-                                Mening vazifalarim
+                                Мои задачи
                             </a>
                         </li>
                     </div>
@@ -374,7 +374,7 @@
                 </ul>
             </div>
             
-            <!-- User info -->
+            <!-- Информация о пользователе -->
             <div class="user-info">
                 <div class="dropdown dropup">
                     <a class="dropdown-toggle" href="#" id="userDropdown" role="button" 
@@ -383,7 +383,7 @@
                         <div class="flex-grow-1">
                             <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
                             <small class="opacity-75">
-                                {% if user.is_admin %}Admin{% elif user.is_manager %}Menejer{% elif user.is_technical %}{{ user.get_specialist_type_display|default:"Texnik xodim" }}{% endif %}
+                                {% if user.is_admin %}Администратор{% elif user.is_manager %}Менеджер{% elif user.is_technical %}{{ user.get_specialist_type_display|default:"Технический сотрудник" }}{% endif %}
                             </small>
                         </div>
                         <i class="bi bi-chevron-up"></i>
@@ -391,18 +391,18 @@
                     <ul class="dropdown-menu dropdown-menu-dark">
                         <li>
                             <a class="dropdown-item" href="{% url 'profile' %}">
-                                <i class="bi bi-person me-2"></i>Profil
+                                <i class="bi bi-person me-2"></i>Профиль
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{% url 'change_password' %}">
-                                <i class="bi bi-lock me-2"></i>Parolni o'zgartirish
+                                <i class="bi bi-lock me-2"></i>Сменить пароль
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{% url 'logout' %}">
-                                <i class="bi bi-box-arrow-right me-2"></i>Chiqish
+                                <i class="bi bi-box-arrow-right me-2"></i>Выход
                             </a>
                         </li>
                     </ul>
@@ -410,16 +410,16 @@
             </div>
         </nav>
         
-        <!-- Main content -->
+        <!-- Основной контент -->
         <main class="main-content">
             <div class="content-wrapper">
     {% else %}
-        <!-- Login sahifasi uchun -->
+        <!-- Для страницы входа -->
         <main class="container-fluid">
             <div class="content-wrapper" style="margin-top: 60px;">
     {% endif %}
                 
-                <!-- Messages -->
+                <!-- Сообщения -->
                 {% if messages %}
                 <div class="row mb-3">
                     <div class="col-12">
@@ -433,7 +433,7 @@
                 </div>
                 {% endif %}
                 
-                <!-- Page content -->
+                <!-- Контент страницы -->
                 {% block content %}{% endblock %}
                 
             </div>
@@ -482,9 +482,9 @@
         
         // Search modal functions
         function openSearchModal(type) {
-            // Bu yerda qidiruv modal oynasini ochish funksiyasini yozishingiz mumkin
-            console.log('Qidiruv modali: ' + type);
-            // Misol: Bootstrap modal yoki AJAX qidiruv
+            // Здесь вы можете написать функцию для открытия модального окна поиска
+            console.log('Модальное окно поиска: ' + type);
+            // Пример: модальное окно Bootstrap или AJAX-поиск
         }
         
         // Active link highlighting
@@ -498,10 +498,10 @@
             });
         });
         
-        // Notification badge update (misol)
+        // Notification badge update (example)
         function updateNotificationBadges() {
-            // Bu yerda AJAX orqali notification count'larni yangilash
-            // Misol: yangi buyurtmalar soni, to'lanmagan to'lovlar va h.k.
+            // Здесь можно обновлять счетчики уведомлений через AJAX
+            // Пример: количество новых заказов, неоплаченные счета и т.д.
         }
         
         // Auto refresh badges every 30 seconds

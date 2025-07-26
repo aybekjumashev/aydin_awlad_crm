@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - Buyurtmalar - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ title }} - Заказы - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
@@ -12,12 +12,12 @@
         <div class="btn-group me-2">
             <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Buyurtmalar ro'yxati
+                Список заказов
             </a>
             {% if order %}
             <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-eye me-1"></i>
-                Ko'rish
+                Просмотр
             </a>
             {% endif %}
         </div>
@@ -28,19 +28,19 @@
     {% csrf_token %}
     
     <div class="row">
-        <!-- Buyurtma asosiy ma'lumotlari -->
+        <!-- Основная информация о заказе -->
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
-                        Buyurtma ma'lumotlari
+                        Информация о заказе
                     </h5>
                 </div>
                 <div class="card-body">
                     {% if order %}
                     <div class="mb-3">
-                        <label class="form-label">Buyurtma raqami</label>
+                        <label class="form-label">Номер заказа</label>
                         <input type="text" class="form-control" value="{{ order.order_number }}" readonly>
                     </div>
                     {% endif %}
@@ -80,7 +80,7 @@
                             </div>
                         {% endif %}
                         <div class="form-text">
-                            O'lchov olinishi kerak bo'lgan aniq manzil
+                            Точный адрес, где необходимо произвести замер
                         </div>
                     </div>
                     
@@ -99,13 +99,13 @@
             </div>
         </div>
         
-        <!-- GPS va o'lchov ma'lumotlari -->
+        <!-- GPS и информация о замере -->
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-geo-alt me-2"></i>
-                        GPS va O'lchov
+                        GPS и Замер
                     </h5>
                 </div>
                 <div class="card-body">
@@ -148,7 +148,7 @@
                     <div class="mb-3">
                         <button type="button" class="btn btn-outline-primary" id="getLocationBtn">
                             <i class="bi bi-geo-alt-fill me-1"></i>
-                            Hozirgi joylashuvni olish
+                            Получить текущее местоположение
                         </button>
                     </div>
                     
@@ -179,13 +179,13 @@
             </div>
         </div>
         
-        <!-- Ishlab chiqarish va o'rnatish -->
+        <!-- Производство и установка -->
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">
                         <i class="bi bi-tools me-2"></i>
-                        Ishlab chiqarish va O'rnatish
+                        Производство и Установка
                     </h5>
                 </div>
                 <div class="card-body">
@@ -241,13 +241,13 @@
         </div>
     </div>
     
-    <!-- Jalyuzilar formset (faqat tahrirlashda) -->
+    <!-- Formset для жалюзи (только при редактировании) -->
     {% if order and formset %}
     <div class="card mb-4">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">
                 <i class="bi bi-grid me-2"></i>
-                Jalyuzilar ro'yxati
+                Список жалюзи
             </h5>
         </div>
         <div class="card-body">
@@ -259,13 +259,13 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0">
                             <i class="bi bi-card-list me-1"></i>
-                            Jalyuzi #{{ forloop.counter }}
+                            Жалюзи #{{ forloop.counter }}
                         </h6>
                         {% if formset.can_delete and form.instance.pk %}
                         <div class="form-check">
                             {{ form.DELETE }}
                             <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
-                                O'chirish
+                                Удалить
                             </label>
                         </div>
                         {% endif %}
@@ -310,13 +310,13 @@
             
             <button type="button" class="btn btn-outline-success" id="add-formset">
                 <i class="bi bi-plus-circle me-1"></i>
-                Yangi jalyuzi qo'shish
+                Добавить новые жалюзи
             </button>
         </div>
     </div>
     {% endif %}
     
-    <!-- Submit tugmalari -->
+    <!-- Кнопки отправки -->
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -324,14 +324,14 @@
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'orders:list' %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-1"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-circle me-1"></i>
                             {% if order %}
-                                Yangilash
+                                Обновить
                             {% else %}
-                                Saqlash
+                                Сохранить
                             {% endif %}
                         </button>
                     </div>
@@ -341,20 +341,20 @@
     </div>
 </form>
 
-<!-- Ma'lumot kartasi -->
+<!-- Информационная карточка -->
 <div class="row mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <h6 class="card-title">
                     <i class="bi bi-info-circle me-2"></i>
-                    Eslatma
+                    Памятка
                 </h6>
                 <ul class="mb-0">
-                    <li>Mijoz va manzil majburiy maydonlar</li>
-                    <li>GPS koordinatalarni avtomatik olish uchun "Hozirgi joylashuvni olish" tugmasini bosing</li>
-                    <li>Jalyuzilar ro'yxatini keyinroq qo'shishingiz mumkin</li>
-                    <li>Barcha sanalar ixtiyoriy, keyin to'ldiriladi</li>
+                    <li>Клиент и адрес - обязательные поля</li>
+                    <li>Нажмите кнопку "Получить текущее местоположение" для автоматического получения GPS-координат</li>
+                    <li>Список жалюзи можно будет добавить позже</li>
+                    <li>Все даты необязательны и могут быть заполнены позже</li>
                 </ul>
             </div>
         </div>
@@ -366,7 +366,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // GPS joylashuvni olish
+    // Получение GPS-координат
     const getLocationBtn = document.getElementById('getLocationBtn');
     const latInput = document.getElementById('{{ form.latitude.id_for_label }}');
     const lngInput = document.getElementById('{{ form.longitude.id_for_label }}');
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (getLocationBtn && latInput && lngInput) {
         getLocationBtn.addEventListener('click', function() {
             if (navigator.geolocation) {
-                this.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Olinyapti...';
+                this.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Получение...';
                 this.disabled = true;
                 
                 navigator.geolocation.getCurrentPosition(
@@ -386,43 +386,43 @@ document.addEventListener('DOMContentLoaded', function() {
                             accuracyInput.value = Math.round(position.coords.accuracy);
                         }
                         
-                        getLocationBtn.innerHTML = '<i class="bi bi-check me-1"></i> Olindi!';
+                        getLocationBtn.innerHTML = '<i class="bi bi-check me-1"></i> Получено!';
                         getLocationBtn.classList.remove('btn-outline-primary');
                         getLocationBtn.classList.add('btn-success');
                         
                         setTimeout(function() {
-                            getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Hozirgi joylashuvni olish';
+                            getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Получить текущее местоположение';
                             getLocationBtn.classList.remove('btn-success');
                             getLocationBtn.classList.add('btn-outline-primary');
                             getLocationBtn.disabled = false;
                         }, 2000);
                     },
                     function(error) {
-                        alert('Joylashuvni olishda xatolik: ' + error.message);
-                        getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Hozirgi joylashuvni olish';
+                        alert('Ошибка при получении местоположения: ' + error.message);
+                        getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Получить текущее местоположение';
                         getLocationBtn.disabled = false;
                     }
                 );
             } else {
-                alert('Brauzeringiz joylashuvni qo\'llab-quvvatlamaydi!');
+                alert('Ваш браузер не поддерживает геолокацию!');
             }
         });
     }
     
-    // Mijoz o'zgarganda manzilni avtomatik to'ldirish
+    // Автозаполнение адреса при смене клиента
     const customerSelect = document.getElementById('{{ form.customer.id_for_label }}');
     const addressTextarea = document.getElementById('{{ form.address.id_for_label }}');
     
     if (customerSelect && addressTextarea) {
         customerSelect.addEventListener('change', function() {
             if (this.value && !addressTextarea.value.trim()) {
-                // Bu yerda AJAX orqali mijoz manzilini olish mumkin
-                // Hozircha oddiy placeholder
+                // Здесь можно получить адрес клиента через AJAX
+                // Пока что простой placeholder
             }
         });
     }
     
-    // Form validation
+    // Валидация формы
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -431,26 +431,26 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!customer) {
                 e.preventDefault();
-                alert('Mijozni tanlang!');
+                alert('Выберите клиента!');
                 if (customerSelect) customerSelect.focus();
                 return;
             }
             
             if (!address) {
                 e.preventDefault();
-                alert('Manzilni kiriting!');
+                alert('Введите адрес!');
                 if (addressTextarea) addressTextarea.focus();
                 return;
             }
         });
     }
     
-    // Formset management (agar mavjud bo'lsa)
+    // Управление Formset (если существует)
     const addFormsetBtn = document.getElementById('add-formset');
     if (addFormsetBtn) {
         addFormsetBtn.addEventListener('click', function() {
-            // Formset qo'shish logikasi
-            // Bu yerda JavaScript formset management kod bo'lishi kerak
+            // Логика добавления Formset
+            // Здесь должен быть код управления JavaScript formset
         });
     }
 });

@@ -13,11 +13,11 @@
         <div class="btn-group me-2">
             <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Buyurtmaga qaytish
+                Вернуться к заказу
             </a>
             <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-list me-1"></i>
-                Ro'yxatga qaytish
+                Вернуться к списку
             </a>
         </div>
     </div>
@@ -27,18 +27,18 @@
     {% csrf_token %}
     
     <div class="row justify-content-center">
-        <!-- Buyurtma asosiy ma'lumotlari -->
+        <!-- Основная информация о заказе -->
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
-                        Buyurtma ma'lumotlari
+                        Информация о заказе
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Buyurtma raqami</label>
+                        <label class="form-label">Номер заказа</label>
                         <input type="text" class="form-control" value="{{ order.order_number }}" readonly>
                     </div>
                     
@@ -57,16 +57,16 @@
                     <div class="d-flex justify-content-between">
                         <!-- <a href="{% url 'orders:delete' order.pk %}" class="btn btn-danger me-2">
                             <i class="bi bi-x-circle me-1"></i>
-                            O'chirish
+                            Удалить
                         </a> -->
                         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
                             <i class="bi bi-x-circle me-1"></i>
-                            Bekor qilish
+                            Отменить заказ
                         </button>
                         
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-1"></i>
-                            O'zgarishlarni saqlash
+                            Сохранить изменения
                         </button>
                     </div>
                 </div>
@@ -83,20 +83,20 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">#{{ order.order_number }}- Bekor qilish </h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">#{{ order.order_number }}- Отмена заказа </h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="{% url 'orders:delete' order.pk %}" method="post">
         {% csrf_token %}
         <div class="modal-body">        
             <div class="mb-3">
-                <label class="form-label">Bekor qilish izohini kiriting</label>
+                <label class="form-label">Введите причину отмены</label>
                 <textarea name="notes" class="form-control" rows="3" required></textarea>
             </div>
         </div>
         <div class="modal-footer d-flex justify-content-between">
-            <span class="text-danger">Rostdan ham buyurtmani bekor qilmoqchimisiz?</span>
-            <button type="submit" class="btn btn-danger">Ha</button>
+            <span class="text-danger">Вы действительно хотите отменить заказ?</span>
+            <button type="submit" class="btn btn-danger">Да</button>
         </div>
       </form>
     </div>
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
     let formIndex = parseInt(totalFormsInput.value);
     
-    // Yangi form qo'shish
+    // Добавить новую форму
     addButton.addEventListener('click', function() {
         const emptyFormHtml = createNewFormHtml(formIndex);
         formsetContainer.insertAdjacentHTML('beforeend', emptyFormHtml);
@@ -123,13 +123,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateRemoveButtons();
         updateCalculations();
         
-        // Yangi form uchun event listeners qo'shish
+        // Добавить слушатели событий для новой формы
         const newForm = formsetContainer.lastElementChild;
         addCalculationListeners(newForm);
         addRemoveListener(newForm);
     });
     
-    // Remove tugmalarini faollashtirish
+    // Активировать кнопки удаления
     const removeButtons = formsetContainer.querySelectorAll('.remove-item-btn');
     removeButtons.forEach(addRemoveListener);
     
@@ -137,16 +137,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const removeBtn = container.querySelector ? container.querySelector('.remove-item-btn') : container;
         if (removeBtn) {
             removeBtn.addEventListener('click', function() {
-                if (confirm('Bu jalyuzini o\'chirmoqchimisiz?')) {
+                if (confirm('Вы уверены, что хотите удалить эти жалюзи?')) {
                     const formDiv = this.closest('.formset-item');
                     
-                    // DELETE checkbox ni belgilash
+                    // Отметить чекбокс DELETE
                     const deleteCheckbox = formDiv.querySelector('input[name$="-DELETE"]');
                     if (deleteCheckbox) {
                         deleteCheckbox.checked = true;
                         formDiv.style.display = 'none';
                     } else {
-                        // Yangi element bo'lsa, to'liq o'chirish
+                        // Если это новый элемент, удалить полностью
                         formDiv.remove();
                         formIndex--;
                         totalFormsInput.value = formIndex;
@@ -160,14 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Form yaratish funksiyasi
+    // Функция создания формы
     function createNewFormHtml(index) {
         return `
             <div class="formset-item border rounded p-3 mb-3" style="background: #f8f9fa;" data-form-index="${index}">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0 text-primary">
                         <i class="bi bi-window me-1"></i>
-                        <span class="item-title">Jalyuzi #<span class="item-number">${index + 1}</span></span>
+                        <span class="item-title">Жалюзи #<span class="item-number">${index + 1}</span></span>
                     </h6>
                     <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
                         <i class="bi bi-trash"></i>
@@ -178,99 +178,99 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Jalyuzi turi <span class="text-danger">*</span></label>
+                        <label class="form-label">Тип жалюзи <span class="text-danger">*</span></label>
                         <select name="form-${index}-blind_type" class="form-select" id="id_form-${index}-blind_type">
                             <option value="">---------</option>
-                            <option value="horizontal">Gorizontal</option>
-                            <option value="vertical">Vertikal</option>
-                            <option value="roller">Roller</option>
-                            <option value="roman">Roman</option>
-                            <option value="zebra">Zebra</option>
-                            <option value="pleated">Bükümlü</option>
+                            <option value="horizontal">Горизонтальные</option>
+                            <option value="vertical">Вертикальные</option>
+                            <option value="roller">Роликовые</option>
+                            <option value="roman">Римские</option>
+                            <option value="zebra">Зебра</option>
+                            <option value="pleated">Плиссе</option>
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Material</label>
+                        <label class="form-label">Материал</label>
                         <select name="form-${index}-material" class="form-select" id="id_form-${index}-material">
                             <option value="">---------</option>
-                            <option value="wood">Yog'och</option>
-                            <option value="aluminum">Alyuminiy</option>
-                            <option value="plastic">Plastik</option>
-                            <option value="fabric">Mato</option>
+                            <option value="wood">Дерево</option>
+                            <option value="aluminum">Алюминий</option>
+                            <option value="plastic">Пластик</option>
+                            <option value="fabric">Ткань</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">O'rnatish turi</label>
+                        <label class="form-label">Тип установки</label>
                         <select name="form-${index}-installation_type" class="form-select" id="id_form-${index}-installation_type">
                             <option value="">---------</option>
-                            <option value="wall">Devorga o'rnatish</option>
-                            <option value="ceiling">Shiftga o'rnatish</option>
-                            <option value="window_frame">Deraza romiga o'rnatish</option>
+                            <option value="wall">Настенная</option>
+                            <option value="ceiling">Потолочная</option>
+                            <option value="window_frame">На раму окна</option>
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Xona nomi</label>
+                        <label class="form-label">Название комнаты</label>
                         <input type="text" name="form-${index}-room_name" class="form-control" id="id_form-${index}-room_name">
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Eni (sm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Ширина (см) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="form-${index}-width" step="0.01" min="0" class="form-control" id="id_form-${index}-width">
-                            <span class="input-group-text">sm</span>
+                            <span class="input-group-text">см</span>
                         </div>
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Bo'yi (sm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Высота (см) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="form-${index}-height" step="0.01" min="0" class="form-control" id="id_form-${index}-height">
-                            <span class="input-group-text">sm</span>
+                            <span class="input-group-text">см</span>
                         </div>
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Donasi</label>
+                        <label class="form-label">Кол-во</label>
                         <input type="number" name="form-${index}-quantity" value="1" min="1" class="form-control" id="id_form-${index}-quantity">
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Birlik narxi (so'm) <span class="text-danger">*</span></label>
+                        <label class="form-label">Цена за ед. (сум) <span class="text-danger">*</span></label>
                         <div class="input-group input-group-sm">
                             <input type="number" name="form-${index}-unit_price" step="0.01" min="0" class="form-control" id="id_form-${index}-unit_price">
-                            <span class="input-group-text">so'm</span>
+                            <span class="input-group-text">сум</span>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Jami narx</label>
+                        <label class="form-label">Итого</label>
                         <div class="alert alert-info p-2 mb-0">
-                            <span class="item-total">0 so'm</span>
+                            <span class="item-total">0 сум</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Mexanizm turi</label>
+                        <label class="form-label">Тип механизма</label>
                         <input type="text" name="form-${index}-mechanism_type" class="form-control" id="id_form-${index}-mechanism_type">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Karniz turi</label>
+                        <label class="form-label">Тип карниза</label>
                         <input type="text" name="form-${index}-cornice_type" class="form-control" id="id_form-${index}-cornice_type">
                     </div>
                 </div>
                 
                 <div class="mb-0">
-                    <label class="form-label">Qo'shimcha izohlar</label>
+                    <label class="form-label">Дополнительные примечания</label>
                     <textarea name="form-${index}-notes" class="form-control" rows="2" id="id_form-${index}-notes"></textarea>
                 </div>
             </div>
         `;
     }
     
-    // Raqamlarni yangilash
+    // Обновить номера
     function updateItemNumbers() {
         const visibleItems = formsetContainer.querySelectorAll('.formset-item:not([style*="display: none"])');
         visibleItems.forEach(function(item, index) {
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Remove tugmalarini ko'rsatish/yashirish
+    // Показать/скрыть кнопки удаления
     function updateRemoveButtons() {
         const visibleItems = formsetContainer.querySelectorAll('.formset-item:not([style*="display: none"])');
         visibleItems.forEach(function(item) {
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Hisob-kitoblarni yangilash
+    // Обновить расчеты
     function updateCalculations() {
         let totalItems = 0;
         let totalPrice = 0;
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const itemTotal = unitPrice * quantity;
             const totalElement = item.querySelector('.item-total');
             if (totalElement) {
-                totalElement.textContent = itemTotal.toLocaleString() + ' so\'m';
+                totalElement.textContent = itemTotal.toLocaleString() + ' сум';
             }
             
             if (unitPrice > 0) {
@@ -315,10 +315,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         document.getElementById('total-items').textContent = totalItems;
-        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' so\'m';
+        document.getElementById('total-price').textContent = totalPrice.toLocaleString() + ' сум';
     }
     
-    // Hisob-kitob event listenerlarini qo'shish
+    // Добавить слушатели для расчетов
     function addCalculationListeners(container) {
         const inputs = container.querySelectorAll('input[type="number"]');
         inputs.forEach(function(input) {
@@ -326,14 +326,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Mavjud formlar uchun event listenerlar
+    // Слушатели для существующих форм
     const existingItems = formsetContainer.querySelectorAll('.formset-item');
     existingItems.forEach(function(item) {
         addCalculationListeners(item);
         addRemoveListener(item);
     });
     
-    // Dastlabki hisob-kitoblar
+    // Первоначальные расчеты
     updateCalculations();
     updateRemoveButtons();
 });

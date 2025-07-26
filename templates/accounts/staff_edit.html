@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ staff_member.get_full_name }} - Tahrirlash - AYDIN AWLAD CRM{% endblock %}
+{% block title %}{{ staff_member.get_full_name }} - Редактирование - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-pencil me-2"></i>
-        Xodim tahrirlash
+        Редактирование сотрудника
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <a href="{% url 'staff:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
             <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-eye me-1"></i>
-                Ko'rish
+                Просмотр
             </a>
         </div>
     </div>
@@ -28,28 +28,28 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-person-gear me-2"></i>
-                    {{ staff_member.get_full_name|default:staff_member.username }} - Ma'lumotlarni tahrirlash
+                    {{ staff_member.get_full_name|default:staff_member.username }} - Редактирование данных
                 </h5>
             </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
                     
-                    <!-- Shaxsiy ma'lumotlar -->
+                    <!-- Личная информация -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="text-primary border-bottom pb-2">
                                 <i class="bi bi-person me-1"></i>
-                                Shaxsiy ma'lumotlar
+                                Личная информация
                             </h6>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Ism</label>
+                            <label class="form-label">Имя</label>
                             <input type="text" name="first_name" class="form-control" 
                                    value="{{ staff_member.first_name }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Familiya</label>
+                            <label class="form-label">Фамилия</label>
                             <input type="text" name="last_name" class="form-control" 
                                    value="{{ staff_member.last_name }}" required>
                         </div>
@@ -59,39 +59,39 @@
                                    value="{{ staff_member.email }}">
                         </div>
                         <div class="col-md-6 mt-3">
-                            <label class="form-label">Telefon</label>
+                            <label class="form-label">Телефон</label>
                             <input type="tel" name="phone" class="form-control" 
                                    value="{{ staff_member.phone }}" 
                                    placeholder="+998901234567">
                         </div>
                     </div>
 
-                    <!-- Mutaxassis turi -->
+                    <!-- Тип специалиста -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="text-primary border-bottom pb-2">
                                 <i class="bi bi-briefcase me-1"></i>
-                                Mutaxassis turi
+                                Тип специалиста
                             </h6>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mutaxassis turi</label>
+                            <label class="form-label">Тип специалиста</label>
                             <select name="specialist_type" class="form-select">
-                                <option value="">Tanlang</option>
-                                <option value="measurer" {% if staff_member.specialist_type == 'measurer' %}selected{% endif %}>O'lchov oluvchi</option>
-                                <option value="manufacturer" {% if staff_member.specialist_type == 'manufacturer' %}selected{% endif %}>Ishlab chiquvchi</option>
-                                <option value="installer" {% if staff_member.specialist_type == 'installer' %}selected{% endif %}>O'rnatuvchi</option>
-                                <option value="universal" {% if staff_member.specialist_type == 'universal' %}selected{% endif %}>Universal (barchasi)</option>
+                                <option value="">Выберите</option>
+                                <option value="measurer" {% if staff_member.specialist_type == 'measurer' %}selected{% endif %}>Замерщик</option>
+                                <option value="manufacturer" {% if staff_member.specialist_type == 'manufacturer' %}selected{% endif %}>Производитель</option>
+                                <option value="installer" {% if staff_member.specialist_type == 'installer' %}selected{% endif %}>Установщик</option>
+                                <option value="universal" {% if staff_member.specialist_type == 'universal' %}selected{% endif %}>Универсал (все)</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Huquqlar -->
+                    <!-- Права доступа -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="text-primary border-bottom pb-2">
                                 <i class="bi bi-shield-check me-1"></i>
-                                Huquqlar
+                                Права доступа
                             </h6>
                         </div>
                         <div class="col-md-6">
@@ -100,7 +100,7 @@
                                        {% if staff_member.can_create_order %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-plus-circle me-1"></i>
-                                    Buyurtma yaratish
+                                    Создание заказа
                                 </label>
                             </div>
                             <div class="form-check mb-2">
@@ -108,7 +108,7 @@
                                        {% if staff_member.can_measure %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-rulers me-1"></i>
-                                    O'lchov olish
+                                    Снятие замеров
                                 </label>
                             </div>
                             <div class="form-check mb-2">
@@ -116,7 +116,7 @@
                                        {% if staff_member.can_manufacture %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-gear me-1"></i>
-                                    Ishlab chiqarish
+                                    Производство
                                 </label>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
                                        {% if staff_member.can_install %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-tools me-1"></i>
-                                    O'rnatish
+                                    Установка
                                 </label>
                             </div>
                             <div class="form-check mb-2">
@@ -134,7 +134,7 @@
                                        {% if staff_member.can_cancel_order %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-x-circle me-1"></i>
-                                    Buyurtma bekor qilish
+                                    Отмена заказа
                                 </label>
                             </div>
                             <div class="form-check mb-2">
@@ -142,13 +142,13 @@
                                        {% if staff_member.can_manage_payments %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-cash-stack me-1"></i>
-                                    To'lovlarni boshqarish
+                                    Управление платежами
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Qo'shimcha huquqlar -->
+                    <!-- Дополнительные права -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="form-check">
@@ -156,21 +156,21 @@
                                        {% if staff_member.can_view_all_orders %}checked{% endif %}>
                                 <label class="form-check-label">
                                     <i class="bi bi-eye me-1"></i>
-                                    Barcha buyurtmalarni ko'rish (faqat o'ziga tayinlanganlarini emas)
+                                    Просматривать все заказы (а не только назначенные ему)
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tugmalar -->
+                    <!-- Кнопки -->
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'staff:detail' staff_member.pk %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-1"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-1"></i>
-                            O'zgarishlarni saqlash
+                            Сохранить изменения
                         </button>
                     </div>
                 </form>
@@ -178,13 +178,13 @@
         </div>
     </div>
 
-    <!-- Qo'shimcha ma'lumotlar -->
+    <!-- Дополнительная информация -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-info-circle me-1"></i>
-                    Xodim haqida
+                    О сотруднике
                 </h6>
             </div>
             <div class="card-body">
@@ -193,36 +193,36 @@
                     <strong>{{ staff_member.username }}</strong>
                 </div>
                 <div class="mb-3">
-                    <small class="text-muted">Qo'shilgan sana:</small><br>
+                    <small class="text-muted">Дата добавления:</small><br>
                     <strong>{{ staff_member.date_joined|date:"d.m.Y H:i" }}</strong>
                 </div>
                 <div class="mb-3">
-                    <small class="text-muted">Oxirgi faollik:</small><br>
+                    <small class="text-muted">Последняя активность:</small><br>
                     <strong>
                         {% if staff_member.last_login %}
                             {{ staff_member.last_login|date:"d.m.Y H:i" }}
                         {% else %}
-                            Hali kirmagan
+                            Еще не входил
                         {% endif %}
                     </strong>
                 </div>
                 <div class="mb-0">
-                    <small class="text-muted">Holat:</small><br>
+                    <small class="text-muted">Статус:</small><br>
                     {% if staff_member.is_active %}
-                        <span class="badge bg-success">Faol</span>
+                        <span class="badge bg-success">Активен</span>
                     {% else %}
-                        <span class="badge bg-secondary">Nofaol</span>
+                        <span class="badge bg-secondary">Неактивен</span>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Xavfsizlik amallar -->
+        <!-- Действия безопасности -->
         <div class="card mt-3">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-shield-exclamation me-1"></i>
-                    Xavfsizlik
+                    Безопасность
                 </h6>
             </div>
             <div class="card-body">
@@ -230,18 +230,18 @@
                     <a href="{% url 'staff:reset_password' staff_member.pk %}" 
                        class="btn btn-outline-warning btn-sm">
                         <i class="bi bi-key me-1"></i>
-                        Parolni tiklash
+                        Сбросить пароль
                     </a>
                     <a href="{% url 'staff:toggle_status' staff_member.pk %}" 
                        class="btn btn-outline-{% if staff_member.is_active %}secondary{% else %}success{% endif %} btn-sm">
                         <i class="bi bi-{% if staff_member.is_active %}pause{% else %}play{% endif %} me-1"></i>
-                        {% if staff_member.is_active %}Nofaol qilish{% else %}Faollashtirish{% endif %}
+                        {% if staff_member.is_active %}Деактивировать{% else %}Активировать{% endif %}
                     </a>
                     {% if user.is_admin %}
                     <a href="{% url 'staff:delete' staff_member.pk %}" 
                        class="btn btn-outline-danger btn-sm">
                         <i class="bi bi-trash me-1"></i>
-                        O'chirish
+                        Удалить
                     </a>
                     {% endif %}
                 </div>

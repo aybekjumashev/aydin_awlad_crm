@@ -1,63 +1,63 @@
 {% extends 'base.html' %}
 
-{% block title %}Buyurtma #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
+{% block title %}Заказ #{{ order.order_number }} - AYDIN AWLAD CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         <i class="bi bi-cart me-2"></i>
-        Buyurtma #{{ order.order_number }}
+        Заказ #{{ order.order_number }}
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             {% if user.is_manager or user.is_admin %}
             <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
             {% else %}
             <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>
-                Orqaga
+                Назад
             </a>
             {% endif %}
             
             {% if user.is_manager or user.is_admin and order.status != 'cancelled' %}
             <a href="{% url 'orders:edit' order.pk %}" class="btn btn-sm btn-warning">
                 <i class="bi bi-pencil me-1"></i>
-                Tahrirlash
+                Редактировать
             </a>
             {% endif %}
             <a href="{% url 'orders:generate_contract' order.pk %}" class="btn btn-sm btn-secondary" target="_blank">
                 <i class="bi bi-printer me-1"></i>
-                Shartnama
+                Договор
             </a>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Buyurtma ma'lumotlari -->
+    <!-- Информация о заказе -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Buyurtma ma'lumotlari
+                    Информация о заказе
                 </h5>
             </div>
             <div class="card-body">
                 <div class="mb-2">
-                    <strong>Raqam:</strong> #{{ order.order_number }}
+                    <strong>Номер:</strong> #{{ order.order_number }}
                 </div>
                 <div class="mb-2">
-                    <strong>Mijoz:</strong> 
+                    <strong>Клиент:</strong> 
                     <span>
                         {{ order.customer.get_full_name }}
                     </span>
                 </div>
                 <div class="mb-2">
-                    <strong>Telefon:</strong> 
+                    <strong>Телефон:</strong> 
                     <a href="tel:{{ order.customer.phone }}" class="text-decoration-none">
                         {{ order.customer.phone }}
                     </a>
@@ -73,7 +73,7 @@
                     {% endfor %}
                 </div>
                 <div class="mb-2">
-                    <strong>Status:</strong>
+                    <strong>Статус:</strong>
                     {% if order.status == 'measuring' %}
                         <span class="badge bg-info">{{ order.get_status_display }}</span>
                     {% elif order.status == 'processing' %}
@@ -88,15 +88,15 @@
                     {% endif %}
                 </div>
                 <div class="mb-2">
-                    <strong>Yaratilgan:</strong> {{ order.created_at|date:"d.m.Y H:i" }}
+                    <strong>Создан:</strong> {{ order.created_at|date:"d.m.Y H:i" }}
                 </div>
                 <div class="mb-2">
-                    <strong>Manzil:</strong> {{ order.address }}
+                    <strong>Адрес:</strong> {{ order.address }}
                 </div>
                 {% if order.notes %}
                 <div class="mb-0">
                     {% if order.notes %}
-                    <strong>Izoh:</strong>
+                    <strong>Примечание:</strong>
                         <div class="mb-3">
                             <div class="border rounded p-3 bg-light">
                                 <small>{{ order.notes|linebreaks }}</small>
@@ -108,112 +108,112 @@
             </div>
         </div>
 
-        <!-- To'lov ma'lumotlari -->
+        <!-- Платежная информация -->
         <div class="card mt-3">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-cash me-2"></i>
-                    To'lov ma'lumotlari
+                    Платежная информация
                 </h5>
             </div>
             <div class="card-body">
                 <div class="mb-2">
-                    <strong>Umumiy narx:</strong> 
-                    <span class="text-success">{{ order.total_amount|floatformat:0 }} so'm</span>
+                    <strong>Общая стоимость:</strong> 
+                    <span class="text-success">{{ order.total_amount|floatformat:0 }} сум</span>
                 </div>
                 <div class="mb-2">
-                    <strong>To'langan:</strong> 
-                    <span class="text-primary">{{ order.paid_amount|floatformat:0 }} so'm</span>
+                    <strong>Оплачено:</strong> 
+                    <span class="text-primary">{{ order.paid_amount|floatformat:0 }} сум</span>
                 </div>
                 <div class="mb-2">
-                    <strong>Qolgan:</strong> 
-                    <span class="text-danger">{{ order.remaining_amount|floatformat:0 }} so'm</span>
+                    <strong>Остаток:</strong> 
+                    <span class="text-danger">{{ order.remaining_amount|floatformat:0 }} сум</span>
                 </div>
                 <div class="mb-0">
-                    <strong>Holat:</strong>
+                    <strong>Статус оплаты:</strong>
                     {% if order.payment_status == 'pending' %}
-                        <span class="badge bg-warning">To'lanmagan</span>
+                        <span class="badge bg-warning">Не оплачено</span>
                     {% elif order.payment_status == 'partial' %}
-                        <span class="badge bg-info">Qisman</span>
+                        <span class="badge bg-info">Частично</span>
                     {% elif order.payment_status == 'paid' %}
-                        <span class="badge bg-success">To'liq</span>
+                        <span class="badge bg-success">Полностью</span>
                     {% endif %}
                 </div>
             </div>
         </div>
 
 
-        <!-- Jarayon va Xodimlar -->
+        <!-- Процесс и Сотрудники -->
         <div class="card mt-3">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-people me-2"></i>
-                    Jarayon va Xodimlar
+                    Процесс и Сотрудники
                 </h5>
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <!-- O'lchov oluvchi -->
+                    <!-- Замерщик -->
                     <li class="mb-2 pb-2 border-bottom">
-                        <strong>O'lchov oluvchi:</strong>
+                        <strong>Замерщик:</strong>
                         {% if order.assigned_measurer %}
                             <div class="d-flex justify-content-between align-items-start">
                                 <span>{{ order.assigned_measurer.get_full_name }}</span>
                                 {% if order.measurement_completed_date %}
-                                    <small class="text-success" title="O'lchov yakunlangan sana">
+                                    <small class="text-success" title="Дата завершения замера">
                                         <i class="bi bi-check-circle me-1"></i>
                                         {{ order.measurement_completed_date|date:"d.m.y H:i" }}
                                     </small>
                                 {% endif %}
                             </div>
                         {% else %}
-                            <span class="text-muted">Tayinlanmagan</span>
+                            <span class="text-muted">Не назначен</span>
                         {% endif %}
                     </li>
 
-                    <!-- Ishlab chiqaruvchi -->
+                    <!-- Производитель -->
                     <li class="mb-2 pb-2 border-bottom">
-                        <strong>Ishlab chiqaruvchi:</strong>
+                        <strong>Производитель:</strong>
                         {% if order.assigned_manufacturer %}
                             <div class="d-flex justify-content-between align-items-start">
                                 <span>{{ order.assigned_manufacturer.get_full_name }}</span>
                                 {% if order.production_completed_date %}
-                                    <small class="text-success" title="Ishlab chiqarish yakunlangan sana">
+                                    <small class="text-success" title="Дата завершения производства">
                                         <i class="bi bi-check-circle me-1"></i>
                                         {{ order.production_completed_date|date:"d.m.y H:i" }}
                                     </small>
                                 {% endif %}
                             </div>
                         {% else %}
-                            <span class="text-muted">Tayinlanmagan</span>
+                            <span class="text-muted">Не назначен</span>
                         {% endif %}
                     </li>
 
-                    <!-- O'rnatuvchi -->
+                    <!-- Установщик -->
                     <li class="mb-2">
-                        <strong>O'rnatuvchi:</strong>
+                        <strong>Установщик:</strong>
                         {% if order.assigned_installer %}
                              <div class="d-flex justify-content-between align-items-start">
                                 <span>{{ order.assigned_installer.get_full_name }}</span>
                                 {% if order.installation_completed_date %}
-                                    <small class="text-success" title="O'rnatish yakunlangan sana">
+                                    <small class="text-success" title="Дата завершения установки">
                                         <i class="bi bi-check-circle me-1"></i>
                                         {{ order.installation_completed_date|date:"d.m.y H:i" }}
                                     </small>
                                 {% endif %}
                             </div>
                         {% else %}
-                            <span class="text-muted">Tayinlanmagan</span>
+                            <span class="text-muted">Не назначен</span>
                         {% endif %}
                     </li>
 
-                    <!-- Bekor qilingan -->
+                    <!-- Отменен -->
                     {% if order.status == 'cancelled' and order.cancelled_date %}
                     <li class="mt-2 pt-2 border-top">
-                        <strong>Bekor qilindi:</strong>
+                        <strong>Отменен:</strong>
                          <div class="d-flex justify-content-between align-items-start">
                             <span>-</span>
-                            <small class="text-danger" title="Bekor qilingan sana">
+                            <small class="text-danger" title="Дата отмены">
                                 <i class="bi bi-x-circle me-1"></i>
                                 {{ order.cancelled_date|date:"d.m.y H:i" }}
                             </small>
@@ -226,13 +226,13 @@
         
     </div>
 
-    <!-- Jalyuzilar ro'yxati -->
+    <!-- Список жалюзи -->
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-window me-2"></i>
-                    Jalyuzilar
+                    Жалюзи
                     <span class="badge bg-primary ms-2">{{ items.count }}</span>
                 </h5>
             </div>
@@ -243,12 +243,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th>№</th>
-                                <th>Turi</th>
-                                <th>O'lcham</th>
-                                <th>Material</th>
-                                <th>Xona</th>
-                                <th>Dona</th>
-                                <th>Narx</th>
+                                <th>Тип</th>
+                                <th>Размер</th>
+                                <th>Материал</th>
+                                <th>Комната</th>
+                                <th>Кол-во</th>
+                                <th>Цена</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -256,18 +256,18 @@
                                 <tr>
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ item.get_blind_type_display }}</td>
-                                    <td>{{ item.width }} × {{ item.height }} sm</td>
+                                    <td>{{ item.width }} × {{ item.height }} см</td>
                                     <td>{{ item.get_material_display }}</td>
                                     <td>{{ item.room_name|default:"-" }}</td>
                                     <td>{{ item.quantity }}</td>
-                                    <td>{{ item.total_price|floatformat:0 }} so'm</td>
+                                    <td>{{ item.total_price|floatformat:0 }} сум</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <th colspan="6">Jami:</th>
-                                <th>{{ order.total_amount|floatformat:0 }} so'm</th>
+                                <th colspan="6">Итого:</th>
+                                <th>{{ order.total_amount|floatformat:0 }} сум</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -275,19 +275,19 @@
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-window display-4 text-muted"></i>
-                    <p class="mt-2 text-muted">Hali jalyuzilar qo'shilmagan</p>
+                    <p class="mt-2 text-muted">Жалюзи еще не добавлены</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- To'lovlar tarixi -->
+        <!-- История платежей -->
         {% if payments %}
         <div class="card mt-3">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-credit-card me-2"></i>
-                    To'lovlar tarixi
+                    История платежей
                     <span class="badge bg-success ms-2">{{ payments.count }}</span>
                 </h5>
             </div>
@@ -296,17 +296,17 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Sana</th>
-                                <th>Summa</th>
-                                <th>Usul</th>
-                                <th>Qabul qiluvchi</th>
+                                <th>Дата</th>
+                                <th>Сумма</th>
+                                <th>Метод</th>
+                                <th>Принял</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for payment in payments %}
                             <tr>
                                 <td>{{ payment.payment_date|date:"d.m.Y H:i" }}</td>
-                                <td>{{ payment.amount|floatformat:0 }} so'm</td>
+                                <td>{{ payment.amount|floatformat:0 }} сум</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>{{ payment.received_by }}</td>
                             </tr>
@@ -320,7 +320,7 @@
     </div>
 </div>
 
-<!-- Tezkor to'lov qo'shish -->
+<!-- Быстрое добавление платежа -->
 {% if user.is_manager or user.is_admin %}
 <div class="row mt-4">
     <div class="col-12">
@@ -328,7 +328,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-plus-circle me-2"></i>
-                    Tezkor to'lov qo'shish
+                    Быстрое добавление платежа
                 </h5>
             </div>
             <div class="card-body">
@@ -336,28 +336,28 @@
                     {% csrf_token %}
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Summa</label>
+                            <label class="form-label">Сумма</label>
                             <input type="number" name="amount" class="form-control" 
                                    placeholder="0" step="1000" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Usul</label>
+                            <label class="form-label">Метод</label>
                             <select name="payment_method" class="form-select">
-                                <option value="cash">Naqd</option>
-                                <option value="card">Karta</option>
-                                <option value="transfer">O'tkazma</option>
+                                <option value="cash">Наличные</option>
+                                <option value="card">Карта</option>
+                                <option value="transfer">Перевод</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Izoh</label>
+                            <label class="form-label">Примечание</label>
                             <input type="text" name="notes" class="form-control" 
-                                   placeholder="Qo'shimcha izoh">
+                                   placeholder="Дополнительное примечание">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
+                            <label class="form-label"> </label>
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-plus me-1"></i>
-                                Qo'shish
+                                Добавить
                             </button>
                         </div>
                     </div>

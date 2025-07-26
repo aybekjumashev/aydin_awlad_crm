@@ -1,6 +1,6 @@
 <!-- templates/customers/public_detail.html -->
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,11 +90,11 @@
                 <h1 class="text-white mb-2">
                     <i class="fas fa-blinds"></i> AYDIN AWLAD
                 </h1>
-                <p class="text-white-50">Mijoz shaxsiy sahifasi</p>
+                <p class="text-white-50">Личная страница клиента</p>
             </div>
         </div>
         
-        <!-- Mijoz ma'lumotlari -->
+        <!-- Данные клиента -->
         <div class="row">
             <div class="col-lg-4 mb-4">
                 <div class="card customer-card h-100">
@@ -106,34 +106,34 @@
                     </div>
                     
                     <div class="card-body">
-                        <!-- Asosiy ma'lumotlar -->
+                        <!-- Основная информация -->
                         <div class="mb-4">
                             <h6 class="text-primary">
-                                <i class="fas fa-info-circle"></i> Asosiy ma'lumotlar
+                                <i class="fas fa-info-circle"></i> Основная информация
                             </h6>
                             
                             {% if customer.get_age %}
                             <p class="mb-2">
                                 <i class="fas fa-birthday-cake text-warning"></i>
-                                <strong>Yoshi:</strong> {{ customer.get_age }} yosh
+                                <strong>Возраст:</strong> {{ customer.get_age }} лет
                             </p>
                             {% endif %}
                             
                             <p class="mb-2">
                                 <i class="fas fa-calendar text-info"></i>
-                                <strong>Ro'yxatga olingan:</strong> {{ customer.created_at|date:"d.m.Y" }}
+                                <strong>Зарегистрирован:</strong> {{ customer.created_at|date:"d.m.Y" }}
                             </p>
                             
                             <p class="mb-0">
                                 <i class="fas fa-map-marker-alt text-danger"></i>
-                                <strong>Manzil:</strong> {{ customer.address|truncatechars:50 }}
+                                <strong>Адрес:</strong> {{ customer.address|truncatechars:50 }}
                             </p>
                         </div>
                         
-                        <!-- Telefon raqamlar -->
+                        <!-- Номера телефонов -->
                         <div class="mb-4">
                             <h6 class="text-primary">
-                                <i class="fas fa-phone"></i> Telefon raqamlar
+                                <i class="fas fa-phone"></i> Номера телефонов
                             </h6>
                             
                             {% for phone in phone_numbers %}
@@ -142,7 +142,7 @@
                                     <span>
                                         <strong>{{ phone.phone }}</strong>
                                         {% if phone.is_primary %}
-                                            <span class="badge bg-success ms-1">Asosiy</span>
+                                            <span class="badge bg-success ms-1">Основной</span>
                                         {% endif %}
                                     </span>
                                     <small class="text-muted">{{ phone.get_phone_type_display }}</small>
@@ -152,20 +152,20 @@
                                 {% endif %}
                             </div>
                             {% empty %}
-                            <p class="text-muted">Telefon raqam kiritilmagan</p>
+                            <p class="text-muted">Номер телефона не введен</p>
                             {% endfor %}
                         </div>
                         
-                        <!-- Statistika -->
+                        <!-- Статистика -->
                         <div class="quick-stats text-white">
                             <div class="row text-center">
                                 <div class="col-6">
                                     <h4 class="mb-0">{{ orders.count }}</h4>
-                                    <small>Buyurtmalar</small>
+                                    <small>Заказы</small>
                                 </div>
                                 <div class="col-6">
                                     <h4 class="mb-0">{{ orders|length|default:0 }}</h4>
-                                    <small>Jaami</small>
+                                    <small>Всего</small>
                                 </div>
                             </div>
                         </div>
@@ -173,13 +173,13 @@
                 </div>
             </div>
             
-            <!-- Buyurtmalar va yangi buyurtma -->
+            <!-- Заказы и новый заказ -->
             <div class="col-lg-8">
-                <!-- Yangi buyurtma berish -->
+                <!-- Оформить новый заказ -->
                 <div class="card customer-card mb-4">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-plus-circle"></i> Yangi buyurtma berish
+                            <i class="fas fa-plus-circle"></i> Оформить новый заказ
                         </h5>
                     </div>
                     
@@ -260,18 +260,18 @@
                             
                             <div class="text-end">
                                 <button type="submit" class="btn btn-success btn-custom">
-                                    <i class="fas fa-paper-plane"></i> Buyurtma berish
+                                    <i class="fas fa-paper-plane"></i> Оформить заказ
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
                 
-                <!-- Buyurtmalar tarixi -->
+                <!-- История заказов -->
                 <div class="card customer-card">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-history"></i> Buyurtmalar tarixi
+                            <i class="fas fa-history"></i> История заказов
                         </h5>
                     </div>
                     
@@ -302,20 +302,20 @@
                                             
                                             <p class="mb-2">
                                                 <i class="fas fa-layer-group"></i>
-                                                <strong>Jalyuzlar:</strong> {{ order.total_items }} dona
+                                                <strong>Жалюзи:</strong> {{ order.total_items }} шт.
                                             </p>
                                             
                                             {% if order.total_area %}
                                             <p class="mb-2">
                                                 <i class="fas fa-expand-arrows-alt"></i>
-                                                <strong>Maydon:</strong> {{ order.total_area }} m²
+                                                <strong>Площадь:</strong> {{ order.total_area }} м²
                                             </p>
                                             {% endif %}
                                             
                                             {% if order.total_price %}
                                             <p class="mb-2">
                                                 <i class="fas fa-money-bill-wave"></i>
-                                                <strong>Narx:</strong> {{ order.total_price|floatformat:0 }} so'm
+                                                <strong>Цена:</strong> {{ order.total_price|floatformat:0 }} сум
                                             </p>
                                             {% endif %}
                                             
@@ -333,8 +333,8 @@
                         {% else %}
                             <div class="text-center py-5">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Hali buyurtmalar yo'q</h5>
-                                <p class="text-muted">Yuqorida yangi buyurtma berishingiz mumkin</p>
+                                <h5 class="text-muted">Заказов пока нет</h5>
+                                <p class="text-muted">Вы можете оформить новый заказ выше</p>
                             </div>
                         {% endif %}
                     </div>
@@ -342,13 +342,13 @@
             </div>
         </div>
         
-        <!-- Aloqa ma'lumotlari -->
+        <!-- Контактная информация -->
         <div class="row mt-5">
             <div class="col-12">
                 <div class="card customer-card">
                     <div class="card-body text-center">
                         <h5 class="text-primary mb-3">
-                            <i class="fas fa-headset"></i> Biz bilan bog'laning
+                            <i class="fas fa-headset"></i> Свяжитесь с нами
                         </h5>
                         
                         <div class="row">
@@ -356,7 +356,7 @@
                                 <div class="d-flex align-items-center justify-content-center">
                                     <i class="fas fa-phone fa-2x text-success me-3"></i>
                                     <div>
-                                        <strong>Telefon</strong><br>
+                                        <strong>Телефон</strong><br>
                                         <a href="tel:+998901234567" class="text-decoration-none">
                                             +998 90 123 45 67
                                         </a>
@@ -380,8 +380,8 @@
                                 <div class="d-flex align-items-center justify-content-center">
                                     <i class="fas fa-clock fa-2x text-warning me-3"></i>
                                     <div>
-                                        <strong>Ish vaqti</strong><br>
-                                        9:00 - 18:00 (Du-Sh)
+                                        <strong>Время работы</strong><br>
+                                        9:00 - 18:00 (Пн-Сб)
                                     </div>
                                 </div>
                             </div>
@@ -397,9 +397,9 @@
     
     <!-- Custom JS -->
     <script>
-        // Form maydonlarini customer ma'lumotlari bilan to'ldirish
+        // Заполнение полей формы данными клиента
         document.addEventListener('DOMContentLoaded', function() {
-            // Telefon raqam validatsiyasi
+            // Валидация номера телефона
             const phoneInput = document.querySelector('input[name="phone"]');
             if (phoneInput) {
                 phoneInput.addEventListener('input', function() {
@@ -410,19 +410,19 @@
                 });
             }
             
-            // Full name ni customer nomi bilan to'ldirish
+            // Заполнение полного имени именем клиента
             const fullNameInput = document.querySelector('input[name="full_name"]');
             if (fullNameInput && !fullNameInput.value) {
                 fullNameInput.value = '{{ customer.get_full_name }}';
             }
             
-            // Primary phone bilan telefon inputni to'ldirish
+            // Заполнение поля телефона основным номером
             const primaryPhone = '{{ customer.phone }}';
             if (phoneInput && !phoneInput.value && primaryPhone) {
                 phoneInput.value = primaryPhone;
             }
             
-            // Address ni customer manzili bilan to'ldirish
+            // Заполнение адреса адресом клиента
             const addressInput = document.querySelector('textarea[name="address"]');
             if (addressInput && !addressInput.value) {
                 addressInput.value = '{{ customer.address }}';

@@ -15,7 +15,7 @@
             border-secondary
         {% endif %}">
         
-        <!-- Card header -->
+        <!-- Заголовок карточки -->
         <div class="card-header d-flex justify-content-between align-items-center
             {% if task_type == 'measure' %}
                 bg-info-subtle
@@ -32,162 +32,162 @@
                 </a>
             </h6>
             <div class="d-flex align-items-center gap-2">
-                <!-- Vazifa turi belgisi -->
+                <!-- Иконка типа задачи -->
                 {% if task_type == 'measure' %}
-                    <i class="bi bi-rulers text-info" title="O'lchov olish"></i>
+                    <i class="bi bi-rulers text-info" title="Снятие замеров"></i>
                 {% elif task_type == 'manufacture' %}
-                    <i class="bi bi-gear-fill text-warning" title="Ishlab chiqarish"></i>
+                    <i class="bi bi-gear-fill text-warning" title="Производство"></i>
                 {% elif task_type == 'install' %}
-                    <i class="bi bi-tools text-success" title="O'rnatish"></i>
+                    <i class="bi bi-tools text-success" title="Установка"></i>
                 {% elif task_type == 'completed' %}
-                    <i class="bi bi-check-circle text-success" title="Yakunlangan"></i>
+                    <i class="bi bi-check-circle text-success" title="Завершено"></i>
                 {% endif %}
                 
-                <!-- Status badge -->
+                <!-- Бейдж статуса -->
                 <span class="badge bg-{% if order.status == 'measuring' %}info{% elif order.status == 'processing' %}warning{% elif order.status == 'installing' %}primary{% elif order.status == 'installed' %}success{% else %}secondary{% endif %}">
                     {{ order.get_status_display }}
                 </span>
             </div>
         </div>
         
-        <!-- Card body -->
+        <!-- Тело карточки -->
         <div class="card-body">
-            <!-- Mijoz ma'lumoti -->
+            <!-- Информация о клиенте -->
             <h6 class="card-title">
                 <i class="bi bi-person me-2"></i>
                 {{ order.customer.get_full_name }}
             </h6>
             
-            <!-- Manzil -->
+            <!-- Адрес -->
             <p class="card-text text-muted small mb-2">
                 <i class="bi bi-geo-alt me-1"></i>
                 {{ order.address|truncatechars:50 }}
             </p>
             
-            <!-- Sana ma'lumoti -->
+            <!-- Информация о дате -->
             <p class="card-text text-muted small mb-2">
                 <i class="bi bi-calendar me-1"></i>
-                Yaratilgan: {{ order.created_at|date:"d.m.Y H:i" }}
+                Создан: {{ order.created_at|date:"d.m.Y H:i" }}
             </p>
 
             {% if order.installation_scheduled_date %}
             <p class="card-text text-muted small mb-2">
                 <i class="bi bi-calendar me-1"></i>
-                O'rnatilishi kerak: {{ order.installation_scheduled_date|date:"d.m.Y H:i" }}
+                Установить до: {{ order.installation_scheduled_date|date:"d.m.Y H:i" }}
             </p>
             {% endif %}
             
-            <!-- Vazifa muddati (agar mavjud bo'lsa) -->
+            <!-- Срок выполнения задачи (если есть) -->
             {% if order.measurement_date and order.status == 'measuring' %}
             <p class="card-text small mb-2 
                 {% if order.measurement_date < current_time %}text-danger{% else %}text-primary{% endif %}">
                 <i class="bi bi-clock me-1"></i>
-                O'lchov: {{ order.measurement_date|date:"d.m.Y H:i" }}
+                Замер: {{ order.measurement_date|date:"d.m.Y H:i" }}
                 {% if order.measurement_date < current_time %}
-                    <span class="badge bg-danger ms-1">Kechikkan</span>
+                    <span class="badge bg-danger ms-1">Просрочено</span>
                 {% endif %}
             </p>
             {% elif order.installation_date and order.status == 'installing' %}
             <p class="card-text small mb-2 
                 {% if order.installation_date < current_time %}text-danger{% else %}text-primary{% endif %}">
                 <i class="bi bi-clock me-1"></i>
-                O'rnatish: {{ order.installation_date|date:"d.m.Y H:i" }}
+                Установка: {{ order.installation_date|date:"d.m.Y H:i" }}
                 {% if order.installation_date < current_time %}
-                    <span class="badge bg-danger ms-1">Kechikkan</span>
+                    <span class="badge bg-danger ms-1">Просрочено</span>
                 {% endif %}
             </p>
             {% endif %}
             
-            <!-- To'lov ma'lumoti (o'rnatish uchun) -->
+            <!-- Информация об оплате (для установки) -->
             {% if order.status == 'installing' and order.total_amount > 0 %}
             <div class="mb-2">
                 {% with remaining=order.total_amount|sub:order.paid_amount %}
                     {% if remaining > 0 %}
                         <small class="text-danger">
                             <i class="bi bi-cash me-1"></i>
-                            Qolgan: {{ remaining|floatformat:0 }} so'm
+                            Остаток: {{ remaining|floatformat:0 }} сум
                         </small>
                     {% else %}
                         <small class="text-success">
                             <i class="bi bi-check-circle me-1"></i>
-                            To'liq to'langan
+                            Полностью оплачено
                         </small>
                     {% endif %}
                 {% endwith %}
             </div>
             {% endif %}
             
-            <!-- Yakunlangan sana (yakunlangan vazifalar uchun) -->
+            <!-- Дата завершения (для завершенных задач) -->
             {% if task_type == 'completed' and order.installation_completed_date %}
             <p class="card-text small text-success mb-2">
                 <i class="bi bi-check-circle me-1"></i>
-                Yakunlangan: {{ order.installation_completed_date|date:"d.m.Y H:i" }}
+                Завершено: {{ order.installation_completed_date|date:"d.m.Y H:i" }}
             </p>
             {% endif %}
             
-            <!-- Kechikkan vazifalar uchun ogohlantirish -->
+            <!-- Предупреждение о просроченных задачах -->
             {% if order.measurement_date and order.measurement_date < current_time and order.status == 'measuring' %}
             <div class="alert alert-danger alert-sm py-2 mb-2">
                 <i class="bi bi-exclamation-triangle me-1"></i>
-                <small>O'lchov muddati o'tgan!</small>
+                <small>Срок замера истек!</small>
             </div>
             {% elif order.installation_date and order.installation_date < current_time and order.status == 'installing' %}
             <div class="alert alert-danger alert-sm py-2 mb-2">
                 <i class="bi bi-exclamation-triangle me-1"></i>
-                <small>O'rnatish muddati o'tgan!</small>
+                <small>Срок установки истек!</small>
             </div>
             {% endif %}
             
-            <!-- Jalyuzlar soni (agar mavjud bo'lsa) -->
+            <!-- Количество жалюзи (если есть) -->
             {% if order.items.count > 0 %}
             <div class="mb-2">
                 <small class="text-muted">
                     <i class="bi bi-grid me-1"></i>
-                    {{ order.items.count }} ta jalyuzi
+                    {{ order.items.count }} жалюзи
                 </small>
             </div>
             {% endif %}
         </div>
         
-        <!-- Card footer - tugmalar -->
+        <!-- Подвал карточки - кнопки -->
         <div class="card-footer bg-transparent">
             <div class="d-flex gap-2">
-                <!-- O'lchov tugmasi -->
+                <!-- Кнопка "Снять замеры" -->
                 {% if user.can_measure and order.status == 'measuring' and task_type != 'completed' %}
                 <a href="{% url 'technical:measurement' order.pk %}" 
                    class="btn btn-info btn-sm flex-fill">
                     <i class="bi bi-rulers me-1"></i>
-                    O'lchov olish
+                    Снять замеры
                 </a>
                 {% endif %}
                 
-                <!-- Ishlab chiqarish tugmasi -->
+                <!-- Кнопка "Производство" -->
                 {% if user.can_manufacture and order.status == 'processing' and task_type != 'completed' %}
                 <a href="{% url 'technical:manufacturing' order.pk %}" 
                    class="btn btn-warning btn-sm flex-fill">
                     <i class="bi bi-gear-fill me-1"></i>
-                    Ishlab chiqarish
+                    Производство
                 </a>
                 {% endif %}
                 
-                <!-- O'rnatish tugmasi -->
+                <!-- Кнопка "Установка" -->
                 {% if user.can_install and order.status == 'installing' and task_type != 'completed' %}
                 <a href="{% url 'technical:installation' order.pk %}" 
                    class="btn btn-success btn-sm flex-fill">
                     <i class="bi bi-tools me-1"></i>
-                    O'rnatish
+                    Установка
                 </a>
                 {% endif %}
                 
-                <!-- Yakunlangan vazifalar uchun ko'rish tugmasi -->
+                <!-- Кнопка "Завершено" для завершенных задач -->
                 {% if task_type == 'completed' %}
                 <span class="btn btn-outline-success btn-sm flex-fill disabled">
                     <i class="bi bi-check-circle me-1"></i>
-                    Yakunlangan
+                    Завершено
                 </span>
                 {% endif %}
                 
-                <!-- Agar hech qanday vazifa tugmasi ko'rsatilmasa -->
+                <!-- Если нет кнопок действий -->
                 {% if task_type != 'completed' %}
                     {% if not user.can_measure or order.status != 'measuring' %}
                         {% if not user.can_manufacture or order.status != 'processing' %}
@@ -195,7 +195,7 @@
                                 {% if order.status != 'installed' %}
                                 <span class="btn btn-outline-secondary btn-sm flex-fill disabled">
                                     <i class="bi bi-eye me-1"></i>
-                                    Faqat ko'rish
+                                    Только просмотр
                                 </span>
                                 {% endif %}
                             {% endif %}
@@ -203,10 +203,10 @@
                     {% endif %}
                 {% endif %}
                 
-                <!-- Buyurtma tafsilotlari tugmasi -->
+                <!-- Кнопка "Детали заказа" -->
                 <a href="{% url 'orders:detail' order.pk %}" 
                    class="btn btn-outline-primary btn-sm"
-                   title="Buyurtma tafsilotlari">
+                   title="Детали заказа">
                     <i class="bi bi-eye"></i>
                 </a>
             </div>

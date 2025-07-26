@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}O'lchov olish - {{ order.order_number }}{% endblock %}
+{% block title %}Снятие замеров - {{ order.order_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,29 +9,29 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
                     <i class="bi bi-rulers me-2"></i>
-                    O'lchov olish - #{{ order.order_number }}
+                    Снятие замеров - #{{ order.order_number }}
                 </h2>
                 <a href="{% url 'technical:my_tasks' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>
-                    Vazifalar
+                    Задачи
                 </a>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Buyurtma ma'lumotlari -->
+        <!-- Информация о заказе -->
         <div class="col-md-4 mb-3">
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-info-circle me-2"></i>
-                        Buyurtma ma'lumotlari
+                        Информация о заказе
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Mijoz:</strong><br>
+                        <strong>Клиент:</strong><br>
                         {{ order.customer.get_full_name }}<br>
                         <small class="text-muted">{{ order.customer.phone }}</small>
                         {% for phone in order.customer.additional_phones.all %}
@@ -46,18 +46,18 @@
                         {% endfor %}
                     </div>
                     <div class="mb-3">
-                        <strong>Manzil:</strong><br>
+                        <strong>Адрес:</strong><br>
                         <small>{{ order.address }}</small>
                     </div>
                     <div class="mb-3">
-                        <strong>Yaratilgan:</strong><br>
+                        <strong>Создан:</strong><br>
                         <small>{{ order.created_at|date:"d.m.Y H:i" }}</small>
                     </div>
                     <div class="mb-0">
                         <span class="badge bg-info">{{ order.get_status_display }}</span>
-                        <!-- DEBUG: Ma'lumotlar ko'rsatish -->
+                        <!-- DEBUG: Показать информацию -->
                         {% if existing_items_count > 0 %}
-                        <br><small class="text-muted mt-2 d-block">📋 {{ existing_items_count }} ta jalyuzi saqlangan</small>
+                        <br><small class="text-muted mt-2 d-block">📋 {{ existing_items_count }} жалюзи сохранено</small>
                         {% endif %}
                     </div>
                 </div>
@@ -65,18 +65,18 @@
         </div>
 
         <div class="col-md-4 p-0 m-0">
-            <!-- O'rnatish vaqtini belgilash -->
+            <!-- Назначить время установки -->
             <div class="mb-3">
                 <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-clock-history me-2"></i>
-                            O'rnatish vaqtini belgilash
+                            Назначить время установки
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">O'rnatish vaqti</label>
+                            <label class="form-label">Время установки</label>
                             <input type="date" class="form-control" id="installation_scheduled_date" 
                                     required value="{{ existing_installation_date }}">
                         </div>
@@ -100,13 +100,13 @@
                         <div class="d-grid gap-2">
                             <button type="button" id="getLocationBtn" class="btn btn-primary">
                                 <i class="bi bi-geo-alt-fill me-1"></i>
-                                {% if has_existing_gps %}Joylashuvni yangilash{% else %}Joylashuvni olish{% endif %}
+                                {% if has_existing_gps %}Обновить местоположение{% else %}Получить местоположение{% endif %}
                             </button>
                             
                             <button type="button" id="openMapBtn" class="btn btn-outline-primary" 
                                     {% if not has_existing_gps %}style="display: none;"{% endif %}>
                                 <i class="bi bi-map me-1"></i>
-                                Xaritada ko'rish
+                                Посмотреть на карте
                             </button>
                         </div>
                         
@@ -114,9 +114,9 @@
                             {% if has_existing_gps %}
                             <div class="alert alert-success small">
                                 <i class="bi bi-check-circle me-1"></i>
-                                GPS saqlangan: {{ existing_gps_lat|floatformat:6 }}, {{ existing_gps_lng|floatformat:6 }}
+                                GPS сохранено: {{ existing_gps_lat|floatformat:6 }}, {{ existing_gps_lng|floatformat:6 }}
                                 {% if existing_gps_accuracy %}
-                                <br><small>Aniqlik: {{ existing_gps_accuracy }}m</small>
+                                <br><small>Точность: {{ existing_gps_accuracy }}м</small>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -128,41 +128,41 @@
 
         </div>
 
-        <!-- O'lchov izohlari -->
+        <!-- Примечания к замеру -->
         <div class="col-md-4 mb-3">
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-chat-text me-2"></i>
-                        O'lchov izohlari
+                        Примечания к замеру
                     </h6>
                 </div>
                 <div class="card-body">
                     <textarea name="measurement_notes" class="form-control mb-3" rows="3" 
-                                placeholder="O'lchov jarayoni haqida qo'shimcha ma'lumotlar...">{{ existing_measurement_notes }}</textarea>
+                                placeholder="Дополнительная информация о процессе замера...">{{ existing_measurement_notes }}</textarea>
                 </div>
             </div>
-                        <!-- Avans to'lov -->
+                        <!-- Авансовый платеж -->
             <div class="mt-3">
                 <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-cash-stack me-2"></i>
-                            Avans to'lov (ixtiyoriy)
+                            Авансовый платеж (необязательно)
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Summa</label>
+                                <label class="form-label">Сумма</label>
                                 <input type="number" name="advance_payment" class="form-control" 
                                         min="0" step="1000" placeholder="0">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">To'lov usuli</label>
+                                <label class="form-label">Способ оплаты</label>
                                 <select name="payment_method" class="form-select">
-                                    <option value="cash">Naqd pul</option>
-                                    <option value="card">Karta</option>
+                                    <option value="cash">Наличные</option>
+                                    <option value="card">Карта</option>
                                 </select>
                             </div>
                         </div>
@@ -172,12 +172,12 @@
         </div>
     </div>
 
-    <!-- O'lchov formi -->
+    <!-- Форма замера -->
     <div>
         <form method="post" class="needs-validation" novalidate id="measurement-form">
             {% csrf_token %}
             
-            <!-- GPS ma'lumotlari hidden fieldlar -->
+            <!-- Скрытые поля для GPS данных -->
             <input type="hidden" name="measurement_latitude" id="measurement_latitude">
             <input type="hidden" name="measurement_longitude" id="measurement_longitude">
             <input type="hidden" name="measurement_location_accuracy" id="measurement_location_accuracy">
@@ -188,27 +188,27 @@
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-plus-circle me-2"></i>
-                        Jalyuzlar ro'yxati
+                        Список жалюзи
                         {% if existing_items_count > 0 %}
-                        <span class="badge bg-info ms-2">{{ existing_items_count }} ta saqlangan</span>
+                        <span class="badge bg-info ms-2">{{ existing_items_count }} сохранено</span>
                         {% else %}
-                        <span class="badge bg-secondary ms-2">Mavjud emas</span>
+                        <span class="badge bg-secondary ms-2">Отсутствует</span>
                         {% endif %}
                     </h6>
                 </div>
                 <div class="card-body">
                     <div id="items-container">
-                        <!-- JavaScript orqali dinamik ravishda qo'shiladi -->
+                        <!-- Динамически добавляется через JavaScript -->
                     </div>
                     
                     <div class="d-flex justify-content-between align-items-center gap-3">
                         <button type="button" id="add-item" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-plus me-1"></i>
-                            Yangi jalyuzi qo'shish
+                            Добавить новые жалюзи
                         </button>
                         <div class="d-flex flex-row align-items-center gap-2">
                             <input type="checkbox" class="m-0" id="advance_payment_checkbox" name="advance_payment_checkbox">
-                            <label class="form-label m-0" for="advance_payment_checkbox" style="cursor: pointer;">Ishlab chiqarishga yuborish</label>
+                            <label class="form-label m-0" for="advance_payment_checkbox" style="cursor: pointer;">Отправить в производство</label>
                         </div>
                     </div>
                     
@@ -216,17 +216,17 @@
                 </div>
             </div>
 
-            <!-- Tugmalar -->
+            <!-- Кнопки -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center gap-3">
                         <a href="{% url 'technical:my_tasks' %}" class="btn btn-secondary btn-lg">
                             <i class="bi bi-arrow-left me-1"></i>
-                            Vazifalar ro'yxatiga qaytish
+                            Вернуться к списку задач
                         </a>
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="bi bi-check-circle me-1"></i>
-                            Saqlash 
+                            Сохранить 
                         </button>
                     </div>
                 </div>
@@ -236,7 +236,7 @@
 </div>
 
 
-<!-- JSON ma'lumotlarni xavfsiz o'tkazish -->
+<!-- Безопасная передача JSON данных -->
 {{ existing_items|json_script:"existing-items-data" }}
 {{ existing_gps_lat|json_script:"existing-gps-lat" }}
 {{ existing_gps_lng|json_script:"existing-gps-lng" }}
@@ -244,63 +244,63 @@
 {{ existing_items_count|json_script:"existing-items-count" }}
 
 <script>
-// JSON ma'lumotlarni xavfsiz olish
+// Безопасное получение JSON данных
 const existingItemsData = JSON.parse(document.getElementById('existing-items-data').textContent || '[]');
 const existingGpsLat = JSON.parse(document.getElementById('existing-gps-lat').textContent || 'null');
 const existingGpsLng = JSON.parse(document.getElementById('existing-gps-lng').textContent || 'null');
 const existingGpsAccuracy = JSON.parse(document.getElementById('existing-gps-accuracy').textContent || '""');
 const existingItemsCount = JSON.parse(document.getElementById('existing-items-count').textContent || '0');
 
-// Backend'dan kelgan mavjud ma'lumotlar
+// Существующие данные с бэкенда
 const EXISTING_DATA = {
     items: existingItemsData,
     gps: { lat: existingGpsLat, lng: existingGpsLng, accuracy: existingGpsAccuracy },
     debug: { itemsCount: existingItemsCount, orderStatus: "{{ order.status|escapejs }}", orderId: {{ order.id|default:0 }} }
 };
 
-console.log('🔧 DEBUG: Template\'dan JavaScript\'ga uzatilgan ma\'lumotlar:', EXISTING_DATA);
+console.log('🔧 DEBUG: Данные, переданные из шаблона в JavaScript:', EXISTING_DATA);
 </script>
 
 
 <!-- ================================================================== -->
-<!-- JAVASCRIPT - TUZATILGAN VA TOZALANGAN VERSIYA -->
+<!-- JAVASCRIPT - ИСПРАВЛЕННАЯ И ОЧИЩЕННАЯ ВЕРСИЯ -->
 <!-- ================================================================== -->
 <script>
 let itemCount = 0;
 
-// ----- GLOBAL CONSTANTS -----
-const blindTypeDisplayNames = { 'horizontal': 'Gorizontal jalyuzi', 'vertical': 'Vertikal jalyuzi', 'roller': 'Rollo parda', 'pleated': 'Plisse parda', 'bamboo': 'Bambuk jalyuzi', 'wooden': 'Yog\'och jalyuzi', 'fabric': 'Mato jalyuzi' };
-const materialDisplayNames = { 'aluminum': 'Alyuminiy', 'plastic': 'Plastik', 'wood': 'Yog\'och', 'fabric': 'Mato', 'bamboo': 'Bambuk', 'composite': 'Kompozit' };
-const installationTypes = { 'wall': 'Devorga o\'rnatish', 'ceiling': 'Shiftga o\'rnatish', 'window_frame': 'Deraza romiga o\'rnatish', 'niche': 'Ichki o\'rnatish' };
-const mechanismTypes = { 'cord': 'Ip bilan boshqarish', 'chain': 'Zanjir bilan boshqarish', 'wand': 'Tayoqcha bilan boshqarish', 'motorized': 'Elektr motor', 'remote': 'Masofadan boshqarish', 'smart': 'Aqlli boshqarish' };
+// ----- ГЛОБАЛЬНЫЕ КОНСТАНТЫ -----
+const blindTypeDisplayNames = { 'horizontal': 'Горизонтальные жалюзи', 'vertical': 'Вертикальные жалюзи', 'roller': 'Роликовые шторы', 'pleated': 'Плиссе', 'bamboo': 'Бамбуковые жалюзи', 'wooden': 'Деревянные жалюзи', 'fabric': 'Тканевые жалюзи' };
+const materialDisplayNames = { 'aluminum': 'Алюминий', 'plastic': 'Пластик', 'wood': 'Дерево', 'fabric': 'Ткань', 'bamboo': 'Бамбук', 'composite': 'Композит' };
+const installationTypes = { 'wall': 'Настенная', 'ceiling': 'Потолочная', 'window_frame': 'На раму окна', 'niche': 'Внутренняя' };
+const mechanismTypes = { 'cord': 'Веревочное управление', 'chain': 'Цепочное управление', 'wand': 'Трость управления', 'motorized': 'Электромотор', 'remote': 'Пульт ДУ', 'smart': 'Умное управление' };
 
-// ----- FORM ITEM FUNCTIONS -----
+// ----- ФУНКЦИИ ФОРМЫ ЭЛЕМЕНТОВ -----
 function createItemForm(index, existingData = null) {
     return `
         <div class="item-form border rounded p-3 mb-3" data-index="${index}" ${existingData ? 'style="border-left: 4px solid #28a745 !important;"' : ''}>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="mb-0">
-                    Jalyuzi #${index + 1}
-                    ${existingData ? '<span class="badge bg-success ms-2">Saqlangan</span>' : '<span class="badge bg-secondary ms-2">Yangi</span>'}
+                    Жалюзи #${index + 1}
+                    ${existingData ? '<span class="badge bg-success ms-2">Сохранено</span>' : '<span class="badge bg-secondary ms-2">Новое</span>'}
                 </h6>
                 <button type="button" class="btn btn-danger btn-sm remove-item" data-remove-index="${index}">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
             <div class="row">
-                <div class="col-sm-4 mb-3"><label class="form-label">Xona *</label><input type="text" name="area_${index}" class="form-control" required value="${existingData?.room_name || ''}"></div>
-                <div class="col-sm-4 mb-3"><label class="form-label">Jalyuzi turi *</label><select name="blind_type_${index}" class="form-select" required>${Object.entries(blindTypeDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.blind_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
-                <div class="col-sm-4 mb-3"><label class="form-label">Material turi</label><select name="material_type_${index}" class="form-select">${Object.entries(materialDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.material_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">Eni (sm) *</label><input type="number" name="width_${index}" data-calc="width" class="form-control" min="10" required value="${existingData?.width || ''}"></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">Bo'yi (sm) *</label><input type="number" name="height_${index}" data-calc="height" class="form-control" min="10" required value="${existingData?.height || ''}"></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">m²</label><input type="number" name="kv_${index}" class="form-control" disabled step="0.01"></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">Birlik narxi *</label><input type="number" name="unit_price_${index}" data-calc="unit_price" class="form-control" min="0" step="1000" required value="${existingData?.unit_price || ''}"></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">m² narxi</label><input type="number" name="kv_price_${index}" data-calc="kv_price" class="form-control" step="1000"></div>
-                <div class="col-sm-2 mb-3"><label class="form-label">Donasi</label><input type="number" name="quantity_${index}" class="form-control" min="1" value="${existingData?.quantity || 1}"></div>
-                <div class="col-sm-6 mb-3"><label class="form-label">O'rnatish turi</label><select name="installation_type_${index}" class="form-select">${Object.entries(installationTypes).map(([v,d]) => `<option value="${v}" ${existingData?.installation_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
-                <div class="col-sm-6 mb-3"><label class="form-label">Mexanizm turi</label><select name="mechanism_type_${index}" class="form-select">${Object.entries(mechanismTypes).map(([v,d]) => `<option value="${v}" ${existingData?.mechanism_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
-                <div class="col-12 mb-3"><label class="form-label">Qo'shimcha izoh</label><textarea name="notes_${index}" class="form-control" rows="2">${existingData?.notes || ''}</textarea></div>
-                <div class="col-12"><input type="checkbox" name="is_measured_${index}" id="is_measured_${index}" class="form-check-input" ${existingData?.is_measured ? 'checked' : ''}> <label class="form-label" for="is_measured_${index}">O'lchash tugatildi</label></div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Комната *</label><input type="text" name="area_${index}" class="form-control" required value="${existingData?.room_name || ''}"></div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Тип жалюзи *</label><select name="blind_type_${index}" class="form-select" required>${Object.entries(blindTypeDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.blind_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-4 mb-3"><label class="form-label">Тип материала</label><select name="material_type_${index}" class="form-select">${Object.entries(materialDisplayNames).map(([v,d]) => `<option value="${v}" ${existingData?.material_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Ширина (см) *</label><input type="number" name="width_${index}" data-calc="width" class="form-control" min="10" required value="${existingData?.width || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Высота (см) *</label><input type="number" name="height_${index}" data-calc="height" class="form-control" min="10" required value="${existingData?.height || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">м²</label><input type="number" name="kv_${index}" class="form-control" disabled step="0.01"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Цена за ед. *</label><input type="number" name="unit_price_${index}" data-calc="unit_price" class="form-control" min="0" step="1000" required value="${existingData?.unit_price || ''}"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Цена за м²</label><input type="number" name="kv_price_${index}" data-calc="kv_price" class="form-control" step="1000"></div>
+                <div class="col-sm-2 mb-3"><label class="form-label">Кол-во</label><input type="number" name="quantity_${index}" class="form-control" min="1" value="${existingData?.quantity || 1}"></div>
+                <div class="col-sm-6 mb-3"><label class="form-label">Тип установки</label><select name="installation_type_${index}" class="form-select">${Object.entries(installationTypes).map(([v,d]) => `<option value="${v}" ${existingData?.installation_type_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-sm-6 mb-3"><label class="form-label">Тип механизма</label><select name="mechanism_type_${index}" class="form-select">${Object.entries(mechanismTypes).map(([v,d]) => `<option value="${v}" ${existingData?.mechanism_raw === v ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+                <div class="col-12 mb-3"><label class="form-label">Доп. примечание</label><textarea name="notes_${index}" class="form-control" rows="2">${existingData?.notes || ''}</textarea></div>
+                <div class="col-12"><input type="checkbox" name="is_measured_${index}" id="is_measured_${index}" class="form-check-input" ${existingData?.is_measured ? 'checked' : ''}> <label class="form-label" for="is_measured_${index}">Замер завершен</label></div>
             </div>
         </div>
     `;
@@ -367,7 +367,7 @@ function updateItemNumbers() {
         item.dataset.index = index;
         const h6 = item.querySelector('h6');
         const badge = h6.querySelector('.badge');
-        h6.innerHTML = `Jalyuzi #${index + 1} ${badge.outerHTML}`;
+        h6.innerHTML = `Жалюзи #${index + 1} ${badge.outerHTML}`;
         item.querySelector('.remove-item').dataset.removeIndex = index;
         
         item.querySelectorAll('input, select, textarea').forEach(input => {
@@ -380,7 +380,7 @@ function updateItemNumbers() {
     updateItemCount();
 }
 
-// ----- MAP & GPS FUNCTIONS -----
+// ----- ФУНКЦИИ КАРТЫ И GPS -----
 function addMapStyles() {
     if (document.getElementById('custom-map-styles')) return;
     const style = document.createElement('style');
@@ -399,18 +399,18 @@ function addMapStyles() {
 function showSimpleMap(lat, lng, mapDiv) {
     mapDiv.innerHTML = `
         <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center bg-light">
-            <h5><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Xarita yuklanmadi</h5>
-            <p class="text-muted">Interaktiv xaritani yuklashda muammo yuzaga keldi.</p>
-            <p><strong>Koordinatalar:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+            <h5><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Карта не загрузилась</h5>
+            <p class="text-muted">Возникла проблема при загрузке интерактивной карты.</p>
+            <p><strong>Координаты:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
             <div>
                 <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-sm btn-primary">Google Maps</a>
-                <a href="https://yandex.uz/maps/?ll=${lng},${lat}&z=18" target="_blank" class="btn btn-sm btn-secondary">Yandex Maps</a>
+                <a href="https://yandex.uz/maps/?ll=${lng},${lat}&z=18" target="_blank" class="btn btn-sm btn-secondary">Яндекс Карты</a>
             </div>
         </div>`;
 }
 
 function createInteractiveMap(lat, lng, mapDiv) {
-    mapDiv.innerHTML = ''; // Clear loading indicator
+    mapDiv.innerHTML = ''; // Очистить индикатор загрузки
     const map = L.map(mapDiv).setView([lat, lng], 16);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -421,18 +421,17 @@ function createInteractiveMap(lat, lng, mapDiv) {
     const accuracy = parseFloat(document.getElementById('location_accuracy')?.value) || 10;
     L.circle([lat, lng], { radius: accuracy, weight: 1 }).addTo(map);
     
-    marker.bindPopup(`<b>Buyurtma joylashuvi</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}`).openPopup();
+    marker.bindPopup(`<b>Местоположение заказа</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}`).openPopup();
     
-    // Refresh map size after it's rendered in the modal
+    // Обновить размер карты после рендеринга в модальном окне
     setTimeout(() => map.invalidateSize(), 100);
 }
 
 function loadLeafletAndInitializeMap(lat, lng, mapDiv) {
-    mapDiv.innerHTML = `<div class="map-loading"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Xarita yuklanmoqda...</p></div>`;
+    mapDiv.innerHTML = `<div class="map-loading"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Карта загружается...</p></div>`;
     addMapStyles();
 
     if (document.querySelector('script[src*="leaflet"]')) {
-         // If script tag already exists but L is not defined, it might be loading. Wait a bit.
         setTimeout(() => createInteractiveMap(lat, lng, mapDiv), 500);
         return;
     }
@@ -483,11 +482,11 @@ function initializeGPS() {
     getLocationBtn.addEventListener('click', () => {
         const originalText = getLocationBtn.innerHTML;
         getLocationBtn.disabled = true;
-        getLocationBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Aniqlanmoqda...';
-        statusDiv.innerHTML = '<div class="alert alert-info small"><i class="bi bi-hourglass-split me-1"></i>GPS signali kutilmoqda...</div>';
+        getLocationBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Определение...';
+        statusDiv.innerHTML = '<div class="alert alert-info small"><i class="bi bi-hourglass-split me-1"></i>Ожидание сигнала GPS...</div>';
 
         if (!navigator.geolocation) {
-            statusDiv.innerHTML = '<div class="alert alert-danger small">GPS funksiyasi qo\'llab-quvvatlanmaydi</div>';
+            statusDiv.innerHTML = '<div class="alert alert-danger small">Функция GPS не поддерживается</div>';
             getLocationBtn.disabled = false;
             getLocationBtn.innerHTML = originalText;
             return;
@@ -501,16 +500,16 @@ function initializeGPS() {
                 accuracyInput.value = Math.round(accuracy);
                 setHiddenGpsValues(latitude.toFixed(6), longitude.toFixed(6), Math.round(accuracy));
 
-                statusDiv.innerHTML = `<div class="alert alert-success small"><i class="bi bi-check-circle me-1"></i>Joylashuv saqlandi! <br><small>Aniqlik: ${Math.round(accuracy)}m</small></div>`;
+                statusDiv.innerHTML = `<div class="alert alert-success small"><i class="bi bi-check-circle me-1"></i>Местоположение сохранено! <br><small>Точность: ${Math.round(accuracy)}м</small></div>`;
                 openMapBtn.style.display = 'block';
                 getLocationBtn.disabled = false;
-                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Joylashuvni yangilash';
+                getLocationBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Обновить местоположение';
             },
             (error) => {
-                let msg = 'Noma\'lum xatolik.';
-                if (error.code === 1) msg = 'GPS ruxsati rad etildi.';
-                if (error.code === 2) msg = 'GPS signali topilmadi.';
-                if (error.code === 3) msg = 'Vaqt tugadi.';
+                let msg = 'Неизвестная ошибка.';
+                if (error.code === 1) msg = 'Доступ к GPS запрещен.';
+                if (error.code === 2) msg = 'Сигнал GPS не найден.';
+                if (error.code === 3) msg = 'Время истекло.';
                 statusDiv.innerHTML = `<div class="alert alert-danger small"><i class="bi bi-exclamation-triangle me-1"></i>${msg}</div>`;
                 getLocationBtn.disabled = false;
                 getLocationBtn.innerHTML = originalText;
@@ -522,7 +521,7 @@ function initializeGPS() {
     openMapBtn.addEventListener('click', () => {
         const lat = latInput.value;
         const lng = lngInput.value;
-        if (!lat || !lng) { alert('Avval joylashuvni oling!'); return; }
+        if (!lat || !lng) { alert('Сначала получите местоположение!'); return; }
 
         let modalEl = document.getElementById('mapModal');
         if (modalEl) modalEl.remove();
@@ -531,7 +530,7 @@ function initializeGPS() {
             <div class="modal fade" id="mapModal" tabindex="-1">
                 <div class="modal-dialog modal-fullscreen">
                     <div class="modal-content">
-                        <div class="modal-header"><h5 class="modal-title">Joylashuv xaritada</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-header"><h5 class="modal-title">Местоположение на карте</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body p-0"><div id="map" style="height: 100%; width: 100%;"></div></div>
                     </div>
                 </div>
@@ -559,9 +558,9 @@ function loadExistingData() {
     }
 }
 
-// ----- DOMContentLoaded (INITIALIZATION) -----
+// ----- DOMContentLoaded (ИНИЦИАЛИЗАЦИЯ) -----
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Sahifa yuklandi, tuzatilgan funksiyalar ishga tushirilmoqda...');
+    console.log('🚀 Страница загружена, исправленные функции запускаются...');
     
     initializeGPS();
     loadExistingData();
@@ -596,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
         this.classList.add('was-validated');
     });
     
-    console.log('🎉 Barcha funksiyalar muvaffaqiyatli ishga tushdi.');
+    console.log('🎉 Все функции успешно запущены.');
 });
 </script>
 

@@ -11,7 +11,7 @@
     <div class="btn-toolbar mb-2 mb-md-0">
         <a href="{% url 'staff:list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>
-            Orqaga
+            Назад
         </a>
     </div>
 </div>
@@ -22,30 +22,30 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-person-badge me-2"></i>
-                    Xodim ma'lumotlari
+                    Данные сотрудника
                 </h5>
             </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
                     
-                    <!-- Asosiy ma'lumotlar -->
+                    <!-- Основная информация -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="username" class="form-label">
                                 <i class="bi bi-person me-1"></i>
-                                Username <span class="text-danger">*</span>
+                                Имя пользователя (логин) <span class="text-danger">*</span>
                             </label>
                             <input type="text" class="form-control" id="username" name="username" required>
-                            <div class="form-text">Tizimga kirish uchun foydalanuvchi nomi</div>
+                            <div class="form-text">Имя пользователя для входа в систему</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">
                                 <i class="bi bi-lock me-1"></i>
-                                Parol <span class="text-danger">*</span>
+                                Пароль <span class="text-danger">*</span>
                             </label>
                             <input type="password" class="form-control" id="password" name="password" required>
-                            <div class="form-text">Kamida 8 belgi bo'lishi kerak</div>
+                            <div class="form-text">Должен содержать не менее 8 символов</div>
                         </div>
                     </div>
 
@@ -53,14 +53,14 @@
                         <div class="col-md-6 mb-3">
                             <label for="first_name" class="form-label">
                                 <i class="bi bi-person-badge me-1"></i>
-                                Ism
+                                Имя
                             </label>
                             <input type="text" class="form-control" id="first_name" name="first_name">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="last_name" class="form-label">
                                 <i class="bi bi-person-badge me-1"></i>
-                                Familiya
+                                Фамилия
                             </label>
                             <input type="text" class="form-control" id="last_name" name="last_name">
                         </div>
@@ -77,32 +77,32 @@
                         <div class="col-md-6 mb-3">
                             <label for="phone" class="form-label">
                                 <i class="bi bi-phone me-1"></i>
-                                Telefon raqam
+                                Номер телефона
                             </label>
                             <input type="text" class="form-control" id="phone" name="phone" placeholder="+998901234567">
                         </div>
                     </div>
 
-                    <!-- Mutaxassis turi -->
+                    <!-- Тип специалиста -->
                     <div class="mb-3">
                         <label for="specialist_type" class="form-label">
                             <i class="bi bi-tools me-1"></i>
-                            Mutaxassis turi
+                            Тип специалиста
                         </label>
                         <select class="form-select" id="specialist_type" name="specialist_type">
-                            <option value="">Tanlang</option>
+                            <option value="">Выберите</option>
                             {% for choice in specialist_choices %}
                                 <option value="{{ choice.0 }}">{{ choice.1 }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- Huquqlar -->
+                    <!-- Права доступа -->
                     <div class="card bg-light">
                         <div class="card-header">
                             <h6 class="mb-0">
                                 <i class="bi bi-shield-check me-2"></i>
-                                Xodim huquqlari
+                                Права сотрудника
                             </h6>
                         </div>
                         <div class="card-body">
@@ -112,14 +112,14 @@
                                         <input class="form-check-input" type="checkbox" id="can_measure" name="can_measure">
                                         <label class="form-check-label" for="can_measure">
                                             <i class="bi bi-rulers me-1"></i>
-                                            O'lchov olish
+                                            Снятие замеров
                                         </label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" id="can_manufacture" name="can_manufacture">
                                         <label class="form-check-label" for="can_manufacture">
                                             <i class="bi bi-tools me-1"></i>
-                                            Ishlab chiqarish
+                                            Производство
                                         </label>
                                     </div>
                                 </div>
@@ -128,14 +128,14 @@
                                         <input class="form-check-input" type="checkbox" id="can_install" name="can_install">
                                         <label class="form-check-label" for="can_install">
                                             <i class="bi bi-house-gear me-1"></i>
-                                            O'rnatish
+                                            Установка
                                         </label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" id="can_create_order" name="can_create_order">
                                         <label class="form-check-label" for="can_create_order">
                                             <i class="bi bi-plus-circle me-1"></i>
-                                            Buyurtma yaratish
+                                            Создание заказа
                                         </label>
                                     </div>
                                 </div>
@@ -143,15 +143,15 @@
                         </div>
                     </div>
 
-                    <!-- Submit buttons -->
+                    <!-- Кнопки отправки -->
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{% url 'staff:list' %}" class="btn btn-secondary">
                             <i class="bi bi-x-circle me-1"></i>
-                            Bekor qilish
+                            Отмена
                         </a>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-circle me-1"></i>
-                            Xodim qo'shish
+                            Добавить сотрудника
                         </button>
                     </div>
                 </form>
@@ -159,26 +159,26 @@
         </div>
     </div>
 
-    <!-- Yordamchi ma'lumotlar -->
+    <!-- Вспомогательная информация -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Ma'lumot
+                    Информация
                 </h6>
             </div>
             <div class="card-body">
                 <div class="alert alert-info" role="alert">
                     <h6 class="alert-heading">
                         <i class="bi bi-lightbulb me-1"></i>
-                        Eslatma
+                        Примечание
                     </h6>
                     <ul class="mb-0">
-                        <li>Username noyob bo'lishi kerak</li>
-                        <li>Parol kamida 8 belgi bo'lishi tavsiya etiladi</li>
-                        <li>Huquqlarni mutaxassis turiga qarab belgilang</li>
-                        <li>Keyinchalik huquqlarni o'zgartirish mumkin</li>
+                        <li>Имя пользователя должно быть уникальным</li>
+                        <li>Рекомендуется пароль длиной не менее 8 символов</li>
+                        <li>Установите права в соответствии с типом специалиста</li>
+                        <li>Права можно будет изменить позже</li>
                     </ul>
                 </div>
 
@@ -186,34 +186,34 @@
                     <div class="card-body">
                         <h6 class="card-title">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Diqqat!
+                            Внимание!
                         </h6>
                         <p class="card-text small mb-0">
-                            Texnik xodim yaratilgandan keyin, unga buyurtmalar tayinlash mumkin bo'ladi.
+                            После создания технического сотрудника ему можно будет назначать заказы.
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Huquqlar tushuntirishi -->
+        <!-- Объяснение прав доступа -->
         <div class="card mt-3">
             <div class="card-header">
-                <h6 class="mb-0">Huquqlar tushuntirishi</h6>
+                <h6 class="mb-0">Объяснение прав доступа</h6>
             </div>
             <div class="card-body">
                 <small>
                     <div class="mb-2">
-                        <strong>O'lchov olish:</strong> Mijoz uyiga borib o'lchov olish
+                        <strong>Снятие замеров:</strong> Выезд к клиенту для снятия замеров
                     </div>
                     <div class="mb-2">
-                        <strong>Ishlab chiqarish:</strong> Jalyuzi ishlab chiqarish
+                        <strong>Производство:</strong> Производство жалюзи
                     </div>
                     <div class="mb-2">
-                        <strong>O'rnatish:</strong> Tayyor jalyuzini o'rnatish
+                        <strong>Установка:</strong> Установка готовых жалюзи
                     </div>
                     <div class="mb-0">
-                        <strong>Buyurtma yaratish:</strong> Yangi buyurtma qabul qilish
+                        <strong>Создание заказа:</strong> Прием нового заказа
                     </div>
                 </small>
             </div>
@@ -222,35 +222,35 @@
 </div>
 
 <script>
-// Form validation
+// Валидация формы
 document.querySelector('form').addEventListener('submit', function(e) {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
     if (!username.trim()) {
         e.preventDefault();
-        alert('Username kiritish majburiy!');
+        alert('Имя пользователя обязательно для ввода!');
         return false;
     }
     
     if (!password.trim()) {
         e.preventDefault();
-        alert('Parol kiritish majburiy!');
+        alert('Пароль обязателен для ввода!');
         return false;
     }
     
     if (password.length < 6) {
         e.preventDefault();
-        alert('Parol kamida 6 belgi bo\'lishi kerak!');
+        alert('Пароль должен содержать не менее 6 символов!');
         return false;
     }
 });
 
-// Specialist type ga qarab huquqlarni avtomatik belgilash
+// Автоматическое выставление прав в зависимости от типа специалиста
 document.getElementById('specialist_type').addEventListener('change', function() {
     const type = this.value;
     
-    // Barcha checkbox'larni tozalash
+    // Сброс всех чекбоксов
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     
     switch(type) {
